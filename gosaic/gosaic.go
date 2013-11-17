@@ -9,6 +9,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"os"
+  "strings"
+  "fmt"
 )
 
 var path string
@@ -27,7 +29,7 @@ func main() {
 	var run runner.Runner
 
 	flag.Parse()
-	subcommand := flag.Arg(0)
+	subcommand := strings.ToLower(flag.Arg(0))
 	arg := flag.Arg(1)
 
 	// build the project
@@ -55,8 +57,13 @@ func main() {
 	switch subcommand {
 	case "status":
 		run = runner.Status{Project: project, Arg: arg}
+  case "index", "addindex":
+    run = runner.Index{Project: project, Arg: arg}
+  case "rmindex":
+    log.Fatal("Not implemented: rmindex")
 	default:
-		log.Fatalf("Invalid sub-command: %s\n", subcommand)
+		fmt.Errorf("Invalid sub-command: %s\n", subcommand)
+		run = runner.Status{Project: project, Arg: arg}
 	}
 
 	// execute the runner
