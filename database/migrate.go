@@ -3,7 +3,6 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 type migrationFunc func(db *sql.DB) error
@@ -16,14 +15,7 @@ func init() {
 	migrations[1] = createGidxTable
 }
 
-func Migrate(dbPath string) error {
-	// get the db
-	db, err := sql.Open("sqlite3", dbPath)
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
+func Migrate(db *sql.DB) error {
 	// get the current version of the db
 	version, err := getVersion(db)
 	if err != nil {

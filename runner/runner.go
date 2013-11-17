@@ -1,8 +1,12 @@
 package runner
 
+import (
+	"github.com/atongen/gosaic"
+)
+
 type Run struct {
-	Path string
-	Arg  string
+	Project *gosaic.Project
+	Arg     string
 }
 
 type Runner interface {

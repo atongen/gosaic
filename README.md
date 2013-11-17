@@ -12,7 +12,8 @@ TODO: Write usage instructions here
 
 ## TODO
 
-[ ] Global project struct
+[X] Global project struct
+[ ] Add images to index
 
 ## Contributing
 
