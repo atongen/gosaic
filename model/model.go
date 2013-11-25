@@ -6,7 +6,7 @@ import (
 
 type Model interface {
   GetId() uint
-  Create(db *sql.DB) bool
-  Update(db *sql.DB) bool
-  Delete(db *sql.DB) bool
+  Create(db *sql.DB) error
+  Update(db *sql.DB) error
+  Delete(db *sql.DB) error
 }
