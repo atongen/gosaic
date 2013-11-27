@@ -3,14 +3,14 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"fmt"
 	"github.com/atongen/gosaic"
 	"github.com/atongen/gosaic/database"
 	"github.com/atongen/gosaic/runner"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"os"
-  "strings"
-  "fmt"
+	"strings"
 )
 
 var path string
@@ -57,10 +57,10 @@ func main() {
 	switch subcommand {
 	case "status":
 		run = runner.Status{Project: project, Arg: arg}
-  case "index", "addindex":
-    run = runner.Index{Project: project, Arg: arg}
-  case "rmindex":
-    log.Fatal("Not implemented: rmindex")
+	case "index", "addindex":
+		run = runner.Index{Project: project, Arg: arg}
+	case "rmindex":
+		log.Fatal("Not implemented: rmindex")
 	default:
 		fmt.Errorf("Invalid sub-command: %s\n", subcommand)
 		run = runner.Status{Project: project, Arg: arg}
