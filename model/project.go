@@ -1,4 +1,4 @@
-package gosaic
+package model
 
 import (
 	"database/sql"

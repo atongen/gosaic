@@ -1,11 +1,11 @@
-package runner
+package controller
 
 import (
 	"fmt"
 	"os"
 )
 
-type Status Run
+type Status Executable
 
 func (status Status) Execute() error {
 	fmt.Printf("Project home: %s\n", status.Project.Path)

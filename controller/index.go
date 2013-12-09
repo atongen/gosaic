@@ -1,4 +1,4 @@
-package runner
+package controller
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-type Index Run
+type Index Executable
 
 func (index Index) Execute() error {
 	finfo, err := os.Stat(index.Arg)

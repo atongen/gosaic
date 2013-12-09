@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
-	"github.com/atongen/gosaic"
+	"github.com/atongen/gosaic/model"
 	"github.com/atongen/gosaic/database"
-	"github.com/atongen/gosaic/runner"
+	"github.com/atongen/gosaic/controller"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"os"
@@ -26,14 +26,14 @@ func init() {
 }
 
 func main() {
-	var run runner.Runner
+	var run controller.Controller
 
 	flag.Parse()
 	subcommand := strings.ToLower(flag.Arg(0))
 	arg := flag.Arg(1)
 
 	// build the project
-	project, err := gosaic.NewProject(path)
+	project, err := model.NewProject(path)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -56,14 +56,14 @@ func main() {
 	// setup the runner
 	switch subcommand {
 	case "status":
-		run = runner.Status{Project: project, Arg: arg}
+		run = controller.Status{Project: project, Arg: arg}
 	case "index", "addindex":
-		run = runner.Index{Project: project, Arg: arg}
+		run = controller.Index{Project: project, Arg: arg}
 	case "rmindex":
 		log.Fatal("Not implemented: rmindex")
 	default:
 		fmt.Errorf("Invalid sub-command: %s\n", subcommand)
-		run = runner.Status{Project: project, Arg: arg}
+		run = controller.Status{Project: project, Arg: arg}
 	}
 
 	// execute the runner
