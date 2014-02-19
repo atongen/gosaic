@@ -1,30 +1,33 @@
-package controller
+package command
 
 import (
-	"fmt"
-	"github.com/atongen/gosaic/model"
-	"github.com/atongen/gosaic/service"
-	"github.com/atongen/gosaic/util"
-	"os"
-	"path/filepath"
-	"strings"
+  "os"
+  "github.com/codegangsta/cli"
+  "github.com/atongen/gosaic/service"
+  "github.com/atongen/gosaic/util"
+  "github.com/atongen/gosaic/model"
+  "fmt"
+  "path/filepath"
+  "strings"
 )
 
-type Index Executable
-
-func (index Index) Execute() error {
-	finfo, err := os.Stat(index.Arg)
+func IndexAction(env *Environment, c *cli.Context) {
+  path := c.Args()[0]
+	finfo, err := os.Stat(path)
 	if err != nil {
-		return fmt.Errorf("File or directory does not exist: %s\n", index.Arg)
+		env.Log.Fatalln("File or directory does not exist: %s\n", path)
 	}
 
-	gidxService := service.NewGidxService(index.Project.DB)
+	gidxService := service.NewGidxService(env.DB)
 
 	if finfo.IsDir() {
-		return indexDir(gidxService, index.Arg)
+		err = indexDir(gidxService, path)
 	} else {
-		return indexFile(gidxService, index.Arg)
+		err = indexFile(gidxService, path)
 	}
+  if err != nil {
+    env.Log.Fatalln(err)
+  }
 }
 
 func indexDir(gidxService *service.GidxService, path string) error {
