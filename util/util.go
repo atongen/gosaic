@@ -3,6 +3,8 @@ package util
 import (
 	"crypto/md5"
 	"fmt"
+	"image"
+	_ "image/jpeg"
 	"io"
 	"os"
 )
@@ -29,4 +31,19 @@ func Md5sum(path string) (string, error) {
 		}
 	}
 	return fmt.Sprintf("%x", hash.Sum(nil)), nil
+}
+
+func ImageBounds(path string) (image.Rectangle, error) {
+	result := image.Rectangle{}
+	file, err := os.Open(path)
+	if err != nil {
+		return result, err
+	}
+	defer file.Close()
+
+	img, _, err := image.Decode(file)
+	if err != nil {
+		return result, err
+	}
+	return img.Bounds(), nil
 }

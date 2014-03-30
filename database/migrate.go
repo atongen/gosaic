@@ -1,25 +1,21 @@
 package database
 
-import (
-	"database/sql"
-	"fmt"
+import "database/sql"
+
+type MigrationFunc func(db *sql.DB) error
+type Migrations []MigrationFunc
+
+var (
+	migrations Migrations = Migrations{
+		createVersionTable,
+		createGidxTable,
+	}
 )
 
-type migrationFunc func(db *sql.DB) error
-
-var migrations []migrationFunc
-
-func init() {
-	migrations = make([]migrationFunc, 2)
-	migrations[0] = createVersionTable
-	migrations[1] = createGidxTable
-}
-
-func Migrate(db *sql.DB) error {
-	// get the current version of the db
-	version, err := getVersion(db)
+func Migrate(db *sql.DB) (int, error) {
+	version, err := GetVersion(db)
 	if err != nil {
-		return err
+		return version, err
 	}
 
 	for idx, migFun := range migrations {
@@ -27,20 +23,24 @@ func Migrate(db *sql.DB) error {
 		if version < migVer {
 			err = migFun(db)
 			if err != nil {
-				return err
+				return version, err
 			}
 			err = setVersion(db, migVer)
 			if err != nil {
-				return err
+				return version, err
 			}
-			fmt.Printf("Migrated database to version %d\n", migVer)
 		}
 	}
 
-	return nil
+	version, err = GetVersion(db)
+	if err != nil {
+		return version, err
+	} else {
+		return version, nil
+	}
 }
 
-func getVersion(db *sql.DB) (int, error) {
+func GetVersion(db *sql.DB) (int, error) {
 	var version int
 	sql := `
     select version

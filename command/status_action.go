@@ -1,12 +1,17 @@
 package command
 
 import (
-  "github.com/codegangsta/cli"
-  "os"
+	"os"
+
+	"github.com/codegangsta/cli"
 )
 
 func StatusAction(env *Environment, c *cli.Context) {
-  env.Log.Printf("gosiac home: %s\n", env.Path)
+	if !hasExpectedArgs(c.Args(), 0) {
+		env.Log.Fatalln("Unexpected arguments present.")
+	}
+
+	env.Log.Printf("Gosaic home: %s\n", env.Path)
 	_, err := os.Stat(env.DbPath)
 	if err == nil {
 		env.Log.Printf("Database exists: %s\n", env.DbPath)

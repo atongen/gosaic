@@ -2,13 +2,15 @@ package command
 
 import (
   "github.com/codegangsta/cli"
-  "os"
+  "runtime"
 )
 
+// DirFlag is a global flag
 func DirFlag() cli.Flag {
-  currentDir, err := os.Getwd()
-  if err != nil {
-    os.Exit(1)
-  }
-  return cli.StringFlag{"dir, d", currentDir, "directory to place working files"}
+  return cli.StringFlag{"dir, d", ".", "Project directory"}
+}
+
+// WorkersFlag is a global flag
+func WorkersFlag() cli.Flag {
+  return cli.IntFlag{"workers, w", runtime.NumCPU(), "Number of worker processes to use"}
 }
