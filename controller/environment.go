@@ -1,4 +1,4 @@
-package command
+package controller
 
 import (
 	"database/sql"

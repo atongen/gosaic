@@ -1,16 +1,8 @@
-package command
+package controller
 
-import (
-	"os"
+import "os"
 
-	"github.com/codegangsta/cli"
-)
-
-func StatusAction(env *Environment, c *cli.Context) {
-	if !hasExpectedArgs(c.Args(), 0) {
-		env.Fatalln("Unexpected arguments present.")
-	}
-
+func Status(env *Environment) {
 	env.Println("Gosaic project directory:", env.Path)
 	_, err := os.Stat(env.DbPath)
 	if err == nil {

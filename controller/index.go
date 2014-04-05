@@ -1,4 +1,4 @@
-package command
+package controller
 
 import (
 	"os"
@@ -8,7 +8,6 @@ import (
 	"github.com/atongen/gosaic/model"
 	"github.com/atongen/gosaic/service"
 	"github.com/atongen/gosaic/util"
-	"github.com/codegangsta/cli"
 )
 
 var (
@@ -21,12 +20,7 @@ type addIndex struct {
 	md5sum string
 }
 
-func IndexAction(env *Environment, c *cli.Context) {
-	if !hasExpectedArgs(c.Args(), 1) {
-		env.Fatalln("Path argument is required.")
-	}
-
-	path := c.Args()[0]
+func Index(env *Environment, path string) {
 	paths := getPaths(path, env)
 	total = len(paths)
 	if total == 0 {

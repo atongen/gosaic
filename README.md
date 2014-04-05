@@ -10,10 +10,12 @@ Create your own image mosaics.
 
 TODO: Write usage instructions here
 
-## TODO
+## Background
 
-[X] Global project struct
-[ ] Add images to index
+* http://www.easyrgb.com/index.php
+* http://en.wikipedia.org/wiki/Color_difference
+* http://en.wikipedia.org/wiki/Dithering
+* http://en.wikipedia.org/wiki/Color_quantization
 
 ## Contributing
 
