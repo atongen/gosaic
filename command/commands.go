@@ -29,5 +29,5 @@ func IndexCommand() cli.Command {
 }
 
 func getCommandEnv(c *cli.Context) *Environment {
-	return GetEnvironment(c.GlobalString("dir"), c.GlobalInt("workers"))
+	return GetEnvironment(c.GlobalString("dir"), c.GlobalInt("workers"), c.GlobalBool("verbose"))
 }

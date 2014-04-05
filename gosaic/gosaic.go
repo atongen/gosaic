@@ -21,6 +21,7 @@ func main() {
 	app.Flags = []cli.Flag{
 		command.DirFlag(),
 		command.WorkersFlag(),
+		command.VerboseFlag(),
 	}
 
 	// Commands

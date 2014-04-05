@@ -11,6 +11,11 @@ import (
 	"github.com/codegangsta/cli"
 )
 
+var (
+	total    int
+	progress int = 0
+)
+
 type addIndex struct {
 	path   string
 	md5sum string
@@ -18,22 +23,24 @@ type addIndex struct {
 
 func IndexAction(env *Environment, c *cli.Context) {
 	if !hasExpectedArgs(c.Args(), 1) {
-		env.Log.Fatalln("Path argument is required.")
+		env.Fatalln("Path argument is required.")
 	}
 
 	path := c.Args()[0]
 	paths := getPaths(path, env)
-	if len(paths) == 0 {
-		env.Log.Println("No images found at path", path)
+	total = len(paths)
+	if total == 0 {
+		env.Println("No images found at path", path)
+	} else {
+		env.Println("Processing", total, "images")
+		processPaths(paths, env)
 	}
-
-	processPaths(paths, env)
 }
 
 func getPaths(path string, env *Environment) []string {
 	f, err := os.Stat(path)
 	if err != nil {
-		env.Log.Fatalln("File or directory does not exist: %s\n", path)
+		env.Fatalln("File or directory does not exist: %s\n", path)
 	}
 
 	paths := make([]string, 0)
@@ -63,54 +70,57 @@ func getPaths(path string, env *Environment) []string {
 }
 
 func processPaths(paths []string, env *Environment) {
+	gidxService := service.NewGidxService(env.DB)
 	add := make(chan addIndex)
-	go storePaths(add, env)
-
 	sem := make(chan bool, env.Workers)
+
+	go storePaths(gidxService, add, sem, env)
+
 	for _, path := range paths {
 		sem <- true
 		go func(path string) {
-			defer func() { <-sem }()
 			md5sum, err := util.Md5sum(path)
 			if err != nil {
-				env.Log.Println("Unable to get md5 sum for path", path)
+				env.Println("Unable to get md5 sum for path", path)
 				return
 			}
 			add <- addIndex{path, md5sum}
 		}(path)
 	}
+
 	for i := 0; i < cap(sem); i++ {
 		sem <- true
 	}
 }
 
-func storePaths(add chan addIndex, env *Environment) {
-	gidxService := service.NewGidxService(env.DB)
+func storePaths(gidxService *service.GidxService, add <-chan addIndex, sem <-chan bool, env *Environment) {
 	for newIndex := range add {
-		storePath(newIndex, gidxService, env)
+		storePath(gidxService, newIndex, env)
+		<-sem
 	}
 }
 
-func storePath(newIndex addIndex, gidxService *service.GidxService, env *Environment) {
+func storePath(gidxService *service.GidxService, newIndex addIndex, env *Environment) {
+	progress++
 	exists, err := gidxService.ExistsByMd5sum(newIndex.md5sum)
 	if err != nil {
-		env.Log.Println("Failed to lookup md5sum", newIndex.md5sum, err)
+		env.Println("Failed to lookup md5sum", newIndex.md5sum, err)
 	}
 
 	if exists {
-		return
-	}
+		env.Verboseln(progress, "of", total, newIndex.path, "(exists)")
+	} else {
+		bounds, err := util.ImageBounds(newIndex.path)
+		if err != nil {
+			env.Println("Can't get bounds", newIndex.path, err)
+		}
 
-	bounds, err := util.ImageBounds(newIndex.path)
-	if err != nil {
-		env.Log.Println("Can't get bounds", newIndex.path, err)
-	}
-
-	env.Log.Println(newIndex.path)
-
-	gidx := model.NewGidx(newIndex.path, newIndex.md5sum, uint(bounds.Max.X), uint(bounds.Max.Y))
-	err = gidxService.Create(gidx)
-	if err != nil {
-		env.Log.Println("Error storing image data", newIndex.path, err)
+		gidx := model.NewGidx(newIndex.path, newIndex.md5sum, uint(bounds.Max.X), uint(bounds.Max.Y))
+		err = gidxService.Create(gidx)
+		if err != nil {
+			env.Println("Error storing image data", newIndex.path, err)
+		} else {
+			env.Verboseln(progress, "of", total, newIndex.path)
+		}
 	}
 }

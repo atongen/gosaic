@@ -8,14 +8,15 @@ import (
 
 func StatusAction(env *Environment, c *cli.Context) {
 	if !hasExpectedArgs(c.Args(), 0) {
-		env.Log.Fatalln("Unexpected arguments present.")
+		env.Fatalln("Unexpected arguments present.")
 	}
 
-	env.Log.Printf("Gosaic home: %s\n", env.Path)
+	env.Println("Gosaic project directory:", env.Path)
 	_, err := os.Stat(env.DbPath)
 	if err == nil {
-		env.Log.Printf("Database exists: %s\n", env.DbPath)
+		env.Verboseln("Database exists:", env.DbPath)
 	} else {
-		env.Log.Fatalln("Error initializing environment.", err)
+		env.Fatalln("Error initializing environment.", err)
 	}
+	env.Println("Status: OK")
 }

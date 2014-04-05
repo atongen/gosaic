@@ -22,9 +22,10 @@ type Environment struct {
 	DbPath  string
 	Log     *log.Logger
 	Workers int
+	Verbose bool
 }
 
-func NewEnvironment(path string, out io.Writer, dbPath string, workers int) *Environment {
+func NewEnvironment(path string, out io.Writer, dbPath string, workers int, verbose bool) *Environment {
 	env := &Environment{}
 
 	// setup the environment logger
@@ -45,12 +46,13 @@ func NewEnvironment(path string, out io.Writer, dbPath string, workers int) *Env
 	env.Path = path
 	env.DbPath = dbPath
 	env.Workers = workers
+	env.Verbose = verbose
 
 	return env
 }
 
-func GetEnvironment(path string, workers int) *Environment {
-	env := NewEnvironment(path, os.Stdout, filepath.Join(path, DbFile), workers)
+func GetEnvironment(path string, workers int, verbose bool) *Environment {
+	env := NewEnvironment(path, os.Stdout, filepath.Join(path, DbFile), workers, verbose)
 	env.Init()
 	return env
 }
@@ -61,7 +63,7 @@ func (env *Environment) Init() {
 	// setup the environment db
 	db, err := sql.Open("sqlite3", env.DbPath)
 	if err != nil {
-		env.Log.Fatalln("Unable to create the db.", err)
+		env.Fatalln("Unable to create the db.", err)
 	}
 	env.DB = db
 	// this has been moved to commands
@@ -71,14 +73,28 @@ func (env *Environment) Init() {
 	// test db connection
 	err = env.DB.Ping()
 	if err != nil {
-		env.Log.Fatalln("Unable to connect to the db.", err)
+		env.Fatalln("Unable to connect to the db.", err)
 	}
 
 	// migrate the database
 	version, err := database.Migrate(env.DB)
 	if err != nil {
-		env.Log.Fatalln("Unable to update the db.", err)
+		env.Fatalln("Unable to update the db.", err)
 	} else {
-		env.Log.Println("Database is at version", version)
+		env.Verboseln("Database is at version", version)
+	}
+}
+
+func (env *Environment) Fatalln(v ...interface{}) {
+	env.Log.Fatalln(v)
+}
+
+func (env *Environment) Println(v ...interface{}) {
+	env.Log.Println(v)
+}
+
+func (env *Environment) Verboseln(v ...interface{}) {
+	if env.Verbose {
+		env.Log.Println(v)
 	}
 }
