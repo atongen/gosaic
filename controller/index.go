@@ -96,25 +96,30 @@ func storePaths(gidxService *service.GidxService, add <-chan addIndex, sem <-cha
 
 func storePath(gidxService *service.GidxService, newIndex addIndex, env *Environment) {
 	progress++
+
 	exists, err := gidxService.ExistsByMd5sum(newIndex.md5sum)
 	if err != nil {
 		env.Println("Failed to lookup md5sum", newIndex.md5sum, err)
+		return
 	}
 
 	if exists {
 		env.Verboseln(progress, "of", total, newIndex.path, "(exists)")
-	} else {
-		bounds, err := util.ImageBounds(newIndex.path)
-		if err != nil {
-			env.Println("Can't get bounds", newIndex.path, err)
-		}
-
-		gidx := model.NewGidx(newIndex.path, newIndex.md5sum, uint(bounds.Max.X), uint(bounds.Max.Y))
-		err = gidxService.Create(gidx)
-		if err != nil {
-			env.Println("Error storing image data", newIndex.path, err)
-		} else {
-			env.Verboseln(progress, "of", total, newIndex.path)
-		}
+		return
 	}
+
+	img, err := util.OpenImage(newIndex.path)
+	if err != nil {
+		env.Println("Can't open image", newIndex.path, err)
+		return
+	}
+	bounds := (*img).Bounds()
+
+	gidx := model.NewGidx(newIndex.path, newIndex.md5sum, uint(bounds.Max.X), uint(bounds.Max.Y))
+	err = gidxService.Create(gidx)
+	if err != nil {
+		env.Println("Error storing image data", newIndex.path, err)
+	}
+
+	env.Verboseln(progress, "of", total, newIndex.path)
 }

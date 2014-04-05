@@ -7,6 +7,9 @@ import (
 	_ "image/jpeg"
 	"io"
 	"os"
+
+	"github.com/disintegration/imaging"
+	"github.com/gosexy/exif"
 )
 
 func Md5sum(path string) (string, error) {
@@ -33,17 +36,46 @@ func Md5sum(path string) (string, error) {
 	return fmt.Sprintf("%x", hash.Sum(nil)), nil
 }
 
-func ImageBounds(path string) (image.Rectangle, error) {
-	result := image.Rectangle{}
-	file, err := os.Open(path)
+// http://sylvana.net/jpegcrop/exif_orientation.html
+func OpenImage(path string) (*image.Image, error) {
+	img, err := imaging.Open(path)
 	if err != nil {
-		return result, err
+		return nil, err
 	}
-	defer file.Close()
 
-	img, _, err := image.Decode(file)
-	if err != nil {
-		return result, err
+	reader := exif.New()
+	err = reader.Open(path)
+	if err == nil {
+		if orientation, ok := reader.Tags["Orientation"]; ok {
+			switch orientation {
+			case "Top-left":
+				// 1
+			case "Top-right":
+				// 2 flop!
+				img = imaging.FlipH(img)
+			case "Bottom-right":
+				// 3 rotate!(180)
+				img = imaging.Rotate180(img)
+			case "Bottom-left":
+				// 4 flip!
+				img = imaging.FlipV(img)
+			case "Left-top":
+				// 5 transpose!
+				img = imaging.Rotate270(img)
+				img = imaging.FlipH(img)
+			case "Right-top":
+				// 6 rotate!(90)
+				img = imaging.Rotate270(img)
+			case "Right-bottom":
+				// 7 transverse!
+				img = imaging.Rotate90(img)
+				img = imaging.FlipH(img)
+			case "Left-bottom":
+				// 8 rotate!(270)
+				img = imaging.Rotate90(img)
+			}
+		}
 	}
-	return img.Bounds(), nil
+
+	return &img, nil
 }
