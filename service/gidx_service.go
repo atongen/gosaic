@@ -30,15 +30,7 @@ func (s *GidxServiceImpl) DbMap() *gorp.DbMap {
 }
 
 func (s *GidxServiceImpl) Register() {
-	s.DbMap().AddTableWithName(model.Gidx{}, s.TableName()).SetKeys(true, s.PrimaryKey())
-}
-
-func (s *GidxServiceImpl) TableName() string {
-	return "gidx"
-}
-
-func (s *GidxServiceImpl) PrimaryKey() string {
-	return "Id"
+	s.DbMap().AddTableWithName(model.Gidx{}, "gidx").SetKeys(true, "Id")
 }
 
 func (s *GidxServiceImpl) Insert(gidxs ...*model.Gidx) error {
@@ -66,19 +58,19 @@ func (s *GidxServiceImpl) Get(id int64) (*model.Gidx, error) {
 
 func (s *GidxServiceImpl) GetOneBy(column string, value interface{}) (*model.Gidx, error) {
 	var gidx model.Gidx
-	err := s.DbMap().SelectOne(&gidx, "select * from \""+s.TableName()+"\" where "+column+" = ?", value)
+	err := s.DbMap().SelectOne(&gidx, "select * from \"gidx\" where "+column+" = ?", value)
 	return &gidx, err
 }
 
 func (s *GidxServiceImpl) ExistsBy(column string, value interface{}) (bool, error) {
-	count, err := s.DbMap().SelectInt("select 1 from \""+s.TableName()+"\" where "+column+" = ?", value)
+	count, err := s.DbMap().SelectInt("select 1 from \"gidx\" where "+column+" = ?", value)
 	return count == 1, err
 }
 
 func (s *GidxServiceImpl) Count() (int64, error) {
-	return s.DbMap().SelectInt("select count(*) from \"" + s.TableName() + "\"")
+	return s.DbMap().SelectInt("select count(*) from \"gidx\"")
 }
 
 func (s *GidxServiceImpl) CountBy(column string, value interface{}) (int64, error) {
-	return s.DbMap().SelectInt("select count(*) from \""+s.TableName()+"\" where "+column+" = ?", value)
+	return s.DbMap().SelectInt("select count(*) from \"gidx\" where "+column+" = ?", value)
 }

@@ -13,16 +13,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var (
-	id          int64
-	path        = "/tmp/file.jpg"
-	md5sum      = "159c9c5ad02d9a15b7f41189960054cd"
-	width       = uint(120)
-	height      = uint(120)
-	orientation = "Top-left"
-)
-
-func setupGidxServiceTest() (*GidxServiceImpl, error) {
+func setupGenericServiceTest() (*GenericServiceImpl, error) {
 	db, err := sql.Open("sqlite3", ":memory:")
 	if err != nil {
 		return nil, err
@@ -33,29 +24,30 @@ func setupGidxServiceTest() (*GidxServiceImpl, error) {
 	}
 	dbMap := &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
 	dbMap.TraceOn("[DB]", log.New(os.Stdout, "test:", log.Ldate|log.Ltime))
-	gidxService := NewGidxService(dbMap)
-	gidxService.Register()
+	genericService := NewGenericService(dbMap, model.Gidx{}, "gidx", "Id")
+	genericService.Register()
 
 	gidx := model.NewGidx(path, md5sum, width, height, orientation)
-	err = gidxService.Insert(gidx)
+	err = genericService.Insert(gidx)
 	if err != nil {
 		return nil, err
 	}
 	id = gidx.Id
-	return gidxService, nil
+	return genericService, nil
 }
 
-func TestGidxServiceGet(t *testing.T) {
-	gidxService, err := setupGidxServiceTest()
+func TestGenericServiceGet(t *testing.T) {
+	gidxService, err := setupGenericServiceTest()
 	if err != nil {
 		t.Error("Unable to setup database.", err)
 	}
 	defer gidxService.DbMap().Db.Close()
 
-	gidx, err := gidxService.Get(id)
+	obj, err := gidxService.Get(id)
 	if err != nil {
 		t.Error("Error finding gidx by id", err)
 	}
+	gidx := obj.(*model.Gidx)
 
 	if gidx.Id != id ||
 		gidx.Md5sum != md5sum ||
@@ -67,8 +59,8 @@ func TestGidxServiceGet(t *testing.T) {
 	}
 }
 
-func TestGidxServiceGetMissing(t *testing.T) {
-	gidxService, err := setupGidxServiceTest()
+func TestGenericServiceGetMissing(t *testing.T) {
+	gidxService, err := setupGenericServiceTest()
 	if err != nil {
 		t.Error("Unable to setup database.", err)
 	}
@@ -84,30 +76,8 @@ func TestGidxServiceGetMissing(t *testing.T) {
 	}
 }
 
-func TestGidxServiceGetOneBy(t *testing.T) {
-	gidxService, err := setupGidxServiceTest()
-	if err != nil {
-		t.Error("Unable to setup database.", err)
-	}
-	defer gidxService.DbMap().Db.Close()
-
-	gidx, err := gidxService.GetOneBy("md5sum", md5sum)
-	if err != nil {
-		t.Error("Error getting gidx for existance by md5sum", err)
-	}
-
-	if gidx.Id != id ||
-		gidx.Md5sum != md5sum ||
-		gidx.Path != path ||
-		gidx.Width != width ||
-		gidx.Height != height ||
-		gidx.Orientation != orientation {
-		t.Error("Found gidx does not match data")
-	}
-}
-
-func TestGidxServiceExistBy(t *testing.T) {
-	gidxService, err := setupGidxServiceTest()
+func TestGenericServiceExistBy(t *testing.T) {
+	gidxService, err := setupGenericServiceTest()
 	if err != nil {
 		t.Error("Unable to setup database.", err)
 	}
@@ -123,8 +93,8 @@ func TestGidxServiceExistBy(t *testing.T) {
 	}
 }
 
-func TestGidxServiceUpdate(t *testing.T) {
-	gidxService, err := setupGidxServiceTest()
+func TestGenericServiceUpdate(t *testing.T) {
+	gidxService, err := setupGenericServiceTest()
 	if err != nil {
 		t.Error("Unable to setup database", err)
 	}
@@ -143,18 +113,19 @@ func TestGidxServiceUpdate(t *testing.T) {
 		t.Error("Nothing was updated")
 	}
 
-	gidx, err := gidxService.Get(id)
+	obj, err := gidxService.Get(id)
 	if err != nil {
 		t.Error("Error finding update gidx", err)
 	}
+	gidx := obj.(*model.Gidx)
 
 	if gidx.Path != newPath {
 		t.Error("Gidx was not updated")
 	}
 }
 
-func TestGidxServiceDelete(t *testing.T) {
-	gidxService, err := setupGidxServiceTest()
+func TestGenericServiceDelete(t *testing.T) {
+	gidxService, err := setupGenericServiceTest()
 	if err != nil {
 		t.Error("Unable to setup database", err)
 	}
@@ -179,8 +150,8 @@ func TestGidxServiceDelete(t *testing.T) {
 	}
 }
 
-func TestGidxServiceCount(t *testing.T) {
-	gidxService, err := setupGidxServiceTest()
+func TestGenericServiceCount(t *testing.T) {
+	gidxService, err := setupGenericServiceTest()
 	if err != nil {
 		t.Error("Unable to setup database", err)
 	}
@@ -196,8 +167,8 @@ func TestGidxServiceCount(t *testing.T) {
 	}
 }
 
-func TestGidxServiceCountBy(t *testing.T) {
-	gidxService, err := setupGidxServiceTest()
+func TestGenericServiceCountBy(t *testing.T) {
+	gidxService, err := setupGenericServiceTest()
 	if err != nil {
 		t.Error("Unable to setup database", err)
 	}
