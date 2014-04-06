@@ -1,0 +1,38 @@
+{
+	"ImportPath": "github.com/atongen/gosaic/gosaic",
+	"GoVersion": "go1.2.1",
+	"Deps": [
+		{
+			"ImportPath": "code.google.com/p/go.image/bmp",
+			"Comment": "null-24",
+			"Rev": "dc5d8934d75bd078c5072d5401f86d70659fcb90"
+		},
+		{
+			"ImportPath": "code.google.com/p/go.image/tiff",
+			"Comment": "null-24",
+			"Rev": "dc5d8934d75bd078c5072d5401f86d70659fcb90"
+		},
+		{
+			"ImportPath": "github.com/codegangsta/cli",
+			"Comment": "1.0.0-43-g3fa24ca",
+			"Rev": "3fa24ca4f3284911d9cac655d06b1d548653c180"
+		},
+		{
+			"ImportPath": "github.com/coopernurse/gorp",
+			"Comment": "v1.5",
+			"Rev": "242be3eec6e4d545d0eca24b5dc71236b71ac656"
+		},
+		{
+			"ImportPath": "github.com/disintegration/imaging",
+			"Rev": "9e6af48e9e09b7c1c98b760aefdfbd19ee24fe84"
+		},
+		{
+			"ImportPath": "github.com/gosexy/exif",
+			"Rev": "ca9cacadc510aa71f199706d0eb59e6cb6fd252f"
+		},
+		{
+			"ImportPath": "github.com/mattn/go-sqlite3",
+			"Rev": "58c62dc30cda06e4a74e18f6489bb6c112fc6e5d"
+		}
+	]
+}
