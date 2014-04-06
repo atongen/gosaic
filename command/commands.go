@@ -38,7 +38,7 @@ func Index() cli.Command {
 }
 
 func getCommandEnv(c *cli.Context) *controller.Environment {
-	return controller.GetEnvironment(c.GlobalString("dir"), c.GlobalInt("workers"), c.GlobalBool("verbose"))
+	return controller.GetEnvironment(c.GlobalString("dir"), c.GlobalInt("workers"), c.GlobalBool("verbose"), c.GlobalBool("debug"))
 }
 
 // hasExpectedArgs checks whether the number of args are as expected.

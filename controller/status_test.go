@@ -8,7 +8,7 @@ import (
 
 func setupStatusTest() (*Environment, *bytes.Buffer) {
 	var out bytes.Buffer
-	env := NewEnvironment("/tmp", &out, ":memory:", 2, false)
+	env := NewEnvironment("/tmp", &out, ":memory:", 2, false, false)
 	env.Init()
 	return env, &out
 }

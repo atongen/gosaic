@@ -1,6 +1,10 @@
 package controller
 
-import "os"
+import (
+	"os"
+
+	"github.com/atongen/gosaic/service"
+)
 
 func Status(env *Environment) {
 	env.Println("Gosaic project directory:", env.Path)
@@ -14,5 +18,12 @@ func Status(env *Environment) {
 			env.Fatalln("Error initializing environment.", err)
 		}
 	}
+
+	gidxService := env.GetService("gidx").(service.GidxService)
+	count, err := gidxService.Count()
+	if err != nil {
+		env.Println("Unable to count index")
+	}
+	env.Println(count, "images in the index.")
 	env.Println("Status: OK")
 }

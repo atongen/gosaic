@@ -1,145 +1,84 @@
 package service
 
 import (
-	"database/sql"
+	"github.com/coopernurse/gorp"
 
 	"github.com/atongen/gosaic/model"
 )
 
-type GidxService struct {
-	DB *sql.DB
+type GidxService interface {
+	Insert(...*model.Gidx) error
+	Update(...*model.Gidx) (int64, error)
+	Delete(...*model.Gidx) (int64, error)
+	Get(int64) (*model.Gidx, error)
+	GetOneBy(string, interface{}) (*model.Gidx, error)
+	ExistsBy(string, interface{}) (bool, error)
+	Count() (int64, error)
+	CountBy(string, interface{}) (int64, error)
 }
 
-func NewGidxService(db *sql.DB) *GidxService {
-	return &GidxService{DB: db}
+type GidxServiceImpl struct {
+	dbMap *gorp.DbMap
 }
 
-func (gidxService *GidxService) FindById(id int64) (*model.Gidx, error) {
-	gidx := &model.Gidx{Id: id}
-	rows, err := gidxService.DB.Query("select path, md5sum, width, height from gidx where id = ? limit 1", id)
+func NewGidxService(dbMap *gorp.DbMap) *GidxServiceImpl {
+	return &GidxServiceImpl{dbMap: dbMap}
+}
+
+func (s *GidxServiceImpl) DbMap() *gorp.DbMap {
+	return s.dbMap
+}
+
+func (s *GidxServiceImpl) Register() {
+	s.DbMap().AddTableWithName(model.Gidx{}, s.TableName()).SetKeys(true, s.PrimaryKey())
+}
+
+func (s *GidxServiceImpl) TableName() string {
+	return "gidx"
+}
+
+func (s *GidxServiceImpl) PrimaryKey() string {
+	return "Id"
+}
+
+func (s *GidxServiceImpl) Insert(gidxs ...*model.Gidx) error {
+	return s.DbMap().Insert(model.GidxsToInterface(gidxs)...)
+}
+
+func (s *GidxServiceImpl) Update(gidxs ...*model.Gidx) (int64, error) {
+	return s.DbMap().Update(model.GidxsToInterface(gidxs)...)
+}
+
+func (s *GidxServiceImpl) Delete(gidxs ...*model.Gidx) (int64, error) {
+	return s.DbMap().Delete(model.GidxsToInterface(gidxs)...)
+}
+
+func (s *GidxServiceImpl) Get(id int64) (*model.Gidx, error) {
+	gidx, err := s.DbMap().Get(model.Gidx{}, id)
 	if err != nil {
 		return nil, err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		err := rows.Scan(&gidx.Path, &gidx.Md5sum, &gidx.Width, &gidx.Height)
-		if err != nil {
-			return nil, err
-		}
-	}
-	err = rows.Err()
-	if err != nil {
-		return gidx, err
-	}
-	return gidx, nil
-}
-
-func (gidxService *GidxService) ExistsById(id int64) (bool, error) {
-	var exists int
-	rows, err := gidxService.DB.Query("select 1 from gidx where id = ? limit 1", id)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		err := rows.Scan(&exists)
-		if err != nil {
-			return false, err
-		}
-	}
-	err = rows.Err()
-	if err != nil {
-		return false, err
-	}
-	if exists == 1 {
-		return true, nil
+	} else if gidx != nil {
+		return gidx.(*model.Gidx), nil
 	} else {
-		return false, nil
+		return nil, nil
 	}
 }
 
-func (gidxService *GidxService) FindByMd5sum(md5sum string) (*model.Gidx, error) {
-	gidx := &model.Gidx{Md5sum: md5sum}
-	rows, err := gidxService.DB.Query("select id, path, width, height from gidx where md5sum = ? limit 1", md5sum)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		err := rows.Scan(&gidx.Id, &gidx.Path, &gidx.Width, &gidx.Height)
-		if err != nil {
-			return nil, err
-		}
-	}
-	err = rows.Err()
-	if err != nil {
-		return gidx, err
-	}
-	return gidx, nil
+func (s *GidxServiceImpl) GetOneBy(column string, value interface{}) (*model.Gidx, error) {
+	var gidx model.Gidx
+	err := s.DbMap().SelectOne(&gidx, "select * from \""+s.TableName()+"\" where "+column+" = ?", value)
+	return &gidx, err
 }
 
-func (gidxService *GidxService) ExistsByMd5sum(md5sum string) (bool, error) {
-	var exists int
-	rows, err := gidxService.DB.Query("select 1 from gidx where md5sum = ? limit 1", md5sum)
-	if err != nil {
-		return false, err
-	}
-	defer rows.Close()
-	for rows.Next() {
-		err := rows.Scan(&exists)
-		if err != nil {
-			return false, err
-		}
-	}
-	err = rows.Err()
-	if err != nil {
-		return false, err
-	}
-	if exists == 1 {
-		return true, nil
-	} else {
-		return false, nil
-	}
-
+func (s *GidxServiceImpl) ExistsBy(column string, value interface{}) (bool, error) {
+	count, err := s.DbMap().SelectInt("select 1 from \""+s.TableName()+"\" where "+column+" = ?", value)
+	return count == 1, err
 }
 
-func (gidxService *GidxService) Create(gidx *model.Gidx) error {
-	stmt, err := gidxService.DB.Prepare("INSERT INTO gidx(path, md5sum, width, height) VALUES(?, ?, ?, ?)")
-	if err != nil {
-		return err
-	}
-	res, err := stmt.Exec(gidx.Path, gidx.Md5sum, gidx.Width, gidx.Height)
-	if err != nil {
-		return err
-	}
-	lastId, err := res.LastInsertId()
-	if err != nil {
-		return err
-	}
-	gidx.Id = lastId
-	return nil
+func (s *GidxServiceImpl) Count() (int64, error) {
+	return s.DbMap().SelectInt("select count(*) from \"" + s.TableName() + "\"")
 }
 
-func (gidxService *GidxService) Update(gidx *model.Gidx) error {
-	stmt, err := gidxService.DB.Prepare("UPDATE gidx set path = ?, md5sum = ?, width = ?, height = ? where id = ?")
-	if err != nil {
-		return err
-	}
-	_, err = stmt.Exec(gidx.Path, gidx.Md5sum, gidx.Width, gidx.Height, gidx.Id)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (gidxService *GidxService) Delete(id int64) error {
-	stmt, err := gidxService.DB.Prepare("delete from gidx where id = ?")
-	if err != nil {
-		return err
-	}
-	_, err = stmt.Exec(id)
-	if err != nil {
-		return err
-	}
-	return nil
+func (s *GidxServiceImpl) CountBy(column string, value interface{}) (int64, error) {
+	return s.DbMap().SelectInt("select count(*) from \""+s.TableName()+"\" where "+column+" = ?", value)
 }

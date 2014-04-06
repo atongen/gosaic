@@ -10,7 +10,7 @@ import (
 
 func setupIndexTest() (*Environment, *bytes.Buffer) {
 	var out bytes.Buffer
-	env := NewEnvironment("/tmp", &out, ":memory:", 2, true)
+	env := NewEnvironment("/tmp", &out, ":memory:", 2, true, false)
 	env.Init()
 	return env, &out
 }

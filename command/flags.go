@@ -20,3 +20,8 @@ func WorkersFlag() cli.Flag {
 func VerboseFlag() cli.Flag {
 	return cli.BoolFlag{"verbose", "Be verbose"}
 }
+
+// DebugFlag is a global flag
+func DebugFlag() cli.Flag {
+	return cli.BoolFlag{"debug", "Display debugging information"}
+}

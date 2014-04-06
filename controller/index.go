@@ -34,7 +34,7 @@ func Index(env *Environment, path string) {
 func getPaths(path string, env *Environment) []string {
 	f, err := os.Stat(path)
 	if err != nil {
-		env.Fatalln("File or directory does not exist: %s\n", path)
+		env.Fatalln("File or directory does not exist: " + path)
 	}
 
 	paths := make([]string, 0)
@@ -64,7 +64,8 @@ func getPaths(path string, env *Environment) []string {
 }
 
 func processPaths(paths []string, env *Environment) {
-	gidxService := service.NewGidxService(env.DB)
+	gidxService := env.GetService("gidx").(service.GidxService)
+
 	add := make(chan addIndex)
 	sem := make(chan bool, env.Workers)
 
@@ -87,17 +88,17 @@ func processPaths(paths []string, env *Environment) {
 	}
 }
 
-func storePaths(gidxService *service.GidxService, add <-chan addIndex, sem <-chan bool, env *Environment) {
+func storePaths(gidxService service.GidxService, add <-chan addIndex, sem <-chan bool, env *Environment) {
 	for newIndex := range add {
 		storePath(gidxService, newIndex, env)
 		<-sem
 	}
 }
 
-func storePath(gidxService *service.GidxService, newIndex addIndex, env *Environment) {
+func storePath(gidxService service.GidxService, newIndex addIndex, env *Environment) {
 	progress++
 
-	exists, err := gidxService.ExistsByMd5sum(newIndex.md5sum)
+	exists, err := gidxService.ExistsBy("md5sum", newIndex.md5sum)
 	if err != nil {
 		env.Println("Failed to lookup md5sum", newIndex.md5sum, err)
 		return
@@ -113,10 +114,16 @@ func storePath(gidxService *service.GidxService, newIndex addIndex, env *Environ
 		env.Println("Can't open image", newIndex.path, err)
 		return
 	}
+
+	orientation, err := util.FixOrientation(newIndex.path, img)
+	if err != nil {
+		env.Verboseln("Can't get image orientation", newIndex.path, err)
+	}
+
 	bounds := (*img).Bounds()
 
-	gidx := model.NewGidx(newIndex.path, newIndex.md5sum, uint(bounds.Max.X), uint(bounds.Max.Y))
-	err = gidxService.Create(gidx)
+	gidx := model.NewGidx(newIndex.path, newIndex.md5sum, uint(bounds.Max.X), uint(bounds.Max.Y), orientation)
+	err = gidxService.Insert(gidx)
 	if err != nil {
 		env.Println("Error storing image data", newIndex.path, err)
 	}

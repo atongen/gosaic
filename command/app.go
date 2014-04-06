@@ -15,6 +15,7 @@ func App() *cli.App {
 		DirFlag(),
 		WorkersFlag(),
 		VerboseFlag(),
+		DebugFlag(),
 	}
 
 	// Commands
