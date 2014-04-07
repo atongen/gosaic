@@ -7,6 +7,7 @@ import (
 )
 
 type GidxService interface {
+	Service
 	Insert(...*model.Gidx) error
 	Update(...*model.Gidx) (int64, error)
 	Delete(...*model.Gidx) (int64, error)
@@ -17,35 +18,35 @@ type GidxService interface {
 	CountBy(string, interface{}) (int64, error)
 }
 
-type GidxServiceImpl struct {
+type gidxServiceImpl struct {
 	dbMap *gorp.DbMap
 }
 
-func NewGidxService(dbMap *gorp.DbMap) *GidxServiceImpl {
-	return &GidxServiceImpl{dbMap: dbMap}
+func NewGidxService(dbMap *gorp.DbMap) GidxService {
+	return &gidxServiceImpl{dbMap: dbMap}
 }
 
-func (s *GidxServiceImpl) DbMap() *gorp.DbMap {
+func (s *gidxServiceImpl) DbMap() *gorp.DbMap {
 	return s.dbMap
 }
 
-func (s *GidxServiceImpl) Register() {
+func (s *gidxServiceImpl) Register() {
 	s.DbMap().AddTableWithName(model.Gidx{}, "gidx").SetKeys(true, "Id")
 }
 
-func (s *GidxServiceImpl) Insert(gidxs ...*model.Gidx) error {
+func (s *gidxServiceImpl) Insert(gidxs ...*model.Gidx) error {
 	return s.DbMap().Insert(model.GidxsToInterface(gidxs)...)
 }
 
-func (s *GidxServiceImpl) Update(gidxs ...*model.Gidx) (int64, error) {
+func (s *gidxServiceImpl) Update(gidxs ...*model.Gidx) (int64, error) {
 	return s.DbMap().Update(model.GidxsToInterface(gidxs)...)
 }
 
-func (s *GidxServiceImpl) Delete(gidxs ...*model.Gidx) (int64, error) {
+func (s *gidxServiceImpl) Delete(gidxs ...*model.Gidx) (int64, error) {
 	return s.DbMap().Delete(model.GidxsToInterface(gidxs)...)
 }
 
-func (s *GidxServiceImpl) Get(id int64) (*model.Gidx, error) {
+func (s *gidxServiceImpl) Get(id int64) (*model.Gidx, error) {
 	gidx, err := s.DbMap().Get(model.Gidx{}, id)
 	if err != nil {
 		return nil, err
@@ -56,21 +57,21 @@ func (s *GidxServiceImpl) Get(id int64) (*model.Gidx, error) {
 	}
 }
 
-func (s *GidxServiceImpl) GetOneBy(column string, value interface{}) (*model.Gidx, error) {
+func (s *gidxServiceImpl) GetOneBy(column string, value interface{}) (*model.Gidx, error) {
 	var gidx model.Gidx
 	err := s.DbMap().SelectOne(&gidx, "select * from \"gidx\" where "+column+" = ?", value)
 	return &gidx, err
 }
 
-func (s *GidxServiceImpl) ExistsBy(column string, value interface{}) (bool, error) {
+func (s *gidxServiceImpl) ExistsBy(column string, value interface{}) (bool, error) {
 	count, err := s.DbMap().SelectInt("select 1 from \"gidx\" where "+column+" = ?", value)
 	return count == 1, err
 }
 
-func (s *GidxServiceImpl) Count() (int64, error) {
+func (s *gidxServiceImpl) Count() (int64, error) {
 	return s.DbMap().SelectInt("select count(*) from \"gidx\"")
 }
 
-func (s *GidxServiceImpl) CountBy(column string, value interface{}) (int64, error) {
+func (s *gidxServiceImpl) CountBy(column string, value interface{}) (int64, error) {
 	return s.DbMap().SelectInt("select count(*) from \"gidx\" where "+column+" = ?", value)
 }

@@ -22,7 +22,7 @@ var (
 	orientation = "Top-left"
 )
 
-func setupGidxServiceTest() (*GidxServiceImpl, error) {
+func setupGidxServiceTest() (GidxService, error) {
 	db, err := sql.Open("sqlite3", ":memory:")
 	if err != nil {
 		return nil, err
