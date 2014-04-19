@@ -20,7 +20,7 @@ type addIndex struct {
 	md5sum string
 }
 
-func Index(env *Environment, path string) {
+func Index(env Environment, path string) {
 	paths := getPaths(path, env)
 	total = len(paths)
 	if total == 0 {
@@ -31,7 +31,7 @@ func Index(env *Environment, path string) {
 	}
 }
 
-func getPaths(path string, env *Environment) []string {
+func getPaths(path string, env Environment) []string {
 	f, err := os.Stat(path)
 	if err != nil {
 		env.Fatalln("File or directory does not exist: " + path)
@@ -63,11 +63,11 @@ func getPaths(path string, env *Environment) []string {
 	return paths
 }
 
-func processPaths(paths []string, env *Environment) {
+func processPaths(paths []string, env Environment) {
 	gidxService := env.GetService("gidx").(service.GidxService)
 
 	add := make(chan addIndex)
-	sem := make(chan bool, env.Workers)
+	sem := make(chan bool, env.Workers())
 
 	go storePaths(gidxService, add, sem, env)
 
@@ -88,14 +88,14 @@ func processPaths(paths []string, env *Environment) {
 	}
 }
 
-func storePaths(gidxService service.GidxService, add <-chan addIndex, sem <-chan bool, env *Environment) {
+func storePaths(gidxService service.GidxService, add <-chan addIndex, sem <-chan bool, env Environment) {
 	for newIndex := range add {
 		storePath(gidxService, newIndex, env)
 		<-sem
 	}
 }
 
-func storePath(gidxService service.GidxService, newIndex addIndex, env *Environment) {
+func storePath(gidxService service.GidxService, newIndex addIndex, env Environment) {
 	progress++
 
 	exists, err := gidxService.ExistsBy("md5sum", newIndex.md5sum)

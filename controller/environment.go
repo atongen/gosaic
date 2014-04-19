@@ -3,6 +3,7 @@ package controller
 import (
 	"database/sql"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -19,75 +20,93 @@ const (
 	DbFile = "gosaic.sqlite3"
 )
 
-type Environment struct {
-	Path    string
-	DB      *sql.DB
-	DbMap   *gorp.DbMap
-	DbPath  string
-	Log     *log.Logger
-	Workers int
-	Verbose bool
-	Debug   bool
+type Environment interface {
+	Init()
+	Close()
+	GetService(string) service.Service
+	Path() string
+	Db() *sql.DB
+	DbMap() *gorp.DbMap
+	Workers() int
+	Fatalln(...interface{})
+	Println(...interface{})
+	Verboseln(...interface{})
+}
 
+type environment struct {
+	path     string
+	dB       *sql.DB
+	dbMap    *gorp.DbMap
+	dbPath   string
+	log      *log.Logger
+	workers  int
+	verbose  bool
+	debug    bool
 	services map[string]service.Service
 	m        sync.Mutex
 }
 
-func NewEnvironment(path string, out io.Writer, dbPath string, workers int, verbose bool, debug bool) *Environment {
-	env := &Environment{}
+func NewEnvironment(path string, out io.Writer, dbPath string, workers int, verbose bool, debug bool) Environment {
+	env := &environment{}
 
 	// setup the environment logger
-	env.Log = log.New(out, "GOSAIC: ", log.Ldate|log.Ltime)
+	env.log = log.New(out, "GOSAIC: ", log.Ldate|log.Ltime)
 
 	// get environment absolute path
 	path, err := filepath.Abs(path)
 	if err != nil {
-		env.Log.Fatalln("Unable to locate environment absolute path.", err)
+		env.log.Fatalln("Unable to locate environment absolute path.", err)
 	}
 
 	// ensure environment path exists
 	err = os.MkdirAll(path, os.ModeDir)
 	if err != nil {
-		env.Log.Fatalln("Unable to create environment path.", err)
+		env.log.Fatalln("Unable to create environment path.", err)
 	}
 
-	env.Path = path
-	env.DbPath = dbPath
-	env.Workers = workers
-	env.Debug = debug
+	env.path = path
+	env.dbPath = dbPath
+	env.workers = workers
+	env.debug = debug
 	if debug {
-		env.Verbose = true
+		env.verbose = true
 	} else {
-		env.Verbose = verbose
+		env.verbose = verbose
 	}
 
 	return env
 }
 
-func GetEnvironment(path string, workers int, verbose bool, debug bool) *Environment {
-	env := NewEnvironment(path, os.Stdout, filepath.Join(path, DbFile), workers, verbose, debug)
-	env.Init()
-	return env
+func GetProdEnv(path string, workers int, verbose bool, debug bool) Environment {
+	return NewEnvironment(path, os.Stdout, filepath.Join(path, DbFile), workers, verbose, debug)
 }
 
-func (env *Environment) Init() {
-	runtime.GOMAXPROCS(env.Workers)
+func GetTestEnv(out io.Writer) Environment {
+	dir, err := ioutil.TempDir("", "GOSAIC")
+	if err != nil {
+		panic(err)
+	}
+	return NewEnvironment(dir, out, ":memory:", 2, true, false)
+}
+
+func (env *environment) Init() {
+	runtime.GOMAXPROCS(env.workers)
 
 	// setup the environment db
-	db, err := sql.Open("sqlite3", env.DbPath)
+	db, err := sql.Open("sqlite3", env.dbPath)
 	if err != nil {
 		env.Fatalln("Unable to create the db.", err)
 	}
-	env.DB = db
+	env.dB = db
 
 	// test db connection
-	err = env.DB.Ping()
+	err = env.dB.Ping()
 	if err != nil {
 		env.Fatalln("Unable to connect to the db.", err)
 	}
 
 	// migrate the database
-	version, err := database.Migrate(env.DB)
+	version, err := database.Migrate(env.dB)
 	if err != nil {
 		env.Fatalln("Unable to update the db.", err)
 	} else {
@@ -95,17 +114,21 @@ func (env *Environment) Init() {
 	}
 
 	// setup orm
-	env.DbMap = &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
+	env.dbMap = &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
 
-	if env.Debug {
-		env.DbMap.TraceOn("[DB]", env.Log)
+	if env.debug {
+		env.dbMap.TraceOn("[DB]", env.log)
 	}
 
 	// services
 	env.services = map[string]service.Service{}
 }
 
-func (env *Environment) GetService(name string) service.Service {
+func (env *environment) Close() {
+	env.dB.Close()
+}
+
+func (env *environment) GetService(name string) service.Service {
 	env.m.Lock()
 	defer env.m.Unlock()
 
@@ -118,7 +141,7 @@ func (env *Environment) GetService(name string) service.Service {
 	default:
 		env.Fatalln("Service " + name + "not found.")
 	case "gidx":
-		s = service.NewGidxService(env.DbMap)
+		s = service.NewGidxService(env.dbMap)
 		s.Register()
 		env.services["gidx"] = s
 	}
@@ -126,16 +149,32 @@ func (env *Environment) GetService(name string) service.Service {
 	return s
 }
 
-func (env *Environment) Fatalln(v ...interface{}) {
-	env.Log.Fatalln(v...)
+func (env *environment) Path() string {
+	return env.path
 }
 
-func (env *Environment) Println(v ...interface{}) {
-	env.Log.Println(v...)
+func (env *environment) Db() *sql.DB {
+	return env.dB
 }
 
-func (env *Environment) Verboseln(v ...interface{}) {
-	if env.Verbose {
-		env.Log.Println(v...)
+func (env *environment) DbMap() *gorp.DbMap {
+	return env.dbMap
+}
+
+func (env *environment) Workers() int {
+	return env.workers
+}
+
+func (env *environment) Fatalln(v ...interface{}) {
+	env.log.Fatalln(v...)
+}
+
+func (env *environment) Println(v ...interface{}) {
+	env.log.Println(v...)
+}
+
+func (env *environment) Verboseln(v ...interface{}) {
+	if env.verbose {
+		env.log.Println(v...)
 	}
 }

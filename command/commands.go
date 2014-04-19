@@ -11,10 +11,11 @@ func Status() cli.Command {
 		Usage: "get status",
 		Action: func(c *cli.Context) {
 			env := getCommandEnv(c)
-			defer env.DB.Close()
 			if !hasExpectedArgs(c.Args(), 0) {
 				env.Fatalln("Unexpected arguments present.")
 			}
+			env.Init()
+			defer env.Close()
 
 			controller.Status(env)
 		},
@@ -27,18 +28,19 @@ func Index() cli.Command {
 		Usage: "add path to index",
 		Action: func(c *cli.Context) {
 			env := getCommandEnv(c)
-			defer env.DB.Close()
 			if !hasExpectedArgs(c.Args(), 1) {
 				env.Fatalln("Path argument is required.")
 			}
+			env.Init()
+			defer env.Close()
 
 			controller.Index(env, c.Args()[0])
 		},
 	}
 }
 
-func getCommandEnv(c *cli.Context) *controller.Environment {
-	return controller.GetEnvironment(c.GlobalString("dir"), c.GlobalInt("workers"), c.GlobalBool("verbose"), c.GlobalBool("debug"))
+func getCommandEnv(c *cli.Context) controller.Environment {
+	return controller.GetProdEnv(c.GlobalString("dir"), c.GlobalInt("workers"), c.GlobalBool("verbose"), c.GlobalBool("debug"))
 }
 
 // hasExpectedArgs checks whether the number of args are as expected.
