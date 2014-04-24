@@ -59,19 +59,19 @@ func (s *gidxServiceImpl) Get(id int64) (*model.Gidx, error) {
 
 func (s *gidxServiceImpl) GetOneBy(column string, value interface{}) (*model.Gidx, error) {
 	var gidx model.Gidx
-	err := s.DbMap().SelectOne(&gidx, "select * from \"gidx\" where "+column+" = ?", value)
+	err := s.DbMap().SelectOne(&gidx, "select * from gidx where "+column+" = ?", value)
 	return &gidx, err
 }
 
 func (s *gidxServiceImpl) ExistsBy(column string, value interface{}) (bool, error) {
-	count, err := s.DbMap().SelectInt("select 1 from \"gidx\" where "+column+" = ?", value)
+	count, err := s.DbMap().SelectInt("select 1 from gidx where "+column+" = ?", value)
 	return count == 1, err
 }
 
 func (s *gidxServiceImpl) Count() (int64, error) {
-	return s.DbMap().SelectInt("select count(*) from \"gidx\"")
+	return s.DbMap().SelectInt("select count(*) from gidx")
 }
 
 func (s *gidxServiceImpl) CountBy(column string, value interface{}) (int64, error) {
-	return s.DbMap().SelectInt("select count(*) from \"gidx\" where "+column+" = ?", value)
+	return s.DbMap().SelectInt("select count(*) from gidx where "+column+" = ?", value)
 }

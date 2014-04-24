@@ -9,6 +9,7 @@ var (
 	migrations Migrations = Migrations{
 		createVersionTable,
 		createGidxTable,
+		createAspectTable,
 	}
 )
 
@@ -105,6 +106,7 @@ func createGidxTable(db *sql.DB) error {
 	sql := `
     create table gidx (
       id integer not null primary key,
+      aspect_id integer not null,
       path text not null,
       md5sum text not null,
       width integer not null,
@@ -118,6 +120,24 @@ func createGidxTable(db *sql.DB) error {
 	}
 
 	sql = "create unique index idx_gidx_md5sum on gidx (md5sum);"
+	_, err = db.Exec(sql)
+	return err
+}
+
+func createAspectTable(db *sql.DB) error {
+	sql := `
+    create table aspects (
+      id integer not null primary key,
+      columns integer not null,
+      rows integer not null
+    );
+  `
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	sql = "create unique index idx_aspects on aspects (rows,columns);"
 	_, err = db.Exec(sql)
 	return err
 }

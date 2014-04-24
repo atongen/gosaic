@@ -142,10 +142,11 @@ func (env *environment) GetService(name string) service.Service {
 		env.Fatalln("Service " + name + "not found.")
 	case "gidx":
 		s = service.NewGidxService(env.dbMap)
-		s.Register()
-		env.services["gidx"] = s
+	case "aspect":
+		s = service.NewAspectService(env.dbMap)
 	}
-
+	s.Register()
+	env.services[name] = s
 	return s
 }
 

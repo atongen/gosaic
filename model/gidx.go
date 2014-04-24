@@ -2,6 +2,7 @@ package model
 
 type Gidx struct {
 	Id          int64
+	AspectId    int64
 	Path        string
 	Md5sum      string
 	Width       uint
@@ -16,10 +17,6 @@ func NewGidx(path string, md5sum string, width uint, height uint, orientation st
 		Width:       width,
 		Height:      height,
 		Orientation: orientation}
-}
-
-func (gidx *Gidx) GetId() int64 {
-	return gidx.Id
 }
 
 func GidxsToInterface(gidxs []*Gidx) []interface{} {
