@@ -64,12 +64,10 @@ func getPaths(path string, env Environment) []string {
 }
 
 func processPaths(paths []string, env Environment) {
-	gidxService := env.GetService("gidx").(service.GidxService)
-
 	add := make(chan addIndex)
 	sem := make(chan bool, env.Workers())
 
-	go storePaths(gidxService, add, sem, env)
+	go storePaths(add, sem, env)
 
 	for _, path := range paths {
 		sem <- true
@@ -88,15 +86,18 @@ func processPaths(paths []string, env Environment) {
 	}
 }
 
-func storePaths(gidxService service.GidxService, add <-chan addIndex, sem <-chan bool, env Environment) {
+func storePaths(add <-chan addIndex, sem <-chan bool, env Environment) {
 	for newIndex := range add {
-		storePath(gidxService, newIndex, env)
+		storePath(newIndex, env)
 		<-sem
 	}
 }
 
-func storePath(gidxService service.GidxService, newIndex addIndex, env Environment) {
+func storePath(newIndex addIndex, env Environment) {
 	progress++
+
+	gidxService := env.GetService("gidx").(service.GidxService)
+	aspectService := env.GetService("aspect").(service.AspectService)
 
 	exists, err := gidxService.ExistsBy("md5sum", newIndex.md5sum)
 	if err != nil {
@@ -122,7 +123,13 @@ func storePath(gidxService service.GidxService, newIndex addIndex, env Environme
 
 	bounds := (*img).Bounds()
 
-	gidx := model.NewGidx(newIndex.path, newIndex.md5sum, uint(bounds.Max.X), uint(bounds.Max.Y), orientation)
+	aspect, err := aspectService.FindOrCreate(bounds.Max.X, bounds.Max.Y)
+	if err != nil {
+		env.Println("Error getting image aspect data", newIndex.path, err)
+		return
+	}
+
+	gidx := model.NewGidx(aspect.Id, newIndex.path, newIndex.md5sum, uint(bounds.Max.X), uint(bounds.Max.Y), orientation)
 	err = gidxService.Insert(gidx)
 	if err != nil {
 		env.Println("Error storing image data", newIndex.path, err)

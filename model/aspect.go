@@ -1,9 +1,9 @@
 package model
 
 type Aspect struct {
-	Id      int64
-	Columns int
-	Rows    int
+	Id      int64 `db:"id"`
+	Columns int   `db:"columns"`
+	Rows    int   `db:"rows"`
 }
 
 func NewAspect(columns int, rows int) *Aspect {

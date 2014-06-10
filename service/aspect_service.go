@@ -12,12 +12,13 @@ type AspectService interface {
 	Service
 	Insert(...*model.Aspect) error
 	Get(id int64) (*model.Aspect, error)
+	Count() (int64, error)
 	FindOrCreate(rows int, columns int) (*model.Aspect, error)
 }
 
 type aspectServiceImpl struct {
 	dbMap *gorp.DbMap
-	m     *sync.Mutex
+	m     sync.Mutex
 }
 
 func NewAspectService(dbMap *gorp.DbMap) AspectService {
@@ -29,7 +30,7 @@ func (s *aspectServiceImpl) DbMap() *gorp.DbMap {
 }
 
 func (s *aspectServiceImpl) Register() {
-	s.DbMap().AddTableWithName(model.Aspect{}, "aspects").SetKeys(true, "Id")
+	s.DbMap().AddTableWithName(model.Aspect{}, "aspects").SetKeys(true, "id")
 }
 
 func (s *aspectServiceImpl) Insert(aspects ...*model.Aspect) error {
@@ -47,6 +48,10 @@ func (s *aspectServiceImpl) Get(id int64) (*model.Aspect, error) {
 	}
 }
 
+func (s *aspectServiceImpl) Count() (int64, error) {
+	return s.DbMap().SelectInt("select count(*) from aspects")
+}
+
 func (s *aspectServiceImpl) FindOrCreate(width int, height int) (*model.Aspect, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
@@ -56,9 +61,7 @@ func (s *aspectServiceImpl) FindOrCreate(width int, height int) (*model.Aspect, 
 
 	// find
 	err := s.DbMap().SelectOne(&aspect, "select * from aspects where columns = ? and rows = ?", aspect.Columns, aspect.Rows)
-	if err != nil {
-		return nil, err
-	} else if aspect.Id != int64(0) {
+	if err == nil {
 		return &aspect, nil
 	}
 

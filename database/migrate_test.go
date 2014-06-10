@@ -17,7 +17,7 @@ func TestMigrate(t *testing.T) {
 	if err != nil {
 		t.Error("Failed to migrate db.", err)
 	}
-	if version != 2 {
+	if version != 3 {
 		t.Error("Failed to complete all migrations.", version)
 	}
 }

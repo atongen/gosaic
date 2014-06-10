@@ -2,8 +2,6 @@ package service
 
 import (
 	"database/sql"
-	"log"
-	"os"
 	"testing"
 
 	"github.com/coopernurse/gorp"
@@ -14,12 +12,14 @@ import (
 )
 
 var (
-	id          int64
-	path        = "/tmp/file.jpg"
-	md5sum      = "159c9c5ad02d9a15b7f41189960054cd"
-	width       = uint(120)
-	height      = uint(120)
-	orientation = "Top-left"
+	testGidx1 = model.NewGidx(
+		int64(1),
+		"/tmp/file.jpg",
+		"159c9c5ad02d9a15b7f41189960054cd",
+		uint(120),
+		uint(120),
+		"Top-left",
+	)
 )
 
 func setupGidxServiceTest() (GidxService, error) {
@@ -32,16 +32,16 @@ func setupGidxServiceTest() (GidxService, error) {
 		return nil, err
 	}
 	dbMap := &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
-	dbMap.TraceOn("[DB]", log.New(os.Stdout, "test:", log.Ldate|log.Ltime))
+	//dbMap.TraceOn("[DB]", log.New(os.Stdout, "test:", log.Ldate|log.Ltime))
 	gidxService := NewGidxService(dbMap)
 	gidxService.Register()
 
-	gidx := model.NewGidx(path, md5sum, width, height, orientation)
+	gidx := model.NewGidx(testGidx1.AspectId, testGidx1.Path, testGidx1.Md5sum, testGidx1.Width, testGidx1.Height, testGidx1.Orientation)
 	err = gidxService.Insert(gidx)
 	if err != nil {
 		return nil, err
 	}
-	id = gidx.Id
+	testGidx1.Id = gidx.Id
 	return gidxService, nil
 }
 
@@ -52,17 +52,18 @@ func TestGidxServiceGet(t *testing.T) {
 	}
 	defer gidxService.DbMap().Db.Close()
 
-	gidx, err := gidxService.Get(id)
+	gidx, err := gidxService.Get(testGidx1.Id)
 	if err != nil {
 		t.Error("Error finding gidx by id", err)
 	}
 
-	if gidx.Id != id ||
-		gidx.Md5sum != md5sum ||
-		gidx.Path != path ||
-		gidx.Width != width ||
-		gidx.Height != height ||
-		gidx.Orientation != orientation {
+	if gidx.Id != testGidx1.Id ||
+		gidx.AspectId != testGidx1.AspectId ||
+		gidx.Md5sum != testGidx1.Md5sum ||
+		gidx.Path != testGidx1.Path ||
+		gidx.Width != testGidx1.Width ||
+		gidx.Height != testGidx1.Height ||
+		gidx.Orientation != testGidx1.Orientation {
 		t.Error("Found gidx does not match data")
 	}
 }
@@ -91,17 +92,18 @@ func TestGidxServiceGetOneBy(t *testing.T) {
 	}
 	defer gidxService.DbMap().Db.Close()
 
-	gidx, err := gidxService.GetOneBy("md5sum", md5sum)
+	gidx, err := gidxService.GetOneBy("md5sum", testGidx1.Md5sum)
 	if err != nil {
 		t.Error("Error getting gidx for existance by md5sum", err)
 	}
 
-	if gidx.Id != id ||
-		gidx.Md5sum != md5sum ||
-		gidx.Path != path ||
-		gidx.Width != width ||
-		gidx.Height != height ||
-		gidx.Orientation != orientation {
+	if gidx.Id != testGidx1.Id ||
+		gidx.AspectId != testGidx1.AspectId ||
+		gidx.Md5sum != testGidx1.Md5sum ||
+		gidx.Path != testGidx1.Path ||
+		gidx.Width != testGidx1.Width ||
+		gidx.Height != testGidx1.Height ||
+		gidx.Orientation != testGidx1.Orientation {
 		t.Error("Found gidx does not match data")
 	}
 }
@@ -113,7 +115,7 @@ func TestGidxServiceExistBy(t *testing.T) {
 	}
 	defer gidxService.DbMap().Db.Close()
 
-	val, err := gidxService.ExistsBy("md5sum", md5sum)
+	val, err := gidxService.ExistsBy("md5sum", testGidx1.Md5sum)
 	if err != nil {
 		t.Error("Error checking gidx for existance by md5sum", err)
 	}
@@ -131,8 +133,8 @@ func TestGidxServiceUpdate(t *testing.T) {
 	defer gidxService.DbMap().Db.Close()
 
 	newPath := "/home/user/tmp/other.jpg"
-	updateGidx := model.NewGidx(newPath, md5sum, width, height, orientation)
-	updateGidx.Id = id
+	updateGidx := model.NewGidx(testGidx1.AspectId, newPath, testGidx1.Md5sum, testGidx1.Width, testGidx1.Height, testGidx1.Orientation)
+	updateGidx.Id = testGidx1.Id
 
 	num, err := gidxService.Update(updateGidx)
 	if err != nil {
@@ -143,7 +145,7 @@ func TestGidxServiceUpdate(t *testing.T) {
 		t.Error("Nothing was updated")
 	}
 
-	gidx, err := gidxService.Get(id)
+	gidx, err := gidxService.Get(testGidx1.Id)
 	if err != nil {
 		t.Error("Error finding update gidx", err)
 	}
@@ -160,7 +162,7 @@ func TestGidxServiceDelete(t *testing.T) {
 	}
 	defer gidxService.DbMap().Db.Close()
 
-	num, err := gidxService.Delete(&model.Gidx{Id: id})
+	num, err := gidxService.Delete(&model.Gidx{Id: testGidx1.Id})
 	if err != nil {
 		t.Error("Error deleting gidx", err)
 	}
@@ -169,7 +171,7 @@ func TestGidxServiceDelete(t *testing.T) {
 		t.Error("Nothing was deleted")
 	}
 
-	val, err := gidxService.ExistsBy("id", id)
+	val, err := gidxService.ExistsBy("id", testGidx1.Id)
 	if err != nil {
 		t.Error("Error confirming gidx deleted", err)
 	}
@@ -203,7 +205,7 @@ func TestGidxServiceCountBy(t *testing.T) {
 	}
 	defer gidxService.DbMap().Db.Close()
 
-	num, err := gidxService.CountBy("md5sum", md5sum)
+	num, err := gidxService.CountBy("md5sum", testGidx1.Md5sum)
 	if err != nil {
 		t.Error("Error updating gidx", err)
 	}
