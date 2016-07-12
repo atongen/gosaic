@@ -32,6 +32,13 @@ TODO: Write usage instructions here
 * http://zejn.net/b/2016/06/10/postgresql-tutorial-color-similarity-search/
 * https://raonyguimaraes.com/how-to-install-postgresql-9-6-on-ubuntudebianlinux-mint/
 
+## Libraries
+
+* https://github.com/fogleman/gg
+* https://github.com/disintegration/imaging
+* https://github.com/rwcarlsen/goexif
+* https://github.com/spf13/cobra
+
 ## Contributing
 
 1. Fork it
