@@ -2,9 +2,22 @@
 
 Create your own image mosaics.
 
-## Installation
+Requirements
+------------
+* golang 1.6.x or later
+* [gb](https://getgb.io/)
+* postgres 9.6
 
-`$ go get github.com/atongen/gosaic`
+
+Building
+--------
+
+```shell
+$ go get github.com/constabulary/gb/...
+$ git clone git@github.com/atongen/gosaic.git
+$ cd gosaic
+$ gb build all
+```
 
 ## Usage
 
@@ -16,6 +29,8 @@ TODO: Write usage instructions here
 * http://en.wikipedia.org/wiki/Color_difference
 * http://en.wikipedia.org/wiki/Dithering
 * http://en.wikipedia.org/wiki/Color_quantization
+* http://zejn.net/b/2016/06/10/postgresql-tutorial-color-similarity-search/
+* https://raonyguimaraes.com/how-to-install-postgresql-9-6-on-ubuntudebianlinux-mint/
 
 ## Contributing
 

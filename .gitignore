@@ -1,1 +1,8 @@
-*.sqlite3
+/pkg/*
+!/pkg/.gitkeep
+
+/bin/*
+!/bin/.gitkeep
+
+/.cover
+/coverage.xml
