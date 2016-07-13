@@ -5,9 +5,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/atongen/gosaic/model"
-	"github.com/atongen/gosaic/service"
-	"github.com/atongen/gosaic/util"
+	"gosaic/model"
+	"gosaic/service"
+	"gosaic/util"
 )
 
 var (

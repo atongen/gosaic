@@ -1,9 +1,9 @@
 package service
 
 import (
-	"github.com/coopernurse/gorp"
+	"gosaic/model"
 
-	"github.com/atongen/gosaic/model"
+	"gopkg.in/gorp.v1"
 )
 
 type GidxService interface {

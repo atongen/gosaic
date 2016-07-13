@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/atongen/gosaic/service"
+	"gosaic/service"
 )
 
 func Status(env Environment) {

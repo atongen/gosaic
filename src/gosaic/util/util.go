@@ -9,7 +9,7 @@ import (
 	"os"
 
 	"github.com/disintegration/imaging"
-	"github.com/gosexy/exif"
+	"github.com/rwcarlsen/goexif/exif"
 )
 
 func Md5sum(path string) (string, error) {

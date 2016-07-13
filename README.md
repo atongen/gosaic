@@ -6,7 +6,7 @@ Requirements
 ------------
 * golang 1.6.x or later
 * [gb](https://getgb.io/)
-* postgres 9.6
+* sqlite3
 
 
 Building
@@ -29,15 +29,31 @@ TODO: Write usage instructions here
 * http://en.wikipedia.org/wiki/Color_difference
 * http://en.wikipedia.org/wiki/Dithering
 * http://en.wikipedia.org/wiki/Color_quantization
+
+### Postgres
+
+Postgres is not currently used, but upcoming version 9.6 has some interesting
+features that could benefit this project.
+
 * http://zejn.net/b/2016/06/10/postgresql-tutorial-color-similarity-search/
 * https://raonyguimaraes.com/how-to-install-postgresql-9-6-on-ubuntudebianlinux-mint/
 
-## Libraries
+## Used Packages
 
-* https://github.com/fogleman/gg
 * https://github.com/disintegration/imaging
 * https://github.com/rwcarlsen/goexif
 * https://github.com/spf13/cobra
+* https://github.com/lucasb-eyer/go-colorful
+* https://github.com/go-gorp/gorp
+* https://github.com/mattn/go-sqlite3
+
+## Future Packages
+
+* https://github.com/fogleman/gg
+
+## TODOs
+
+1. image rotation
 
 ## Contributing
 

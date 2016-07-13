@@ -4,10 +4,11 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/coopernurse/gorp"
+	"gopkg.in/gorp.v1"
 
-	"github.com/atongen/gosaic/database"
-	"github.com/atongen/gosaic/model"
+	"gosaic/database"
+	"gosaic/model"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 

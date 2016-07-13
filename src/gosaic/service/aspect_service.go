@@ -3,9 +3,9 @@ package service
 import (
 	"sync"
 
-	"github.com/coopernurse/gorp"
+	"gopkg.in/gorp.v1"
 
-	"github.com/atongen/gosaic/model"
+	"gosaic/model"
 )
 
 type AspectService interface {

@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/atongen/gosaic/command"
+	"gosaic/command"
 )
 
 func main() {

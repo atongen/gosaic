@@ -10,10 +10,11 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/atongen/gosaic/database"
-	"github.com/atongen/gosaic/service"
-	"github.com/coopernurse/gorp"
+	"gosaic/database"
+	"gosaic/service"
+
 	_ "github.com/mattn/go-sqlite3"
+	"gopkg.in/gorp.v1"
 )
 
 const (
