@@ -30,7 +30,7 @@ func TestIndex(t *testing.T) {
 	}
 	defer env.Close()
 	_, file, _, _ := runtime.Caller(0)
-	dir := path.Join(path.Dir(file), "../../../testdata")
+	dir := path.Join(path.Dir(file), "testdata")
 	Index(env, dir)
 	if !strings.Contains(out.String(), "1 of 1") {
 		t.Error("Indexing did not occur")
