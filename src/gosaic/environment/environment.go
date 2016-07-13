@@ -112,6 +112,11 @@ func (env *environment) Init() error {
 		return err
 	}
 
+	_, err = env.dB.Exec("PRAGMA foreign_keys = ON;")
+	if err != nil {
+		return err
+	}
+
 	// migrate the database
 	_, err = database.Migrate(env.dB)
 	if err != nil {
@@ -121,8 +126,8 @@ func (env *environment) Init() error {
 	// setup orm
 	env.dbMap = &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
 
-	// during development
-	env.dbMap.TraceOn("[DB]", env.log)
+	// development
+	//env.dbMap.TraceOn("[DB]", env.log)
 
 	// services
 	env.services = map[ServiceName]service.Service{}

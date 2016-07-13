@@ -10,6 +10,7 @@ var (
 		createVersionTable,
 		createGidxTable,
 		createAspectTable,
+		createGidxPartialTable,
 	}
 )
 
@@ -138,6 +139,27 @@ func createAspectTable(db *sql.DB) error {
 	}
 
 	sql = "create unique index idx_aspects on aspects (rows,columns);"
+	_, err = db.Exec(sql)
+	return err
+}
+
+func createGidxPartialTable(db *sql.DB) error {
+	sql := `
+    create table gidx_partials (
+      id integer not null primary key,
+      gidx_id integer not null,
+      aspect_id integer not null,
+			data blob not null,
+			FOREIGN KEY(gidx_id) REFERENCES gidx(id) ON DELETE CASCADE,
+			FOREIGN KEY(aspect_id) REFERENCES aspect(id) ON DELETE CASCADE
+    );
+  `
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	sql = "create unique index idx_gidx_partials on gidx_partials (gidx_id,aspect_id);"
 	_, err = db.Exec(sql)
 	return err
 }

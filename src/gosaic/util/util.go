@@ -3,13 +3,21 @@ package util
 import (
 	"crypto/md5"
 	"fmt"
+	"gosaic/model"
 	"image"
 	_ "image/jpeg"
 	"io"
+	"math"
 	"os"
 
 	"github.com/disintegration/imaging"
 	"github.com/rwcarlsen/goexif/exif"
+)
+
+const (
+	// size of partial square for down-sampling
+	// before getting slice of lab data
+	DATA_SIZE = 10
 )
 
 func Md5sum(path string) (string, error) {
@@ -102,4 +110,52 @@ func OpenImage(path string) (*image.Image, error) {
 	}
 
 	return &img, nil
+}
+
+func ScaleAspect(image_w, image_h, aspect_w, aspect_h int) (int, int) {
+	ratio_image := float64(image_w) / float64(image_h)
+	ratio_aspect := float64(aspect_w) / float64(aspect_h)
+
+	var width, height int
+
+	if ratio_image < ratio_aspect {
+		width = image_w
+		h := float64(aspect_h) * float64(image_w) / float64(aspect_w)
+		height = Round(h)
+	} else {
+		w := float64(aspect_w) * float64(image_h) / float64(aspect_h)
+		width = Round(w)
+		height = image_h
+	}
+
+	return width, height
+}
+
+func Round(f float64) int {
+	r := math.Floor(f + .5)
+	return int(r)
+}
+
+func GetAspectLab(path string, columns, rows int) ([]*model.Lab, error) {
+	img, err := OpenImage(path)
+	if err != nil {
+		return nil, err
+	}
+
+	b := (*img).Bounds()
+	w, h := ScaleAspect(b.Max.X, b.Max.Y, columns, rows)
+
+	aspectImg := imaging.Fill((*img), w, h, imaging.Center, imaging.Lanczos)
+	dataImg := imaging.Resize(aspectImg, DATA_SIZE, DATA_SIZE, imaging.Lanczos)
+
+	labs := make([]*model.Lab, DATA_SIZE*DATA_SIZE)
+
+	for y := 0; y < DATA_SIZE; y++ {
+		for x := 0; x < DATA_SIZE; x++ {
+			lab := model.RgbaToLab(dataImg.At(x, y))
+			labs[y*DATA_SIZE+x] = lab
+		}
+	}
+
+	return labs, nil
 }

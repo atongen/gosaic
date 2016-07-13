@@ -13,7 +13,7 @@ type AspectService interface {
 	Insert(...*model.Aspect) error
 	Get(id int64) (*model.Aspect, error)
 	Count() (int64, error)
-	FindOrCreate(rows int, columns int) (*model.Aspect, error)
+	FindOrCreate(rows, columns int) (*model.Aspect, error)
 }
 
 type aspectServiceImpl struct {
@@ -70,7 +70,7 @@ func (s *aspectServiceImpl) FindOrCreate(width int, height int) (*model.Aspect, 
 	err = s.Insert(&aspect)
 	if err != nil {
 		return nil, err
-	} else {
-		return &aspect, nil
 	}
+
+	return &aspect, nil
 }

@@ -127,20 +127,35 @@ func storePath(newIndex addIndex, env environment.Environment) {
 		return
 	}
 
+	// don't actually fix orientation here, just determine
+	// if x and y need to be swapped
 	orientation, err := util.GetOrientation(newIndex.path)
-	if err == nil {
-		util.FixOrientation(img, orientation)
+	swap := false
+	if err == nil && 4 < orientation && orientation <= 8 {
+		swap = true
+	}
+	if orientation == 0 {
+		orientation = 1
 	}
 
 	bounds := (*img).Bounds()
 
-	aspect, err := aspectService.FindOrCreate(bounds.Max.X, bounds.Max.Y)
+	var width, height int
+	if swap {
+		width = bounds.Max.Y
+		height = bounds.Max.X
+	} else {
+		width = bounds.Max.X
+		height = bounds.Max.Y
+	}
+
+	aspect, err := aspectService.FindOrCreate(width, height)
 	if err != nil {
 		env.Println("Error getting image aspect data", newIndex.path, err)
 		return
 	}
 
-	gidx := model.NewGidx(aspect.Id, newIndex.path, newIndex.md5sum, uint(bounds.Max.X), uint(bounds.Max.Y), orientation)
+	gidx := model.NewGidx(aspect.Id, newIndex.path, newIndex.md5sum, uint(width), uint(height), orientation)
 	err = gidxService.Insert(gidx)
 	if err != nil {
 		env.Println("Error storing image data", newIndex.path, err)
