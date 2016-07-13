@@ -4,10 +4,11 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/coopernurse/gorp"
+	"gopkg.in/gorp.v1"
 
-	"github.com/atongen/gosaic/database"
-	"github.com/atongen/gosaic/model"
+	"gosaic/database"
+	"gosaic/model"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -18,7 +19,7 @@ var (
 		"159c9c5ad02d9a15b7f41189960054cd",
 		uint(120),
 		uint(120),
-		"Top-left",
+		1,
 	)
 )
 

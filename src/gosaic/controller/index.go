@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"gosaic/environment"
 	"gosaic/model"
-	"gosaic/service"
 	"gosaic/util"
 )
 
@@ -20,7 +20,7 @@ type addIndex struct {
 	md5sum string
 }
 
-func Index(env Environment, path string) {
+func Index(env environment.Environment, path string) {
 	paths := getPaths(path, env)
 	total = len(paths)
 	if total == 0 {
@@ -31,7 +31,7 @@ func Index(env Environment, path string) {
 	}
 }
 
-func getPaths(path string, env Environment) []string {
+func getPaths(path string, env environment.Environment) []string {
 	f, err := os.Stat(path)
 	if err != nil {
 		env.Fatalln("File or directory does not exist: " + path)
@@ -63,7 +63,7 @@ func getPaths(path string, env Environment) []string {
 	return paths
 }
 
-func processPaths(paths []string, env Environment) {
+func processPaths(paths []string, env environment.Environment) {
 	add := make(chan addIndex)
 	sem := make(chan bool, env.Workers())
 
@@ -86,18 +86,27 @@ func processPaths(paths []string, env Environment) {
 	}
 }
 
-func storePaths(add <-chan addIndex, sem <-chan bool, env Environment) {
+func storePaths(add <-chan addIndex, sem <-chan bool, env environment.Environment) {
 	for newIndex := range add {
 		storePath(newIndex, env)
 		<-sem
 	}
 }
 
-func storePath(newIndex addIndex, env Environment) {
+func storePath(newIndex addIndex, env environment.Environment) {
 	progress++
 
-	gidxService := env.GetService("gidx").(service.GidxService)
-	aspectService := env.GetService("aspect").(service.AspectService)
+	gidxService, err := env.GidxService()
+	if err != nil {
+		env.Println(err.Error())
+		return
+	}
+
+	aspectService, err := env.AspectService()
+	if err != nil {
+		env.Println(err.Error())
+		return
+	}
 
 	exists, err := gidxService.ExistsBy("md5sum", newIndex.md5sum)
 	if err != nil {
@@ -106,7 +115,7 @@ func storePath(newIndex addIndex, env Environment) {
 	}
 
 	if exists {
-		env.Verboseln(progress, "of", total, newIndex.path, "(exists)")
+		env.Println(progress, "of", total, newIndex.path, "(exists)")
 		return
 	}
 
@@ -116,9 +125,9 @@ func storePath(newIndex addIndex, env Environment) {
 		return
 	}
 
-	orientation, err := util.FixOrientation(newIndex.path, img)
-	if err != nil {
-		env.Verboseln("Can't get image orientation", newIndex.path, err)
+	orientation, err := util.GetOrientation(newIndex.path)
+	if err == nil {
+		util.FixOrientation(img, orientation)
 	}
 
 	bounds := (*img).Bounds()
@@ -135,5 +144,5 @@ func storePath(newIndex addIndex, env Environment) {
 		env.Println("Error storing image data", newIndex.path, err)
 	}
 
-	env.Verboseln(progress, "of", total, newIndex.path)
+	env.Println(progress, "of", total, newIndex.path)
 }

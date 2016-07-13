@@ -7,10 +7,10 @@ type Gidx struct {
 	Md5sum      string `db:"md5sum"`
 	Width       uint   `db:"width"`
 	Height      uint   `db:"height"`
-	Orientation string `db:"orientation"`
+	Orientation int    `db:"orientation"`
 }
 
-func NewGidx(aspect_id int64, path string, md5sum string, width uint, height uint, orientation string) *Gidx {
+func NewGidx(aspect_id int64, path string, md5sum string, width uint, height uint, orientation int) *Gidx {
 	return &Gidx{
 		AspectId:    aspect_id,
 		Path:        path,

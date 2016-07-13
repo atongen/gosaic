@@ -1,8 +1,8 @@
 package service
 
-import "github.com/coopernurse/gorp"
+import "gopkg.in/gorp.v1"
 
 type Service interface {
 	DbMap() *gorp.DbMap
-	Register()
+	Register() error
 }

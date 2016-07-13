@@ -1,11 +1,14 @@
 package main
 
 import (
+	"fmt"
+	"gosaic/cmd"
 	"os"
-
-	"gosaic/command"
 )
 
 func main() {
-	command.App().Run(os.Args)
+	if err := cmd.RootCmd.Execute(); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 }

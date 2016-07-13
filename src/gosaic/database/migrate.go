@@ -111,7 +111,7 @@ func createGidxTable(db *sql.DB) error {
       md5sum text not null,
       width integer not null,
       height integer not null,
-      orientation text not null
+      orientation integer not null
     );
   `
 	_, err := db.Exec(sql)

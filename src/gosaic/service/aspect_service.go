@@ -29,8 +29,9 @@ func (s *aspectServiceImpl) DbMap() *gorp.DbMap {
 	return s.dbMap
 }
 
-func (s *aspectServiceImpl) Register() {
+func (s *aspectServiceImpl) Register() error {
 	s.DbMap().AddTableWithName(model.Aspect{}, "aspects").SetKeys(true, "id")
+	return nil
 }
 
 func (s *aspectServiceImpl) Insert(aspects ...*model.Aspect) error {

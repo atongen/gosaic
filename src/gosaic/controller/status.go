@@ -1,17 +1,20 @@
 package controller
 
-import (
-	"gosaic/service"
-)
+import "gosaic/environment"
 
-func Status(env Environment) {
+func Status(env environment.Environment) {
 	env.Println("Gosaic project directory:", env.Path())
 
-	gidxService := env.GetService("gidx").(service.GidxService)
+	gidxService, err := env.GidxService()
+	if err != nil {
+		env.Fatalln(err.Error())
+	}
+
 	count, err := gidxService.Count()
 	if err != nil {
-		env.Println("Unable to count index")
+		env.Fatalln("Unable to count index")
 	}
+
 	env.Println(count, "images in the index.")
 	env.Println("Status: OK")
 }

@@ -30,8 +30,9 @@ func (s *gidxServiceImpl) DbMap() *gorp.DbMap {
 	return s.dbMap
 }
 
-func (s *gidxServiceImpl) Register() {
+func (s *gidxServiceImpl) Register() error {
 	s.DbMap().AddTableWithName(model.Gidx{}, "gidx").SetKeys(true, "id")
+	return nil
 }
 
 func (s *gidxServiceImpl) Insert(gidxs ...*model.Gidx) error {

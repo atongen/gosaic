@@ -4,5 +4,7 @@
 /bin/*
 !/bin/.gitkeep
 
+/gosaic.sqlite3
+
 /.cover
 /coverage.xml
