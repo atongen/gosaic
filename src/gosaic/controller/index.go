@@ -10,80 +10,83 @@ import (
 	"gosaic/util"
 )
 
-var (
-	total    int
-	progress int = 0
-)
-
 type addIndex struct {
 	path   string
 	md5sum string
 }
 
 func Index(env environment.Environment, path string) {
-	paths := getPaths(path, env)
-	total = len(paths)
-	if total == 0 {
-		env.Println("No images found at path", path)
-	} else {
-		env.Println("Processing", total, "images")
-		processPaths(paths, env)
+	paths, err := getPaths(path, env)
+	if err != nil {
+		env.Printf("Error finding images in path %s: %s\n", path, err.Error())
+		return
+	}
+
+	num := len(paths)
+	if num == 0 {
+		env.Printf("No images found at path %s\n", path)
+		return
+	}
+
+	env.Printf("Processing %d images\n", num)
+	err = processPaths(paths, env)
+	if err != nil {
+		env.Printf("Error indexing images: %s\n", err.Error())
 	}
 }
 
-func getPaths(path string, env environment.Environment) []string {
-	f, err := os.Stat(path)
-	if err != nil {
-		env.Fatalln("File or directory does not exist: " + path)
-	}
-
+func getPaths(path string, env environment.Environment) ([]string, error) {
 	paths := make([]string, 0)
 
-	if f.IsDir() {
-		filepath.Walk(path, func(path string, f os.FileInfo, err error) error {
-			if !f.IsDir() {
-				if strings.HasSuffix(strings.ToLower(path), ".jpg") {
-					absPath, err := filepath.Abs(path)
-					if err == nil {
-						paths = append(paths, absPath)
-					}
-				}
-			}
-			return nil
-		})
-	} else {
-		if strings.HasSuffix(strings.ToLower(path), ".jpg") {
-			absPath, err := filepath.Abs(path)
-			if err == nil {
-				paths = append(paths, absPath)
-			}
+	err := filepath.Walk(path, func(path string, f os.FileInfo, err error) error {
+		if err != nil {
+			return err
 		}
+		if !f.Mode().IsRegular() {
+			return nil
+		}
+		ext := strings.ToLower(filepath.Ext(path))
+		if ext != ".jpg" {
+			return nil
+		}
+		absPath, err := filepath.Abs(path)
+		if err != nil {
+			return err
+		}
+		paths = append(paths, absPath)
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
-	return paths
+	return paths, nil
 }
 
-func processPaths(paths []string, env environment.Environment) {
+func processPaths(paths []string, env environment.Environment) error {
 	add := make(chan addIndex)
 	sem := make(chan bool, env.Workers())
 
 	go storePaths(add, sem, env)
 
-	for _, path := range paths {
+	for _, p := range paths {
 		sem <- true
-		go func(path string) {
-			md5sum, err := util.Md5sum(path)
+		go func(myPath string) {
+			md5sum, err := util.Md5sum(myPath)
 			if err != nil {
-				env.Println("Unable to get md5 sum for path", path)
+				env.Printf("Unable to get md5 sum for path %s\n", myPath)
 				return
 			}
-			add <- addIndex{path, md5sum}
-		}(path)
+			add <- addIndex{myPath, md5sum}
+		}(p)
 	}
 
 	for i := 0; i < cap(sem); i++ {
 		sem <- true
 	}
+
+	return nil
 }
 
 func storePaths(add <-chan addIndex, sem <-chan bool, env environment.Environment) {
@@ -94,8 +97,6 @@ func storePaths(add <-chan addIndex, sem <-chan bool, env environment.Environmen
 }
 
 func storePath(newIndex addIndex, env environment.Environment) {
-	progress++
-
 	gidxService, err := env.GidxService()
 	if err != nil {
 		env.Println(err.Error())
@@ -115,9 +116,10 @@ func storePath(newIndex addIndex, env environment.Environment) {
 	}
 
 	if exists {
-		env.Println(progress, "of", total, newIndex.path, "(exists)")
 		return
 	}
+
+	env.Println(newIndex.path)
 
 	img, err := util.OpenImage(newIndex.path)
 	if err != nil {
@@ -143,6 +145,4 @@ func storePath(newIndex addIndex, env environment.Environment) {
 	if err != nil {
 		env.Println("Error storing image data", newIndex.path, err)
 	}
-
-	env.Println(progress, "of", total, newIndex.path)
 }

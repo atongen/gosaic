@@ -2,14 +2,12 @@ package controller
 
 import (
 	"bytes"
-	"fmt"
 	"gosaic/environment"
 	"strings"
 	"testing"
 )
 
 func TestStatus(t *testing.T) {
-	fmt.Println("TestStatus")
 	var out bytes.Buffer
 	env, err := environment.GetTestEnv(&out)
 	if err != nil {

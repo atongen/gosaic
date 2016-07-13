@@ -11,7 +11,7 @@ var (
 )
 
 func init() {
-	addLocalFlag(&indexPath, "index", "", "", "Path to index", IndexCmd)
+	addLocalFlag(&indexPath, "index", "i", "", "Path to index", IndexCmd)
 	RootCmd.AddCommand(IndexCmd)
 }
 

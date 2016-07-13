@@ -32,7 +32,9 @@ func TestIndex(t *testing.T) {
 	_, file, _, _ := runtime.Caller(0)
 	dir := path.Join(path.Dir(file), "testdata")
 	Index(env, dir)
-	if !strings.Contains(out.String(), "1 of 1") {
-		t.Error("Indexing did not occur")
+	fmt.Println(out.String())
+	if !strings.Contains(out.String(), "Processing 1 images") ||
+		strings.Contains(out.String(), "Error indexing images") {
+		t.Errorf("Indexing failed: %s", out.String())
 	}
 }
