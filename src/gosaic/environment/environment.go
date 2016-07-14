@@ -2,7 +2,6 @@ package environment
 
 import (
 	"database/sql"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -21,13 +20,6 @@ const (
 	DbFile = "gosaic.sqlite3"
 )
 
-type ServiceName uint8
-
-const (
-	GidxServiceName ServiceName = iota
-	AspectServiceName
-)
-
 var (
 	Version   = "none"
 	BuildTime = "none"
@@ -40,6 +32,7 @@ type Environment interface {
 	Close()
 	GidxService() (service.GidxService, error)
 	AspectService() (service.AspectService, error)
+	GidxPartialService() (service.GidxPartialService, error)
 	Path() string
 	Workers() int
 	Db() *sql.DB
@@ -137,59 +130,6 @@ func (env *environment) Init() error {
 
 func (env *environment) Close() {
 	env.dB.Close()
-}
-
-func (env *environment) getService(name ServiceName) (service.Service, error) {
-	env.m.Lock()
-	defer env.m.Unlock()
-
-	var s service.Service
-	if s, ok := env.services[name]; ok {
-		return s, nil
-	}
-
-	switch name {
-	default:
-		return nil, fmt.Errorf("Service not found")
-	case GidxServiceName:
-		s = service.NewGidxService(env.dbMap)
-	case AspectServiceName:
-		s = service.NewAspectService(env.dbMap)
-	}
-	err := s.Register()
-	if err != nil {
-		return nil, err
-	}
-	env.services[name] = s
-	return s, nil
-}
-
-func (env *environment) GidxService() (service.GidxService, error) {
-	s, err := env.getService(GidxServiceName)
-	if err != nil {
-		return nil, err
-	}
-
-	gidxService, ok := s.(service.GidxService)
-	if !ok {
-		return nil, fmt.Errorf("Invalid gidx service")
-	}
-
-	return gidxService, nil
-}
-
-func (env *environment) AspectService() (service.AspectService, error) {
-	s, err := env.getService(AspectServiceName)
-	if err != nil {
-		return nil, err
-	}
-
-	aspectService, ok := s.(service.AspectService)
-	if !ok {
-		return nil, fmt.Errorf("Invalid aspect service")
-	}
-
-	return aspectService, nil
 }
 
 func (env *environment) Path() string {
