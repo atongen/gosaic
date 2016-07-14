@@ -7,7 +7,7 @@ type GidxPartial struct {
 	GidxId   int64  `db:"gidx_id"`
 	AspectId int64  `db:"aspect_id"`
 	Data     []byte `db:"data"`
-	Pixels   []*Lab
+	Pixels   []*Lab `db:"-"`
 }
 
 func NewGidxPartial(gidx_id, aspect_id int64, pixels []*Lab) *GidxPartial {

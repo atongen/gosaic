@@ -1,12 +1,8 @@
 package service
 
 import (
-	"database/sql"
 	"testing"
 
-	"gopkg.in/gorp.v1"
-
-	"gosaic/database"
 	"gosaic/model"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -24,18 +20,26 @@ var (
 )
 
 func setupGidxServiceTest() (GidxService, error) {
-	db, err := sql.Open("sqlite3", ":memory:")
+	dbMap, err := getTestDbMap()
 	if err != nil {
 		return nil, err
 	}
-	_, err = database.Migrate(db)
+
+	aspectService, err := getTestAspectService(dbMap)
 	if err != nil {
 		return nil, err
 	}
-	dbMap := &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
-	//dbMap.TraceOn("[DB]", log.New(os.Stdout, "test:", log.Ldate|log.Ltime))
-	gidxService := NewGidxService(dbMap)
-	gidxService.Register()
+	aspect := model.Aspect{Columns: 1, Rows: 1}
+	err = aspectService.Insert(&aspect)
+	if err != nil {
+		return nil, err
+	}
+
+	gidxService, err := getTestGidxService(dbMap)
+	if err != nil {
+		return nil, err
+	}
+	testGidx1.AspectId = aspect.Id
 
 	gidx := model.NewGidx(testGidx1.AspectId, testGidx1.Path, testGidx1.Md5sum, testGidx1.Width, testGidx1.Height, testGidx1.Orientation)
 	err = gidxService.Insert(gidx)
@@ -49,7 +53,7 @@ func setupGidxServiceTest() (GidxService, error) {
 func TestGidxServiceGet(t *testing.T) {
 	gidxService, err := setupGidxServiceTest()
 	if err != nil {
-		t.Error("Unable to setup database.", err)
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
 	defer gidxService.DbMap().Db.Close()
 
@@ -72,7 +76,7 @@ func TestGidxServiceGet(t *testing.T) {
 func TestGidxServiceGetMissing(t *testing.T) {
 	gidxService, err := setupGidxServiceTest()
 	if err != nil {
-		t.Error("Unable to setup database.", err)
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
 	defer gidxService.DbMap().Db.Close()
 
@@ -89,7 +93,7 @@ func TestGidxServiceGetMissing(t *testing.T) {
 func TestGidxServiceGetOneBy(t *testing.T) {
 	gidxService, err := setupGidxServiceTest()
 	if err != nil {
-		t.Error("Unable to setup database.", err)
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
 	defer gidxService.DbMap().Db.Close()
 
@@ -112,7 +116,7 @@ func TestGidxServiceGetOneBy(t *testing.T) {
 func TestGidxServiceExistBy(t *testing.T) {
 	gidxService, err := setupGidxServiceTest()
 	if err != nil {
-		t.Error("Unable to setup database.", err)
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
 	defer gidxService.DbMap().Db.Close()
 
@@ -129,7 +133,7 @@ func TestGidxServiceExistBy(t *testing.T) {
 func TestGidxServiceUpdate(t *testing.T) {
 	gidxService, err := setupGidxServiceTest()
 	if err != nil {
-		t.Error("Unable to setup database", err)
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
 	defer gidxService.DbMap().Db.Close()
 
@@ -159,7 +163,7 @@ func TestGidxServiceUpdate(t *testing.T) {
 func TestGidxServiceDelete(t *testing.T) {
 	gidxService, err := setupGidxServiceTest()
 	if err != nil {
-		t.Error("Unable to setup database", err)
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
 	defer gidxService.DbMap().Db.Close()
 

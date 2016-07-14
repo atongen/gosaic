@@ -35,7 +35,7 @@ func (s *gidxPartialServiceImpl) DbMap() *gorp.DbMap {
 }
 
 func (s *gidxPartialServiceImpl) Register() error {
-	s.DbMap().AddTableWithName(model.GidxPartial{}, "gidx_partial").SetKeys(true, "id")
+	s.DbMap().AddTableWithName(model.GidxPartial{}, "gidx_partials").SetKeys(true, "id")
 	return nil
 }
 
@@ -69,16 +69,16 @@ func (s *gidxPartialServiceImpl) GetOneBy(column string, value interface{}) (*mo
 }
 
 func (s *gidxPartialServiceImpl) ExistsBy(column string, value interface{}) (bool, error) {
-	count, err := s.DbMap().SelectInt("select 1 from gidx_partial where "+column+" = ?", value)
+	count, err := s.DbMap().SelectInt("select 1 from gidx_partials where "+column+" = ?", value)
 	return count == 1, err
 }
 
 func (s *gidxPartialServiceImpl) Count() (int64, error) {
-	return s.DbMap().SelectInt("select count(*) from gidx_partial")
+	return s.DbMap().SelectInt("select count(*) from gidx_partials")
 }
 
 func (s *gidxPartialServiceImpl) CountBy(column string, value interface{}) (int64, error) {
-	return s.DbMap().SelectInt("select count(*) from gidx_partial where "+column+" = ?", value)
+	return s.DbMap().SelectInt("select count(*) from gidx_partials where "+column+" = ?", value)
 }
 
 func (s *gidxPartialServiceImpl) FindOrCreate(gidx *model.Gidx, aspect *model.Aspect) (*model.GidxPartial, error) {
@@ -100,7 +100,7 @@ func (s *gidxPartialServiceImpl) FindOrCreate(gidx *model.Gidx, aspect *model.As
 		return &p, nil
 	}
 
-	pixels, err := util.GetAspectLab(gidx.Path, aspect.Columns, aspect.Rows)
+	pixels, err := util.GetAspectLab(gidx, aspect)
 	if err != nil {
 		return nil, err
 	}

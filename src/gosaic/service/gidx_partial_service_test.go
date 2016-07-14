@@ -1,217 +1,79 @@
 package service
 
 import (
-	"database/sql"
 	"testing"
 
-	"gopkg.in/gorp.v1"
-
-	"gosaic/database"
 	"gosaic/model"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var (
-	testGidx1 = model.NewGidx(
-		int64(1),
-		"/tmp/file.jpg",
-		"159c9c5ad02d9a15b7f41189960054cd",
-		uint(120),
-		uint(120),
-		1,
-	)
-)
-
-func setupGidxPartialServiceTest() (GidxService, error) {
-	db, err := sql.Open("sqlite3", ":memory:")
+func TestGidxPartialService(t *testing.T) {
+	dbMap, err := getTestDbMap()
 	if err != nil {
-		return nil, err
+		t.Fatalf("Unable to get test dbmap: %s\n", err.Error())
 	}
-	_, err = database.Migrate(db)
+	defer dbMap.Db.Close()
+
+	aspectService, err := getTestAspectService(dbMap)
 	if err != nil {
-		return nil, err
+		t.Fatalf("Unable to get aspect service: %s\n", err.Error())
 	}
-	dbMap := &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
-	//dbMap.TraceOn("[DB]", log.New(os.Stdout, "test:", log.Ldate|log.Ltime))
-	gidxService := NewGidxService(dbMap)
-	gidxService.Register()
 
-	gidx := model.NewGidx(testGidx1.AspectId, testGidx1.Path, testGidx1.Md5sum, testGidx1.Width, testGidx1.Height, testGidx1.Orientation)
-	err = gidxService.Insert(gidx)
+	gidxService, err := getTestGidxService(dbMap)
 	if err != nil {
-		return nil, err
+		t.Fatalf("Unable to get gidx service: %s\n", err.Error())
 	}
-	testGidx1.Id = gidx.Id
-	return gidxService, nil
-}
 
-func TestGidxServiceGet(t *testing.T) {
-	gidxService, err := setupGidxServiceTest()
+	gidxPartialService, err := getTestGidxPartialService(dbMap)
 	if err != nil {
-		t.Error("Unable to setup database.", err)
+		t.Fatalf("Unable to get gidx partial service: %s\n", err.Error())
 	}
-	defer gidxService.DbMap().Db.Close()
 
-	gidx, err := gidxService.Get(testGidx1.Id)
+	aspect := model.Aspect{Columns: 87, Rows: 128}
+	err = aspectService.Insert(&aspect)
 	if err != nil {
-		t.Error("Error finding gidx by id", err)
+		t.Fatalf("Unable to insert test aspect: %s\n", err.Error())
 	}
 
-	if gidx.Id != testGidx1.Id ||
-		gidx.AspectId != testGidx1.AspectId ||
-		gidx.Md5sum != testGidx1.Md5sum ||
-		gidx.Path != testGidx1.Path ||
-		gidx.Width != testGidx1.Width ||
-		gidx.Height != testGidx1.Height ||
-		gidx.Orientation != testGidx1.Orientation {
-		t.Error("Found gidx does not match data")
+	gidx := model.Gidx{
+		AspectId:    aspect.Id,
+		Path:        "testdata/matterhorn.jpg",
+		Md5sum:      "fcaadee574094a3ae04c6badbbb9ee5e",
+		Width:       uint(696),
+		Height:      uint(1024),
+		Orientation: 1,
 	}
-}
-
-func TestGidxServiceGetMissing(t *testing.T) {
-	gidxService, err := setupGidxServiceTest()
+	err = gidxService.Insert(&gidx)
 	if err != nil {
-		t.Error("Unable to setup database.", err)
+		t.Fatalf("Unable to insert test aspect: %s\n", err.Error())
 	}
-	defer gidxService.DbMap().Db.Close()
 
-	gidx, err := gidxService.Get(1234)
+	gidxPartial, err := gidxPartialService.FindOrCreate(&gidx, &aspect)
 	if err != nil {
-		t.Error("Error finding gidx by id", err)
+		t.Fatalf("Failed to FindOrCreate gidxPartial: %s\n", err.Error())
 	}
 
-	if gidx != nil {
-		t.Error("Found non-existent gidx")
-	}
-}
-
-func TestGidxServiceGetOneBy(t *testing.T) {
-	gidxService, err := setupGidxServiceTest()
-	if err != nil {
-		t.Error("Unable to setup database.", err)
-	}
-	defer gidxService.DbMap().Db.Close()
-
-	gidx, err := gidxService.GetOneBy("md5sum", testGidx1.Md5sum)
-	if err != nil {
-		t.Error("Error getting gidx for existance by md5sum", err)
+	if gidxPartial.GidxId != gidx.Id {
+		t.Errorf("gidxPartial.GidxId was %d, expected %d\n", gidxPartial.GidxId, gidx.Id)
 	}
 
-	if gidx.Id != testGidx1.Id ||
-		gidx.AspectId != testGidx1.AspectId ||
-		gidx.Md5sum != testGidx1.Md5sum ||
-		gidx.Path != testGidx1.Path ||
-		gidx.Width != testGidx1.Width ||
-		gidx.Height != testGidx1.Height ||
-		gidx.Orientation != testGidx1.Orientation {
-		t.Error("Found gidx does not match data")
-	}
-}
-
-func TestGidxServiceExistBy(t *testing.T) {
-	gidxService, err := setupGidxServiceTest()
-	if err != nil {
-		t.Error("Unable to setup database.", err)
-	}
-	defer gidxService.DbMap().Db.Close()
-
-	val, err := gidxService.ExistsBy("md5sum", testGidx1.Md5sum)
-	if err != nil {
-		t.Error("Error checking gidx for existance by md5sum", err)
+	if gidxPartial.AspectId != aspect.Id {
+		t.Errorf("gidxPartial.AspectId was %d, expected %d\n", gidxPartial.AspectId, aspect.Id)
 	}
 
-	if !val {
-		t.Error("Found gidx does not exist")
-	}
-}
-
-func TestGidxServiceUpdate(t *testing.T) {
-	gidxService, err := setupGidxServiceTest()
-	if err != nil {
-		t.Error("Unable to setup database", err)
-	}
-	defer gidxService.DbMap().Db.Close()
-
-	newPath := "/home/user/tmp/other.jpg"
-	updateGidx := model.NewGidx(testGidx1.AspectId, newPath, testGidx1.Md5sum, testGidx1.Width, testGidx1.Height, testGidx1.Orientation)
-	updateGidx.Id = testGidx1.Id
-
-	num, err := gidxService.Update(updateGidx)
-	if err != nil {
-		t.Error("Error updating gidx", err)
+	if len(gidxPartial.Data) == 0 {
+		t.Error("gidxPartial.Data was empty")
 	}
 
-	if num == 0 {
-		t.Error("Nothing was updated")
+	numPixels := len(gidxPartial.Pixels)
+	if numPixels != 100 {
+		t.Errorf("gidxPartial.Pixels len was %d, expected %d\n", numPixels, 100)
 	}
 
-	gidx, err := gidxService.Get(testGidx1.Id)
-	if err != nil {
-		t.Error("Error finding update gidx", err)
-	}
-
-	if gidx.Path != newPath {
-		t.Error("Gidx was not updated")
-	}
-}
-
-func TestGidxServiceDelete(t *testing.T) {
-	gidxService, err := setupGidxServiceTest()
-	if err != nil {
-		t.Error("Unable to setup database", err)
-	}
-	defer gidxService.DbMap().Db.Close()
-
-	num, err := gidxService.Delete(&model.Gidx{Id: testGidx1.Id})
-	if err != nil {
-		t.Error("Error deleting gidx", err)
-	}
-
-	if num == 0 {
-		t.Error("Nothing was deleted")
-	}
-
-	val, err := gidxService.ExistsBy("id", testGidx1.Id)
-	if err != nil {
-		t.Error("Error confirming gidx deleted", err)
-	}
-
-	if val {
-		t.Error("Gidx was not deleted")
-	}
-}
-
-func TestGidxServiceCount(t *testing.T) {
-	gidxService, err := setupGidxServiceTest()
-	if err != nil {
-		t.Error("Unable to setup database", err)
-	}
-	defer gidxService.DbMap().Db.Close()
-
-	num, err := gidxService.Count()
-	if err != nil {
-		t.Error("Error updating gidx", err)
-	}
-
-	if num == 0 {
-		t.Error("Nothing was counted")
-	}
-}
-
-func TestGidxServiceCountBy(t *testing.T) {
-	gidxService, err := setupGidxServiceTest()
-	if err != nil {
-		t.Error("Unable to setup database", err)
-	}
-	defer gidxService.DbMap().Db.Close()
-
-	num, err := gidxService.CountBy("md5sum", testGidx1.Md5sum)
-	if err != nil {
-		t.Error("Error updating gidx", err)
-	}
-
-	if num != 1 {
-		t.Error("Nothing was counted")
+	for i, pix := range gidxPartial.Pixels {
+		if pix.L == 0.0 && pix.A == 0.0 && pix.B == 0.0 {
+			t.Errorf("pixel %d was empty\n", i)
+		}
 	}
 }

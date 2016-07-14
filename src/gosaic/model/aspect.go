@@ -14,9 +14,9 @@ func NewAspect(columns int, rows int) *Aspect {
 }
 
 func (a *Aspect) SetAspect(width int, height int) (int, int) {
-	var d int = gcd(width, height)
-	a.Columns = width / d
-	a.Rows = height / d
+	c, r := calculateAspect(width, height)
+	a.Columns = c
+	a.Rows = r
 	return a.Columns, a.Rows
 }
 

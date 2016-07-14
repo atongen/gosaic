@@ -1,12 +1,8 @@
 package service
 
 import (
-	"database/sql"
 	"testing"
 
-	"gopkg.in/gorp.v1"
-
-	"gosaic/database"
 	"gosaic/model"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -17,18 +13,15 @@ var (
 )
 
 func setupAspectServiceTest() (AspectService, error) {
-	db, err := sql.Open("sqlite3", ":memory:")
+	dbMap, err := getTestDbMap()
 	if err != nil {
 		return nil, err
 	}
-	_, err = database.Migrate(db)
+
+	aspectService, err := getTestAspectService(dbMap)
 	if err != nil {
 		return nil, err
 	}
-	dbMap := &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
-	//dbMap.TraceOn("[DB]", log.New(os.Stdout, "test:", log.Ldate|log.Ltime))
-	aspectService := NewAspectService(dbMap)
-	aspectService.Register()
 
 	aspect := model.NewAspect(testAspect1.Columns, testAspect1.Rows)
 	err = aspectService.Insert(aspect)

@@ -8,8 +8,8 @@ type Migrations []MigrationFunc
 var (
 	migrations Migrations = Migrations{
 		createVersionTable,
-		createGidxTable,
 		createAspectTable,
+		createGidxTable,
 		createGidxPartialTable,
 	}
 )
@@ -112,7 +112,8 @@ func createGidxTable(db *sql.DB) error {
       md5sum text not null,
       width integer not null,
       height integer not null,
-      orientation integer not null
+      orientation integer not null,
+			FOREIGN KEY(aspect_id) REFERENCES aspects(id) ON DELETE RESTRICT
     );
   `
 	_, err := db.Exec(sql)
@@ -151,7 +152,7 @@ func createGidxPartialTable(db *sql.DB) error {
       aspect_id integer not null,
 			data blob not null,
 			FOREIGN KEY(gidx_id) REFERENCES gidx(id) ON DELETE CASCADE,
-			FOREIGN KEY(aspect_id) REFERENCES aspect(id) ON DELETE CASCADE
+			FOREIGN KEY(aspect_id) REFERENCES aspects(id) ON DELETE RESTRICT
     );
   `
 	_, err := db.Exec(sql)
