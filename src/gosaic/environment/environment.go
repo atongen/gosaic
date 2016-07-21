@@ -67,7 +67,7 @@ func NewEnvironment(path string, out io.Writer, dbPath string, workers int) (Env
 	}
 
 	// ensure environment path exists
-	err = os.MkdirAll(path, os.ModeDir)
+	err = os.MkdirAll(path, 0755)
 	if err != nil {
 		return nil, err
 	}

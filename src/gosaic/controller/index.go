@@ -1,10 +1,6 @@
 package controller
 
 import (
-	"os"
-	"path/filepath"
-	"strings"
-
 	"gosaic/environment"
 	"gosaic/model"
 	"gosaic/util"
@@ -16,7 +12,7 @@ type addIndex struct {
 }
 
 func Index(env environment.Environment, path string) {
-	paths, err := getPaths(path, env)
+	paths, err := getJpgPaths(path, env)
 	if err != nil {
 		env.Printf("Error finding images in path %s: %s\n", path, err.Error())
 		return
@@ -29,46 +25,17 @@ func Index(env environment.Environment, path string) {
 	}
 
 	env.Printf("Processing %d images\n", num)
-	err = processPaths(paths, env)
+	err = processIndexPaths(paths, env)
 	if err != nil {
 		env.Printf("Error indexing images: %s\n", err.Error())
 	}
 }
 
-func getPaths(path string, env environment.Environment) ([]string, error) {
-	paths := make([]string, 0)
-
-	err := filepath.Walk(path, func(path string, f os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if !f.Mode().IsRegular() {
-			return nil
-		}
-		ext := strings.ToLower(filepath.Ext(path))
-		if ext != ".jpg" {
-			return nil
-		}
-		absPath, err := filepath.Abs(path)
-		if err != nil {
-			return err
-		}
-		paths = append(paths, absPath)
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return paths, nil
-}
-
-func processPaths(paths []string, env environment.Environment) error {
+func processIndexPaths(paths []string, env environment.Environment) error {
 	add := make(chan addIndex)
 	sem := make(chan bool, env.Workers())
 
-	go storePaths(add, sem, env)
+	go storeIndexPaths(add, sem, env)
 
 	for _, p := range paths {
 		sem <- true
@@ -89,14 +56,14 @@ func processPaths(paths []string, env environment.Environment) error {
 	return nil
 }
 
-func storePaths(add <-chan addIndex, sem <-chan bool, env environment.Environment) {
+func storeIndexPaths(add <-chan addIndex, sem <-chan bool, env environment.Environment) {
 	for newIndex := range add {
-		storePath(newIndex, env)
+		storeIndexPath(newIndex, env)
 		<-sem
 	}
 }
 
-func storePath(newIndex addIndex, env environment.Environment) {
+func storeIndexPath(newIndex addIndex, env environment.Environment) {
 	gidxService, err := env.GidxService()
 	if err != nil {
 		env.Println(err.Error())

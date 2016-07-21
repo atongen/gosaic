@@ -18,7 +18,10 @@ type GidxPartialService interface {
 	ExistsBy(string, interface{}) (bool, error)
 	Count() (int64, error)
 	CountBy(string, interface{}) (int64, error)
+	Find(*model.Gidx, *model.Aspect) (*model.GidxPartial, error)
+	Create(*model.Gidx, *model.Aspect) (*model.GidxPartial, error)
 	FindOrCreate(*model.Gidx, *model.Aspect) (*model.GidxPartial, error)
+	FindMissing(*model.Aspect) ([]*model.Gidx, error)
 }
 
 type gidxPartialServiceImpl struct {
@@ -81,23 +84,29 @@ func (s *gidxPartialServiceImpl) CountBy(column string, value interface{}) (int6
 	return s.DbMap().SelectInt("select count(*) from gidx_partials where "+column+" = ?", value)
 }
 
-func (s *gidxPartialServiceImpl) FindOrCreate(gidx *model.Gidx, aspect *model.Aspect) (*model.GidxPartial, error) {
-	s.m.Lock()
-	defer s.m.Unlock()
-
+func (s *gidxPartialServiceImpl) Find(gidx *model.Gidx, aspect *model.Aspect) (*model.GidxPartial, error) {
 	p := model.GidxPartial{
 		GidxId:   gidx.Id,
 		AspectId: aspect.Id,
 	}
 
-	// find
 	err := s.DbMap().SelectOne(&p, "select * from gidx_partials where gidx_id = ? and aspect_id = ?", p.GidxId, p.AspectId)
-	if err == nil {
-		err = p.DecodeData()
-		if err != nil {
-			return nil, err
-		}
-		return &p, nil
+	if err != nil {
+		return nil, err
+	}
+
+	err = p.DecodeData()
+	if err != nil {
+		return nil, err
+	}
+
+	return &p, nil
+}
+
+func (s *gidxPartialServiceImpl) Create(gidx *model.Gidx, aspect *model.Aspect) (*model.GidxPartial, error) {
+	p := model.GidxPartial{
+		GidxId:   gidx.Id,
+		AspectId: aspect.Id,
 	}
 
 	pixels, err := util.GetAspectLab(gidx, aspect)
@@ -111,11 +120,41 @@ func (s *gidxPartialServiceImpl) FindOrCreate(gidx *model.Gidx, aspect *model.As
 		return nil, err
 	}
 
-	// or create
 	err = s.Insert(&p)
 	if err != nil {
 		return nil, err
 	}
 
 	return &p, nil
+}
+
+func (s *gidxPartialServiceImpl) FindOrCreate(gidx *model.Gidx, aspect *model.Aspect) (*model.GidxPartial, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	p, err := s.Find(gidx, aspect)
+	if err == nil {
+		return p, nil
+	}
+
+	// or create
+	return s.Create(gidx, aspect)
+}
+
+func (s *gidxPartialServiceImpl) FindMissing(aspect *model.Aspect) ([]*model.Gidx, error) {
+	sql := `
+select * from gidx
+where not exists (
+	select 1 from gidx_partials
+	where gidx_partials.gidx_id = gidx.id
+	and gidx_partials.aspect_id = ?
+)
+`
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	var gidxs []*model.Gidx
+	_, err := s.dbMap.Select(&gidxs, sql, aspect.Id)
+
+	return gidxs, err
 }

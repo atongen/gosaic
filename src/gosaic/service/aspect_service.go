@@ -11,9 +11,9 @@ import (
 type AspectService interface {
 	Service
 	Insert(...*model.Aspect) error
-	Get(id int64) (*model.Aspect, error)
+	Get(int64) (*model.Aspect, error)
 	Count() (int64, error)
-	FindOrCreate(rows, columns int) (*model.Aspect, error)
+	FindOrCreate(int, int) (*model.Aspect, error)
 }
 
 type aspectServiceImpl struct {
