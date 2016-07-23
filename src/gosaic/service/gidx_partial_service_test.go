@@ -131,4 +131,18 @@ func TestGidxPartialServiceFindMissing(t *testing.T) {
 	if gidxs[0].Id != gidx.Id {
 		t.Errorf("Expected missing gidx id %d, got %d\n", gidx.Id, gidxs[0].Id)
 	}
+
+	_, err = gidxPartialService.Create(&gidx, &aspect)
+	if err != nil {
+		t.Fatalf("Failed to Create gidxPartial: %s\n", err.Error())
+	}
+
+	gidxs, err = gidxPartialService.FindMissing(&aspect, "gidx.id", 100, 0)
+	if err != nil {
+		t.Fatalf("Failed to FindMissing gidxPartial: %s\n", err.Error())
+	}
+
+	if len(gidxs) != 0 {
+		t.Fatalf("Expected 0 Missing gidxPartial, got %d\n", len(gidxs))
+	}
 }
