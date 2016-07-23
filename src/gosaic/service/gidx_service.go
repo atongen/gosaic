@@ -63,7 +63,7 @@ func (s *gidxServiceImpl) Get(id int64) (*model.Gidx, error) {
 
 func (s *gidxServiceImpl) GetOneBy(column string, value interface{}) (*model.Gidx, error) {
 	var gidx model.Gidx
-	err := s.DbMap().SelectOne(&gidx, "select * from gidx where "+column+" = ?", value)
+	err := s.DbMap().SelectOne(&gidx, "select * from gidx where "+column+" = ? limit 1", value)
 	return &gidx, err
 }
 
