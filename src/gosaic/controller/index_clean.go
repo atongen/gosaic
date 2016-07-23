@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-func CleanIndex(env environment.Environment) {
+func IndexClean(env environment.Environment) {
 	gidxService, err := env.GidxService()
 	if err != nil {
 		env.Printf("Error getting index service: %s\n", err.Error())

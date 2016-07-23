@@ -171,6 +171,7 @@ func createCoverTable(db *sql.DB) error {
 	sql := `
     create table covers (
       id integer not null primary key,
+			type text not null,
       name text not null,
       width integer not null,
 			height integer not null

@@ -31,6 +31,7 @@ func TestCoverServiceInsert(t *testing.T) {
 
 	c1 := model.Cover{
 		Name:   "test1",
+		Type:   "test",
 		Width:  600,
 		Height: 400,
 	}
@@ -53,6 +54,7 @@ func TestCoverServiceInsert(t *testing.T) {
 
 	if c1.Id != c2.Id ||
 		c1.Name != c2.Name ||
+		c1.Type != c2.Type ||
 		c1.Width != c2.Width ||
 		c1.Height != c2.Height {
 		t.Fatalf("Inserted cover (%+v) does not match: %+v\n", c2, c1)
@@ -68,6 +70,7 @@ func TestCoverServiceUpdate(t *testing.T) {
 
 	c1 := model.Cover{
 		Name:   "test1",
+		Type:   "test",
 		Width:  600,
 		Height: 400,
 	}
@@ -102,6 +105,7 @@ func TestCoverServiceDelete(t *testing.T) {
 
 	c1 := model.Cover{
 		Name:   "test1",
+		Type:   "test",
 		Width:  600,
 		Height: 400,
 	}
@@ -132,9 +136,9 @@ func TestCoverServiceFindAll(t *testing.T) {
 	defer coverService.DbMap().Db.Close()
 
 	covers := []model.Cover{
-		model.Cover{Name: "test1", Width: 600, Height: 400},
-		model.Cover{Name: "test2", Width: 600, Height: 400},
-		model.Cover{Name: "test3", Width: 600, Height: 400},
+		model.Cover{Name: "test1", Type: "test", Width: 600, Height: 400},
+		model.Cover{Name: "test2", Type: "test", Width: 600, Height: 400},
+		model.Cover{Name: "test3", Type: "test", Width: 600, Height: 400},
 	}
 
 	for _, cover := range covers {

@@ -7,13 +7,13 @@ import (
 )
 
 func init() {
-	RootCmd.AddCommand(ListIndexCmd)
+	RootCmd.AddCommand(IndexCleanCmd)
 }
 
-var ListIndexCmd = &cobra.Command{
-	Use:   "list_index",
-	Short: "List index entries",
-	Long:  "List index entries",
+var IndexCleanCmd = &cobra.Command{
+	Use:   "index_clean",
+	Short: "Remove stale index entries",
+	Long:  "Remove stale index entries",
 	Run: func(c *cobra.Command, args []string) {
 		err := Env.Init()
 		if err != nil {
@@ -21,6 +21,6 @@ var ListIndexCmd = &cobra.Command{
 		}
 		defer Env.Close()
 
-		controller.ListIndex(Env)
+		controller.IndexClean(Env)
 	},
 }

@@ -2,24 +2,28 @@ package controller
 
 import "gosaic/environment"
 
-func RmIndex(env environment.Environment, paths []string) {
+func IndexList(env environment.Environment) {
 	gidxService, err := env.GidxService()
 	if err != nil {
 		env.Printf("Error getting index service: %s\n", err.Error())
 		return
 	}
 
-	for _, path := range paths {
-		gidx, err := gidxService.GetOneBy("path", path)
+	batchSize := 1000
+
+	for i := 0; ; i++ {
+		gidxs, err := gidxService.FindAll("gidx.path ASC", batchSize, batchSize*i)
 		if err != nil {
 			env.Printf("Error finding indexes: %s\n", err.Error())
 			return
 		}
-		if gidx != nil {
-			_, err := gidxService.Delete(gidx)
-			if err != nil {
-				env.Printf("Error removing %s\n", path)
-			}
+		if len(gidxs) == 0 {
+			// we are done
+			return
+		}
+
+		for _, gidx := range gidxs {
+			env.Println(gidx.Path)
 		}
 	}
 }
