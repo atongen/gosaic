@@ -62,3 +62,23 @@ func getTestGidxPartialService(dbMap *gorp.DbMap) (GidxPartialService, error) {
 
 	return gidxPartialService, nil
 }
+
+func getTestCoverService(dbMap *gorp.DbMap) (CoverService, error) {
+	coverService := NewCoverService(dbMap)
+	err := coverService.Register()
+	if err != nil {
+		return nil, err
+	}
+
+	return coverService, nil
+}
+
+func getTestCoverPartialService(dbMap *gorp.DbMap) (CoverPartialService, error) {
+	coverPartialService := NewCoverPartialService(dbMap)
+	err := coverPartialService.Register()
+	if err != nil {
+		return nil, err
+	}
+
+	return coverPartialService, nil
+}

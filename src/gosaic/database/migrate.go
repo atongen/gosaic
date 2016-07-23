@@ -11,6 +11,8 @@ var (
 		createAspectTable,
 		createGidxTable,
 		createGidxPartialTable,
+		createCoverTable,
+		createCoverPartialTable,
 	}
 )
 
@@ -60,9 +62,9 @@ func GetVersion(db *sql.DB) (int, error) {
 	for rows.Next() {
 		rows.Scan(&version)
 	}
-	rows.Close()
+	err = rows.Close()
 
-	return version, nil
+	return version, err
 }
 
 func setVersion(db *sql.DB, version int) error {
@@ -161,6 +163,49 @@ func createGidxPartialTable(db *sql.DB) error {
 	}
 
 	sql = "create unique index idx_gidx_partials on gidx_partials (gidx_id,aspect_id);"
+	_, err = db.Exec(sql)
+	return err
+}
+
+func createCoverTable(db *sql.DB) error {
+	sql := `
+    create table covers (
+      id integer not null primary key,
+      name text not null,
+      width integer not null,
+			height integer not null
+    );
+  `
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	sql = "create unique index idx_covers_name on covers (name);"
+	_, err = db.Exec(sql)
+	return err
+}
+
+func createCoverPartialTable(db *sql.DB) error {
+	sql := `
+    create table cover_partials (
+      id integer not null primary key,
+      cover_id integer not null,
+      aspect_id integer not null,
+			x1 integer not null,
+			y1 integer not null,
+			x2 integer not null,
+			y2 integer not null,
+			FOREIGN KEY(cover_id) REFERENCES covers(id) ON DELETE CASCADE,
+			FOREIGN KEY(aspect_id) REFERENCES aspects(id) ON DELETE RESTRICT
+    );
+  `
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	sql = "create index idx_cover_partials on cover_partials (cover_id);"
 	_, err = db.Exec(sql)
 	return err
 }

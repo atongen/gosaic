@@ -33,6 +33,8 @@ type Environment interface {
 	GidxService() (service.GidxService, error)
 	AspectService() (service.AspectService, error)
 	GidxPartialService() (service.GidxPartialService, error)
+	CoverService() (service.CoverService, error)
+	CoverPartialService() (service.CoverPartialService, error)
 	Path() string
 	Workers() int
 	Db() *sql.DB

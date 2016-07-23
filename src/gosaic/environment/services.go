@@ -11,6 +11,8 @@ const (
 	GidxServiceName ServiceName = iota
 	AspectServiceName
 	GidxPartialServiceName
+	CoverServiceName
+	CoverPartialServiceName
 )
 
 func (env *environment) getService(name ServiceName) (service.Service, error) {
@@ -30,6 +32,10 @@ func (env *environment) getService(name ServiceName) (service.Service, error) {
 	case AspectServiceName:
 		s = service.NewAspectService(env.dbMap)
 	case GidxPartialServiceName:
+		s = service.NewGidxPartialService(env.dbMap)
+	case CoverServiceName:
+		s = service.NewCoverService(env.dbMap)
+	case CoverPartialServiceName:
 		s = service.NewGidxPartialService(env.dbMap)
 	}
 	err := s.Register()
@@ -80,4 +86,32 @@ func (env *environment) GidxPartialService() (service.GidxPartialService, error)
 	}
 
 	return gidxPartialService, nil
+}
+
+func (env *environment) CoverService() (service.CoverService, error) {
+	s, err := env.getService(CoverServiceName)
+	if err != nil {
+		return nil, err
+	}
+
+	coverService, ok := s.(service.CoverService)
+	if !ok {
+		return nil, fmt.Errorf("Invalid cover service")
+	}
+
+	return coverService, nil
+}
+
+func (env *environment) CoverPartialService() (service.CoverPartialService, error) {
+	s, err := env.getService(CoverPartialServiceName)
+	if err != nil {
+		return nil, err
+	}
+
+	coverPartialService, ok := s.(service.CoverPartialService)
+	if !ok {
+		return nil, fmt.Errorf("Invalid cover_partial service")
+	}
+
+	return coverPartialService, nil
 }
