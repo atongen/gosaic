@@ -2,6 +2,7 @@ package service
 
 import (
 	"gosaic/model"
+	"sync"
 
 	"gopkg.in/gorp.v1"
 )
@@ -16,10 +17,12 @@ type GidxService interface {
 	ExistsBy(string, interface{}) (bool, error)
 	Count() (int64, error)
 	CountBy(string, interface{}) (int64, error)
+	FindAll(string, int, int) ([]*model.Gidx, error)
 }
 
 type gidxServiceImpl struct {
 	dbMap *gorp.DbMap
+	m     sync.Mutex
 }
 
 func NewGidxService(dbMap *gorp.DbMap) GidxService {
@@ -75,4 +78,21 @@ func (s *gidxServiceImpl) Count() (int64, error) {
 
 func (s *gidxServiceImpl) CountBy(column string, value interface{}) (int64, error) {
 	return s.DbMap().SelectInt("select count(*) from gidx where "+column+" = ?", value)
+}
+
+func (s *gidxServiceImpl) FindAll(order string, limit, offset int) ([]*model.Gidx, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	sql := `
+select * from gidx
+order by ?
+limit ?
+offset ?
+`
+
+	var gidxs []*model.Gidx
+	_, err := s.dbMap.Select(&gidxs, sql, order, limit, offset)
+
+	return gidxs, err
 }

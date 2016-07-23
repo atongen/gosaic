@@ -84,7 +84,7 @@ func (s *gidxPartialServiceImpl) CountBy(column string, value interface{}) (int6
 	return s.DbMap().SelectInt("select count(*) from gidx_partials where "+column+" = ?", value)
 }
 
-func (s *gidxPartialServiceImpl) Find(gidx *model.Gidx, aspect *model.Aspect) (*model.GidxPartial, error) {
+func (s *gidxPartialServiceImpl) doFind(gidx *model.Gidx, aspect *model.Aspect) (*model.GidxPartial, error) {
 	p := model.GidxPartial{
 		GidxId:   gidx.Id,
 		AspectId: aspect.Id,
@@ -103,7 +103,14 @@ func (s *gidxPartialServiceImpl) Find(gidx *model.Gidx, aspect *model.Aspect) (*
 	return &p, nil
 }
 
-func (s *gidxPartialServiceImpl) Create(gidx *model.Gidx, aspect *model.Aspect) (*model.GidxPartial, error) {
+func (s *gidxPartialServiceImpl) Find(gidx *model.Gidx, aspect *model.Aspect) (*model.GidxPartial, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	return s.doFind(gidx, aspect)
+}
+
+func (s *gidxPartialServiceImpl) doCreate(gidx *model.Gidx, aspect *model.Aspect) (*model.GidxPartial, error) {
 	p := model.GidxPartial{
 		GidxId:   gidx.Id,
 		AspectId: aspect.Id,
@@ -128,20 +135,30 @@ func (s *gidxPartialServiceImpl) Create(gidx *model.Gidx, aspect *model.Aspect) 
 	return &p, nil
 }
 
+func (s *gidxPartialServiceImpl) Create(gidx *model.Gidx, aspect *model.Aspect) (*model.GidxPartial, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	return s.doCreate(gidx, aspect)
+}
+
 func (s *gidxPartialServiceImpl) FindOrCreate(gidx *model.Gidx, aspect *model.Aspect) (*model.GidxPartial, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	p, err := s.Find(gidx, aspect)
+	p, err := s.doFind(gidx, aspect)
 	if err == nil {
 		return p, nil
 	}
 
 	// or create
-	return s.Create(gidx, aspect)
+	return s.doCreate(gidx, aspect)
 }
 
 func (s *gidxPartialServiceImpl) FindMissing(aspect *model.Aspect, order string, limit, offset int) ([]*model.Gidx, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	sql := `
 select * from gidx
 where not exists (
@@ -153,8 +170,6 @@ order by ?
 limit ?
 offset ?
 `
-	s.m.Lock()
-	defer s.m.Unlock()
 
 	var gidxs []*model.Gidx
 	_, err := s.dbMap.Select(&gidxs, sql, aspect.Id, order, limit, offset)
