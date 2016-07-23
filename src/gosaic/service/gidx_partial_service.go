@@ -21,7 +21,7 @@ type GidxPartialService interface {
 	Find(*model.Gidx, *model.Aspect) (*model.GidxPartial, error)
 	Create(*model.Gidx, *model.Aspect) (*model.GidxPartial, error)
 	FindOrCreate(*model.Gidx, *model.Aspect) (*model.GidxPartial, error)
-	FindMissing(*model.Aspect) ([]*model.Gidx, error)
+	FindMissing(*model.Aspect, string, int, int) ([]*model.Gidx, error)
 }
 
 type gidxPartialServiceImpl struct {
@@ -141,7 +141,7 @@ func (s *gidxPartialServiceImpl) FindOrCreate(gidx *model.Gidx, aspect *model.As
 	return s.Create(gidx, aspect)
 }
 
-func (s *gidxPartialServiceImpl) FindMissing(aspect *model.Aspect) ([]*model.Gidx, error) {
+func (s *gidxPartialServiceImpl) FindMissing(aspect *model.Aspect, order string, limit, offset int) ([]*model.Gidx, error) {
 	sql := `
 select * from gidx
 where not exists (
@@ -149,12 +149,15 @@ where not exists (
 	where gidx_partials.gidx_id = gidx.id
 	and gidx_partials.aspect_id = ?
 )
+order by ?
+limit ?
+offset ?
 `
 	s.m.Lock()
 	defer s.m.Unlock()
 
 	var gidxs []*model.Gidx
-	_, err := s.dbMap.Select(&gidxs, sql, aspect.Id)
+	_, err := s.dbMap.Select(&gidxs, sql, aspect.Id, order, limit, offset)
 
 	return gidxs, err
 }
