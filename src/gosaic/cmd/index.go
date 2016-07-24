@@ -6,21 +6,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	indexPath string
-)
-
 func init() {
-	addLocalFlag(&indexPath, "index", "i", "", "Path to index", IndexCmd)
 	RootCmd.AddCommand(IndexCmd)
 }
 
 var IndexCmd = &cobra.Command{
-	Use:   "index",
+	Use:   "index PATH",
 	Short: "Add path to index",
 	Long:  "Add path to index",
 	Run: func(c *cobra.Command, args []string) {
-		if indexPath == "" {
+		if len(args) == 0 {
 			Env.Fatalln("index path is required")
 		}
 
@@ -30,6 +25,6 @@ var IndexCmd = &cobra.Command{
 		}
 		defer Env.Close()
 
-		controller.Index(Env, indexPath)
+		controller.Index(Env, args[0])
 	},
 }

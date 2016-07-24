@@ -13,6 +13,7 @@ type CoverService interface {
 	Insert(*model.Cover) error
 	Update(*model.Cover) error
 	Delete(*model.Cover) error
+	GetOneBy(string, interface{}) (*model.Cover, error)
 	FindAll(string) ([]*model.Cover, error)
 }
 
@@ -57,6 +58,12 @@ func (s *coverServiceImpl) Update(c *model.Cover) error {
 func (s *coverServiceImpl) Delete(c *model.Cover) error {
 	_, err := s.DbMap().Delete(c)
 	return err
+}
+
+func (s *coverServiceImpl) GetOneBy(column string, value interface{}) (*model.Cover, error) {
+	var cover model.Cover
+	err := s.DbMap().SelectOne(&cover, "select * from covers where "+column+" = ? limit 1", value)
+	return &cover, err
 }
 
 func (s *coverServiceImpl) FindAll(order string) ([]*model.Cover, error) {

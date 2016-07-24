@@ -21,10 +21,30 @@
 			"branch": "master"
 		},
 		{
+			"importpath": "github.com/fogleman/gg",
+			"repository": "https://github.com/fogleman/gg",
+			"revision": "e8e616055ccfad96f5ddf1ff714848959cf52a57",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/fsnotify/fsnotify",
 			"repository": "https://github.com/fsnotify/fsnotify",
 			"revision": "a8a77c9133d2d6fd8334f3260d06f60e8d80a5fb",
 			"branch": "master"
+		},
+		{
+			"importpath": "github.com/golang/freetype/raster",
+			"repository": "https://github.com/golang/freetype",
+			"revision": "38b4c392adc5eed94207994c4848fff99f4ac234",
+			"branch": "master",
+			"path": "/raster"
+		},
+		{
+			"importpath": "github.com/golang/freetype/truetype",
+			"repository": "https://github.com/golang/freetype",
+			"revision": "38b4c392adc5eed94207994c4848fff99f4ac234",
+			"branch": "master",
+			"path": "/truetype"
 		},
 		{
 			"importpath": "github.com/hashicorp/hcl",
@@ -118,6 +138,20 @@
 			"revision": "a21e5be7b49fd6d0c47097c7a31fb763802c1117",
 			"branch": "master",
 			"path": "/bmp"
+		},
+		{
+			"importpath": "golang.org/x/image/font",
+			"repository": "https://go.googlesource.com/image",
+			"revision": "c348254d65821a0aaca538bf5e7774bb522c1dec",
+			"branch": "master",
+			"path": "/font"
+		},
+		{
+			"importpath": "golang.org/x/image/math/fixed",
+			"repository": "https://go.googlesource.com/image",
+			"revision": "c348254d65821a0aaca538bf5e7774bb522c1dec",
+			"branch": "master",
+			"path": "/math/fixed"
 		},
 		{
 			"importpath": "golang.org/x/image/tiff",

@@ -128,6 +128,41 @@ func TestCoverServiceDelete(t *testing.T) {
 	}
 }
 
+func TestCoverServiceGetOneBy(t *testing.T) {
+	coverService, err := setupCoverServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer coverService.DbMap().Db.Close()
+
+	c1 := model.Cover{
+		Name:   "test1",
+		Type:   "test",
+		Width:  600,
+		Height: 400,
+	}
+
+	err = coverService.Insert(&c1)
+	if err != nil {
+		t.Fatalf("Error inserting cover: %s\n", err.Error())
+	}
+
+	c2, err := coverService.GetOneBy("name", "test1")
+	if err != nil {
+		t.Fatalf("Error getting inserted cover: %s\n", err.Error())
+	} else if c2 == nil {
+		t.Fatalf("Cover not inserted\n")
+	}
+
+	if c1.Id != c2.Id ||
+		c1.Name != c2.Name ||
+		c1.Type != c2.Type ||
+		c1.Width != c2.Width ||
+		c1.Height != c2.Height {
+		t.Fatalf("Inserted cover (%+v) does not match: %+v\n", c2, c1)
+	}
+}
+
 func TestCoverServiceFindAll(t *testing.T) {
 	coverService, err := setupCoverServiceTest()
 	if err != nil {

@@ -7,14 +7,12 @@ import (
 )
 
 var (
-	coverSquareName   string
 	coverSquareWidth  int
 	coverSquareHeight int
 	coverSquareNum    int
 )
 
 func init() {
-	addLocalFlag(&coverSquareName, "name", "n", "", "Name of square cover to create", CoverSquareCmd)
 	addLocalIntFlag(&coverSquareWidth, "width", "", 0, "Pixel width of cover", CoverSquareCmd)
 	addLocalIntFlag(&coverSquareHeight, "height", "", 0, "Pixel height of cover", CoverSquareCmd)
 	addLocalIntFlag(&coverSquareNum, "size", "s", 0, "Number of partials in smallest dimension", CoverSquareCmd)
@@ -22,11 +20,11 @@ func init() {
 }
 
 var CoverSquareCmd = &cobra.Command{
-	Use:   "cover_square",
+	Use:   "cover_square NAME",
 	Short: "Create a square cover",
 	Long:  "Create a square cover",
 	Run: func(c *cobra.Command, args []string) {
-		if coverSquareName == "" {
+		if len(args) != 1 {
 			Env.Fatalln("name is required")
 		}
 
@@ -48,6 +46,6 @@ var CoverSquareCmd = &cobra.Command{
 		}
 		defer Env.Close()
 
-		controller.CoverSquare(Env, coverSquareName, coverSquareWidth, coverSquareHeight, coverSquareNum)
+		controller.CoverSquare(Env, args[0], coverSquareWidth, coverSquareHeight, coverSquareNum)
 	},
 }
