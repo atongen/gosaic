@@ -67,6 +67,13 @@ func addLocalFlag(myVar *string, longName, shortName, defVal, desc string, cmds 
 	}
 }
 
+func addLocalIntFlag(myVar *int, longName, shortName string, defVal int, desc string, cmds ...*cobra.Command) {
+	for _, cmd := range cmds {
+		cmd.Flags().IntVarP(myVar, longName, shortName, defVal, desc)
+		bindLocalFlags(cmd, longName)
+	}
+}
+
 func bindLocalFlags(cmd *cobra.Command, flags ...string) {
 	for _, flag := range flags {
 		viper.BindPFlag(flag, cmd.Flags().Lookup(flag))

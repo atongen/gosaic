@@ -36,7 +36,7 @@ func (env *environment) getService(name ServiceName) (service.Service, error) {
 	case CoverServiceName:
 		s = service.NewCoverService(env.dbMap)
 	case CoverPartialServiceName:
-		s = service.NewGidxPartialService(env.dbMap)
+		s = service.NewCoverPartialService(env.dbMap)
 	}
 	err := s.Register()
 	if err != nil {

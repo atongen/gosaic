@@ -8,9 +8,10 @@ import (
 )
 
 type Lab struct {
-	L float64 `json:"l"`
-	A float64 `json:"a"`
-	B float64 `json:"b"`
+	L     float64 `json:"l"`
+	A     float64 `json:"a"`
+	B     float64 `json:"b"`
+	Alpha float64 `json:"alpha"`
 }
 
 func (lab1 *Lab) dist(lab2 *Lab) float64 {
@@ -22,8 +23,8 @@ func sq(v float64) float64 {
 }
 
 func RgbaToLab(color color.Color) *Lab {
-	r, g, b, _ := color.RGBA()
+	r, g, b, alpha := color.RGBA()
 	myColor := colorful.Color{R: float64(r) / 65535.0, G: float64(g) / 65535.0, B: float64(b) / 65535.0}
 	l, a, bb := myColor.Lab()
-	return &Lab{l, a, bb}
+	return &Lab{l, a, bb, float64(alpha)}
 }
