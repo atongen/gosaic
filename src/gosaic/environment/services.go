@@ -13,6 +13,7 @@ const (
 	GidxPartialServiceName
 	CoverServiceName
 	CoverPartialServiceName
+	MacroServiceName
 )
 
 func (env *environment) getService(name ServiceName) (service.Service, error) {
@@ -37,6 +38,8 @@ func (env *environment) getService(name ServiceName) (service.Service, error) {
 		s = service.NewCoverService(env.dbMap)
 	case CoverPartialServiceName:
 		s = service.NewCoverPartialService(env.dbMap)
+	case MacroServiceName:
+		s = service.NewMacroService(env.dbMap)
 	}
 	err := s.Register()
 	if err != nil {
@@ -114,4 +117,18 @@ func (env *environment) CoverPartialService() (service.CoverPartialService, erro
 	}
 
 	return coverPartialService, nil
+}
+
+func (env *environment) MacroService() (service.MacroService, error) {
+	s, err := env.getService(MacroServiceName)
+	if err != nil {
+		return nil, err
+	}
+
+	macroService, ok := s.(service.MacroService)
+	if !ok {
+		return nil, fmt.Errorf("Invalid macro service")
+	}
+
+	return macroService, nil
 }

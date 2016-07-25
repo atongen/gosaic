@@ -8,10 +8,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var (
-	testAspect1 = model.NewAspect(1, 1)
-)
-
 func setupAspectServiceTest() (AspectService, error) {
 	dbMap, err := getTestDbMap()
 	if err != nil {
@@ -23,12 +19,12 @@ func setupAspectServiceTest() (AspectService, error) {
 		return nil, err
 	}
 
-	aspect := model.NewAspect(testAspect1.Columns, testAspect1.Rows)
-	err = aspectService.Insert(aspect)
+	aspect = model.Aspect{Columns: 1, Rows: 1}
+	err = aspectService.Insert(&aspect)
 	if err != nil {
 		return nil, err
 	}
-	testAspect1.Id = aspect.Id
+
 	return aspectService, nil
 }
 
@@ -39,14 +35,14 @@ func TestAspectServiceGet(t *testing.T) {
 	}
 	defer aspectService.DbMap().Db.Close()
 
-	aspect, err := aspectService.Get(testAspect1.Id)
+	aspect2, err := aspectService.Get(aspect.Id)
 	if err != nil {
 		t.Error("Error finding aspect by id", err)
 	}
 
-	if aspect.Id != testAspect1.Id ||
-		aspect.Columns != testAspect1.Columns ||
-		aspect.Rows != testAspect1.Rows {
+	if aspect.Id != aspect2.Id ||
+		aspect.Columns != aspect2.Columns ||
+		aspect.Rows != aspect2.Rows {
 		t.Error("Found aspect does not match data")
 	}
 }
@@ -58,12 +54,12 @@ func TestAspectServiceGetMissing(t *testing.T) {
 	}
 	defer aspectService.DbMap().Db.Close()
 
-	aspect, err := aspectService.Get(1234)
+	aspect2, err := aspectService.Get(1234)
 	if err != nil {
 		t.Error("Error finding aspect by id", err)
 	}
 
-	if aspect != nil {
+	if aspect2 != nil {
 		t.Error("Found non-existent aspect")
 	}
 }

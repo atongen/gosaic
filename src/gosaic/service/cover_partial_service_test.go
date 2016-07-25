@@ -8,11 +8,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var (
-	cover1  model.Cover
-	aspect1 model.Aspect
-)
-
 func setupCoverPartialServiceTest() (CoverPartialService, error) {
 	dbMap, err := getTestDbMap()
 	if err != nil {
@@ -34,20 +29,14 @@ func setupCoverPartialServiceTest() (CoverPartialService, error) {
 		return nil, err
 	}
 
-	cover1 = model.Cover{
-		Name:   "test1",
-		Width:  800,
-		Height: 600,
-	}
-
-	err = coverService.Insert(&cover1)
+	aspect = model.Aspect{Columns: 1, Rows: 1}
+	err = aspectService.Insert(&aspect)
 	if err != nil {
 		return nil, err
 	}
 
-	aspect1 = model.Aspect{}
-	aspect1.SetAspect(int(cover1.Width), int(cover1.Height))
-	err = aspectService.Insert(&aspect1)
+	cover = model.Cover{Name: "test1", AspectId: aspect.Id, Width: 1, Height: 1}
+	err = coverService.Insert(&cover)
 	if err != nil {
 		return nil, err
 	}
@@ -63,8 +52,8 @@ func TestCoverPartialServiceInsert(t *testing.T) {
 	defer coverPartialService.DbMap().Db.Close()
 
 	p1 := model.CoverPartial{
-		CoverId:  cover1.Id,
-		AspectId: aspect1.Id,
+		CoverId:  cover.Id,
+		AspectId: aspect.Id,
 		X1:       0,
 		Y1:       0,
 		X2:       2,
@@ -106,8 +95,8 @@ func TestCoverPartialServiceUpdate(t *testing.T) {
 	defer coverPartialService.DbMap().Db.Close()
 
 	p1 := model.CoverPartial{
-		CoverId:  cover1.Id,
-		AspectId: aspect1.Id,
+		CoverId:  cover.Id,
+		AspectId: aspect.Id,
 		X1:       0,
 		Y1:       0,
 		X2:       2,
@@ -143,8 +132,8 @@ func TestCoverPartialServiceDelete(t *testing.T) {
 	defer coverPartialService.DbMap().Db.Close()
 
 	p1 := model.CoverPartial{
-		CoverId:  cover1.Id,
-		AspectId: aspect1.Id,
+		CoverId:  cover.Id,
+		AspectId: aspect.Id,
 		X1:       0,
 		Y1:       0,
 		X2:       2,
@@ -177,9 +166,9 @@ func TestCoverPartialServiceFindAll(t *testing.T) {
 	defer coverPartialService.DbMap().Db.Close()
 
 	cps := []model.CoverPartial{
-		model.CoverPartial{CoverId: cover1.Id, AspectId: aspect1.Id, X1: 0, Y1: 0, X2: 1, Y2: 1},
-		model.CoverPartial{CoverId: cover1.Id, AspectId: aspect1.Id, X1: 0, Y1: 0, X2: 1, Y2: 1},
-		model.CoverPartial{CoverId: cover1.Id, AspectId: aspect1.Id, X1: 0, Y1: 0, X2: 1, Y2: 1},
+		model.CoverPartial{CoverId: cover.Id, AspectId: aspect.Id, X1: 0, Y1: 0, X2: 1, Y2: 1},
+		model.CoverPartial{CoverId: cover.Id, AspectId: aspect.Id, X1: 0, Y1: 0, X2: 1, Y2: 1},
+		model.CoverPartial{CoverId: cover.Id, AspectId: aspect.Id, X1: 0, Y1: 0, X2: 1, Y2: 1},
 	}
 
 	for _, cp := range cps {
@@ -189,7 +178,7 @@ func TestCoverPartialServiceFindAll(t *testing.T) {
 		}
 	}
 
-	cps2, err := coverPartialService.FindAll(cover1.Id, "cover_partials.id ASC")
+	cps2, err := coverPartialService.FindAll(cover.Id, "cover_partials.id ASC")
 	if err != nil {
 		t.Fatalf("Error finding cover partials: %s\n", err.Error())
 	}

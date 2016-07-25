@@ -3,8 +3,14 @@ package service
 import (
 	"database/sql"
 	"gosaic/database"
+	"gosaic/model"
 
 	"gopkg.in/gorp.v1"
+)
+
+var (
+	aspect model.Aspect
+	cover  model.Cover
 )
 
 func getTestDbMap() (*gorp.DbMap, error) {
@@ -81,4 +87,14 @@ func getTestCoverPartialService(dbMap *gorp.DbMap) (CoverPartialService, error) 
 	}
 
 	return coverPartialService, nil
+}
+
+func getTestMacroService(dbMap *gorp.DbMap) (MacroService, error) {
+	macroService := NewMacroService(dbMap)
+	err := macroService.Register()
+	if err != nil {
+		return nil, err
+	}
+
+	return macroService, nil
 }

@@ -29,7 +29,7 @@ func setupGidxServiceTest() (GidxService, error) {
 	if err != nil {
 		return nil, err
 	}
-	aspect := model.Aspect{Columns: 1, Rows: 1}
+	aspect = model.Aspect{Columns: 1, Rows: 1}
 	err = aspectService.Insert(&aspect)
 	if err != nil {
 		return nil, err

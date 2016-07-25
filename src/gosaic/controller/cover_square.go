@@ -26,15 +26,15 @@ func CoverSquare(env environment.Environment, name string, width, height, num in
 		return
 	}
 
-	cover, err := createSquareCover(coverService, name, width, height)
-	if err != nil {
-		env.Printf("Error creating square cover: %s\n", err.Error())
-		return
-	}
-
 	aspect, err := aspectService.FindOrCreate(1, 1)
 	if err != nil {
 		env.Printf("Error getting square aspect: %s\n", err.Error())
+		return
+	}
+
+	cover, err := createSquareCover(coverService, aspect, name, width, height)
+	if err != nil {
+		env.Printf("Error creating square cover: %s\n", err.Error())
 		return
 	}
 
@@ -47,12 +47,13 @@ func CoverSquare(env environment.Environment, name string, width, height, num in
 	env.Printf("Created cover %s with %d partials\n", cover.Name, numPartials)
 }
 
-func createSquareCover(coverService service.CoverService, name string, width, height int) (*model.Cover, error) {
+func createSquareCover(coverService service.CoverService, aspect *model.Aspect, name string, width, height int) (*model.Cover, error) {
 	var cover model.Cover = model.Cover{
-		Type:   "square",
-		Name:   name,
-		Width:  uint(width),
-		Height: uint(height),
+		Type:     "square",
+		AspectId: aspect.Id,
+		Name:     name,
+		Width:    uint(width),
+		Height:   uint(height),
 	}
 
 	err := coverService.Insert(&cover)

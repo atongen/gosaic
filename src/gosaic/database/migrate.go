@@ -13,6 +13,7 @@ var (
 		createGidxPartialTable,
 		createCoverTable,
 		createCoverPartialTable,
+		createMacroTable,
 	}
 )
 
@@ -171,10 +172,12 @@ func createCoverTable(db *sql.DB) error {
 	sql := `
     create table covers (
       id integer not null primary key,
+      aspect_id integer not null,
 			type text not null,
       name text not null,
       width integer not null,
-			height integer not null
+			height integer not null,
+			FOREIGN KEY(aspect_id) REFERENCES aspects(id) ON DELETE RESTRICT
     );
   `
 	_, err := db.Exec(sql)
@@ -207,6 +210,31 @@ func createCoverPartialTable(db *sql.DB) error {
 	}
 
 	sql = "create index idx_cover_partials on cover_partials (cover_id);"
+	_, err = db.Exec(sql)
+	return err
+}
+
+func createMacroTable(db *sql.DB) error {
+	sql := `
+    create table macros (
+      id integer not null primary key,
+      aspect_id integer not null,
+			cover_id integer not null,
+      path text not null,
+      md5sum text not null,
+      width integer not null,
+      height integer not null,
+      orientation integer not null,
+			FOREIGN KEY(aspect_id) REFERENCES aspects(id) ON DELETE RESTRICT,
+			FOREIGN KEY(cover_id) REFERENCES covers(id) ON DELETE RESTRICT
+    );
+  `
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	sql = "create unique index idx_macro_md5sum on macros (md5sum);"
 	_, err = db.Exec(sql)
 	return err
 }

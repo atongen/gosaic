@@ -14,7 +14,19 @@ func setupCoverServiceTest() (CoverService, error) {
 		return nil, err
 	}
 
+	aspectService, err := getTestAspectService(dbMap)
+	if err != nil {
+		return nil, err
+	}
+
 	coverService, err := getTestCoverService(dbMap)
+	if err != nil {
+		return nil, err
+	}
+
+	aspect = model.Aspect{}
+	aspect.SetAspect(1, 1)
+	err = aspectService.Insert(&aspect)
 	if err != nil {
 		return nil, err
 	}
@@ -30,10 +42,11 @@ func TestCoverServiceInsert(t *testing.T) {
 	defer coverService.DbMap().Db.Close()
 
 	c1 := model.Cover{
-		Name:   "test1",
-		Type:   "test",
-		Width:  600,
-		Height: 400,
+		Name:     "test1",
+		AspectId: aspect.Id,
+		Type:     "test",
+		Width:    600,
+		Height:   400,
 	}
 
 	err = coverService.Insert(&c1)
@@ -54,6 +67,7 @@ func TestCoverServiceInsert(t *testing.T) {
 
 	if c1.Id != c2.Id ||
 		c1.Name != c2.Name ||
+		c1.AspectId != c2.AspectId ||
 		c1.Type != c2.Type ||
 		c1.Width != c2.Width ||
 		c1.Height != c2.Height {
@@ -69,10 +83,11 @@ func TestCoverServiceUpdate(t *testing.T) {
 	defer coverService.DbMap().Db.Close()
 
 	c1 := model.Cover{
-		Name:   "test1",
-		Type:   "test",
-		Width:  600,
-		Height: 400,
+		Name:     "test1",
+		Type:     "test",
+		AspectId: aspect.Id,
+		Width:    600,
+		Height:   400,
 	}
 
 	err = coverService.Insert(&c1)
@@ -104,10 +119,11 @@ func TestCoverServiceDelete(t *testing.T) {
 	defer coverService.DbMap().Db.Close()
 
 	c1 := model.Cover{
-		Name:   "test1",
-		Type:   "test",
-		Width:  600,
-		Height: 400,
+		Name:     "test1",
+		Type:     "test",
+		AspectId: aspect.Id,
+		Width:    600,
+		Height:   400,
 	}
 
 	err = coverService.Insert(&c1)
@@ -136,10 +152,11 @@ func TestCoverServiceGetOneBy(t *testing.T) {
 	defer coverService.DbMap().Db.Close()
 
 	c1 := model.Cover{
-		Name:   "test1",
-		Type:   "test",
-		Width:  600,
-		Height: 400,
+		Name:     "test1",
+		Type:     "test",
+		AspectId: aspect.Id,
+		Width:    600,
+		Height:   400,
 	}
 
 	err = coverService.Insert(&c1)
@@ -157,6 +174,7 @@ func TestCoverServiceGetOneBy(t *testing.T) {
 	if c1.Id != c2.Id ||
 		c1.Name != c2.Name ||
 		c1.Type != c2.Type ||
+		c1.AspectId != c2.AspectId ||
 		c1.Width != c2.Width ||
 		c1.Height != c2.Height {
 		t.Fatalf("Inserted cover (%+v) does not match: %+v\n", c2, c1)
@@ -171,9 +189,9 @@ func TestCoverServiceFindAll(t *testing.T) {
 	defer coverService.DbMap().Db.Close()
 
 	covers := []model.Cover{
-		model.Cover{Name: "test1", Type: "test", Width: 600, Height: 400},
-		model.Cover{Name: "test2", Type: "test", Width: 600, Height: 400},
-		model.Cover{Name: "test3", Type: "test", Width: 600, Height: 400},
+		model.Cover{Name: "test1", Type: "test", AspectId: aspect.Id, Width: 600, Height: 400},
+		model.Cover{Name: "test2", Type: "test", AspectId: aspect.Id, Width: 600, Height: 400},
+		model.Cover{Name: "test3", Type: "test", AspectId: aspect.Id, Width: 600, Height: 400},
 	}
 
 	for _, cover := range covers {
