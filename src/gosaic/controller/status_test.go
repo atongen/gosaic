@@ -1,19 +1,12 @@
 package controller
 
 import (
-	"bytes"
-	"gosaic/environment"
 	"strings"
 	"testing"
 )
 
 func TestStatus(t *testing.T) {
-	var out bytes.Buffer
-	env, err := environment.GetTestEnv(&out)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	err = env.Init()
+	env, out, err := setupControllerTest()
 	if err != nil {
 		t.Error(err.Error())
 	}

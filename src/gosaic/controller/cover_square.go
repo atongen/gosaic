@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"gosaic/environment"
 	"gosaic/model"
 	"gosaic/service"
@@ -11,41 +10,41 @@ import (
 func CoverSquare(env environment.Environment, name string, width, height, num int) {
 	coverService, err := env.CoverService()
 	if err != nil {
-		fmt.Printf("Error creating cover service: %s\n", err.Error())
+		env.Printf("Error creating cover service: %s\n", err.Error())
 		return
 	}
 
 	coverPartialService, err := env.CoverPartialService()
 	if err != nil {
-		fmt.Printf("Error creating cover partial service: %s\n", err.Error())
+		env.Printf("Error creating cover partial service: %s\n", err.Error())
 		return
 	}
 
 	aspectService, err := env.AspectService()
 	if err != nil {
-		fmt.Printf("Error getting aspect service: %s\n", err.Error())
+		env.Printf("Error getting aspect service: %s\n", err.Error())
 		return
 	}
 
 	cover, err := createSquareCover(coverService, name, width, height)
 	if err != nil {
-		fmt.Printf("Error creating square cover: %s\n", err.Error())
+		env.Printf("Error creating square cover: %s\n", err.Error())
 		return
 	}
 
 	aspect, err := aspectService.FindOrCreate(1, 1)
 	if err != nil {
-		fmt.Printf("Error getting square aspect: %s\n", err.Error())
+		env.Printf("Error getting square aspect: %s\n", err.Error())
 		return
 	}
 
 	numPartials, err := addSquareCoverPartials(coverPartialService, cover, aspect, num)
 	if err != nil {
-		fmt.Printf("Error adding square cover partials: %s\n", err.Error())
+		env.Printf("Error adding square cover partials: %s\n", err.Error())
 		return
 	}
 
-	fmt.Printf("Created cover %s with %d partials\n", cover.Name, numPartials)
+	env.Printf("Created cover %s with %d partials\n", cover.Name, numPartials)
 }
 
 func createSquareCover(coverService service.CoverService, name string, width, height int) (*model.Cover, error) {
@@ -95,9 +94,6 @@ func addSquareCoverPartials(coverPartialService service.CoverPartialService, cov
 	yOffset := int(math.Floor(float64(int(cover.Height)-size*rows) / float64(2.0)))
 
 	created := 0
-	total := columns * rows
-	fmt.Printf("size: %d, columns: %d, rows: %d\n", size, columns, rows)
-	fmt.Printf("xOffset: %d, yOffset: %d\n", xOffset, yOffset)
 
 	for i := 0; i < columns; i++ {
 		for j := 0; j < rows; j++ {
@@ -119,7 +115,6 @@ func addSquareCoverPartials(coverPartialService service.CoverPartialService, cov
 				return created, err
 			}
 			created += 1
-			fmt.Printf("%d/%d - x1: %d, y1: %d, x2: %d, y2: %d\n", created, total, x1, y1, x2, y2)
 		}
 	}
 
