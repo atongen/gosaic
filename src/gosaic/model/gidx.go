@@ -10,21 +10,42 @@ type Gidx struct {
 	Orientation int    `db:"orientation"`
 }
 
-func NewGidx(aspect_id int64, path string, md5sum string, width uint, height uint, orientation int) *Gidx {
-	return &Gidx{
-		AspectId:    aspect_id,
-		Path:        path,
-		Md5sum:      md5sum,
-		Width:       width,
-		Height:      height,
-		Orientation: orientation}
+func (g *Gidx) GetPath() string {
+	return g.Path
 }
 
-func GidxsToInterface(gidxs []*Gidx) []interface{} {
-	n := len(gidxs)
-	interfaces := make([]interface{}, n)
-	for i := 0; i < n; i++ {
-		interfaces[i] = interface{}(gidxs[i])
-	}
-	return interfaces
+func (g *Gidx) GetMd5sum() string {
+	return g.Md5sum
+}
+
+func (g *Gidx) GetWidth() uint {
+	return g.Width
+}
+
+func (g *Gidx) GetHeight() uint {
+	return g.Height
+}
+
+func (g *Gidx) GetOrientation() int {
+	return g.Orientation
+}
+
+func (g *Gidx) SetPath(path string) {
+	g.Path = path
+}
+
+func (g *Gidx) SetMd5sum(md5sum string) {
+	g.Md5sum = md5sum
+}
+
+func (g *Gidx) SetWidth(width uint) {
+	g.Width = width
+}
+
+func (g *Gidx) SetHeight(height uint) {
+	g.Height = height
+}
+
+func (g *Gidx) SetOrientation(orientation int) {
+	g.Orientation = orientation
 }

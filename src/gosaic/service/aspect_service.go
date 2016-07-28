@@ -10,7 +10,7 @@ import (
 
 type AspectService interface {
 	Service
-	Insert(...*model.Aspect) error
+	Insert(*model.Aspect) error
 	Get(int64) (*model.Aspect, error)
 	Count() (int64, error)
 	FindOrCreate(int, int) (*model.Aspect, error)
@@ -34,8 +34,8 @@ func (s *aspectServiceImpl) Register() error {
 	return nil
 }
 
-func (s *aspectServiceImpl) Insert(aspects ...*model.Aspect) error {
-	return s.DbMap().Insert(model.AspectsToInterface(aspects)...)
+func (s *aspectServiceImpl) Insert(aspect *model.Aspect) error {
+	return s.DbMap().Insert(aspect)
 }
 
 func (s *aspectServiceImpl) Get(id int64) (*model.Aspect, error) {

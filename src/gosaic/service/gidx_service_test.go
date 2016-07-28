@@ -9,14 +9,14 @@ import (
 )
 
 var (
-	testGidx1 = model.NewGidx(
-		int64(1),
-		"/tmp/file.jpg",
-		"159c9c5ad02d9a15b7f41189960054cd",
-		uint(120),
-		uint(120),
-		1,
-	)
+	testGidx1 = &model.Gidx{
+		Id:          int64(1),
+		Path:        "/tmp/file.jpg",
+		Md5sum:      "159c9c5ad02d9a15b7f41189960054cd",
+		Width:       uint(120),
+		Height:      uint(120),
+		Orientation: 1,
+	}
 )
 
 func setupGidxServiceTest() (GidxService, error) {
@@ -41,8 +41,15 @@ func setupGidxServiceTest() (GidxService, error) {
 	}
 	testGidx1.AspectId = aspect.Id
 
-	gidx := model.NewGidx(testGidx1.AspectId, testGidx1.Path, testGidx1.Md5sum, testGidx1.Width, testGidx1.Height, testGidx1.Orientation)
-	err = gidxService.Insert(gidx)
+	gidx := model.Gidx{
+		AspectId:    testGidx1.AspectId,
+		Path:        testGidx1.Path,
+		Md5sum:      testGidx1.Md5sum,
+		Width:       testGidx1.Width,
+		Height:      testGidx1.Height,
+		Orientation: testGidx1.Orientation,
+	}
+	err = gidxService.Insert(&gidx)
 	if err != nil {
 		return nil, err
 	}
@@ -138,10 +145,17 @@ func TestGidxServiceUpdate(t *testing.T) {
 	defer gidxService.DbMap().Db.Close()
 
 	newPath := "/home/user/tmp/other.jpg"
-	updateGidx := model.NewGidx(testGidx1.AspectId, newPath, testGidx1.Md5sum, testGidx1.Width, testGidx1.Height, testGidx1.Orientation)
+	updateGidx := model.Gidx{
+		AspectId:    testGidx1.AspectId,
+		Path:        newPath,
+		Md5sum:      testGidx1.Md5sum,
+		Width:       testGidx1.Width,
+		Height:      testGidx1.Height,
+		Orientation: testGidx1.Orientation,
+	}
 	updateGidx.Id = testGidx1.Id
 
-	num, err := gidxService.Update(updateGidx)
+	num, err := gidxService.Update(&updateGidx)
 	if err != nil {
 		t.Error("Error updating gidx", err)
 	}

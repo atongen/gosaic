@@ -136,20 +136,20 @@ func Round(f float64) int {
 	return int(r)
 }
 
-func GetAspectLab(gidx *model.Gidx, aspect *model.Aspect) ([]*model.Lab, error) {
-	img, err := OpenImage(gidx.Path)
+func GetAspectLab(i model.Image, aspect *model.Aspect) ([]*model.Lab, error) {
+	img, err := OpenImage(i.GetPath())
 	if err != nil {
 		return nil, err
 	}
 
-	if gidx.Orientation != 1 {
-		err = FixOrientation(img, gidx.Orientation)
+	if i.GetOrientation() != 1 {
+		err = FixOrientation(img, i.GetOrientation())
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	w, h := ScaleAspect(int(gidx.Width), int(gidx.Height), aspect.Columns, aspect.Rows)
+	w, h := ScaleAspect(int(i.GetWidth()), int(i.GetHeight()), aspect.Columns, aspect.Rows)
 
 	aspectImg := imaging.Fill((*img), w, h, imaging.Center, imaging.Lanczos)
 	dataImg := imaging.Resize(aspectImg, DATA_SIZE, DATA_SIZE, imaging.Lanczos)

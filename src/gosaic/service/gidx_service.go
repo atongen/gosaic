@@ -9,9 +9,9 @@ import (
 
 type GidxService interface {
 	Service
-	Insert(...*model.Gidx) error
-	Update(...*model.Gidx) (int64, error)
-	Delete(...*model.Gidx) (int64, error)
+	Insert(*model.Gidx) error
+	Update(*model.Gidx) (int64, error)
+	Delete(*model.Gidx) (int64, error)
 	Get(int64) (*model.Gidx, error)
 	GetOneBy(string, interface{}) (*model.Gidx, error)
 	ExistsBy(string, interface{}) (bool, error)
@@ -38,16 +38,16 @@ func (s *gidxServiceImpl) Register() error {
 	return nil
 }
 
-func (s *gidxServiceImpl) Insert(gidxs ...*model.Gidx) error {
-	return s.DbMap().Insert(model.GidxsToInterface(gidxs)...)
+func (s *gidxServiceImpl) Insert(gidx *model.Gidx) error {
+	return s.DbMap().Insert(gidx)
 }
 
-func (s *gidxServiceImpl) Update(gidxs ...*model.Gidx) (int64, error) {
-	return s.DbMap().Update(model.GidxsToInterface(gidxs)...)
+func (s *gidxServiceImpl) Update(gidx *model.Gidx) (int64, error) {
+	return s.DbMap().Update(gidx)
 }
 
-func (s *gidxServiceImpl) Delete(gidxs ...*model.Gidx) (int64, error) {
-	return s.DbMap().Delete(model.GidxsToInterface(gidxs)...)
+func (s *gidxServiceImpl) Delete(gidx *model.Gidx) (int64, error) {
+	return s.DbMap().Delete(gidx)
 }
 
 func (s *gidxServiceImpl) Get(id int64) (*model.Gidx, error) {

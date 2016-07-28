@@ -14,6 +14,7 @@ var (
 		createCoverTable,
 		createCoverPartialTable,
 		createMacroTable,
+		createMacroPartialTable,
 	}
 )
 
@@ -235,6 +236,35 @@ func createMacroTable(db *sql.DB) error {
 	}
 
 	sql = "create unique index idx_macro_md5sum on macros (md5sum);"
+	_, err = db.Exec(sql)
+	return err
+}
+
+func createMacroPartialTable(db *sql.DB) error {
+	sql := `
+    create table macro_partials (
+      id integer not null primary key,
+			macro_id integer not null,
+			cover_partial_id integer not null,
+      aspect_id integer not null,
+			data blob not null,
+			FOREIGN KEY(macro_id) REFERENCES macros(id) ON DELETE CASCADE,
+			FOREIGN KEY(cover_partial_id) REFERENCES cover_partials(id) ON DELETE CASCADE,
+			FOREIGN KEY(aspect_id) REFERENCES aspects(id) ON DELETE RESTRICT
+    );
+  `
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	sql = "create index idx_macro_partial_macro_id on macro_partials (macro_id);"
+	_, err = db.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	sql = "create unique index idx_macro_partial on macro_partials (macro_id,cover_partial_id);"
 	_, err = db.Exec(sql)
 	return err
 }

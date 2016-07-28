@@ -10,9 +10,9 @@ import (
 
 type GidxPartialService interface {
 	Service
-	Insert(...*model.GidxPartial) error
-	Update(...*model.GidxPartial) (int64, error)
-	Delete(...*model.GidxPartial) (int64, error)
+	Insert(*model.GidxPartial) error
+	Update(*model.GidxPartial) (int64, error)
+	Delete(*model.GidxPartial) (int64, error)
 	Get(int64) (*model.GidxPartial, error)
 	GetOneBy(string, interface{}) (*model.GidxPartial, error)
 	ExistsBy(string, interface{}) (bool, error)
@@ -42,16 +42,16 @@ func (s *gidxPartialServiceImpl) Register() error {
 	return nil
 }
 
-func (s *gidxPartialServiceImpl) Insert(gidx_partials ...*model.GidxPartial) error {
-	return s.DbMap().Insert(model.GidxPartialsToInterface(gidx_partials)...)
+func (s *gidxPartialServiceImpl) Insert(gidx_partial *model.GidxPartial) error {
+	return s.DbMap().Insert(gidx_partial)
 }
 
-func (s *gidxPartialServiceImpl) Update(gidx_partials ...*model.GidxPartial) (int64, error) {
-	return s.DbMap().Update(model.GidxPartialsToInterface(gidx_partials)...)
+func (s *gidxPartialServiceImpl) Update(gidx_partial *model.GidxPartial) (int64, error) {
+	return s.DbMap().Update(gidx_partial)
 }
 
-func (s *gidxPartialServiceImpl) Delete(gidx_partials ...*model.GidxPartial) (int64, error) {
-	return s.DbMap().Delete(model.GidxPartialsToInterface(gidx_partials)...)
+func (s *gidxPartialServiceImpl) Delete(gidx_partial *model.GidxPartial) (int64, error) {
+	return s.DbMap().Delete(gidx_partial)
 }
 
 func (s *gidxPartialServiceImpl) Get(id int64) (*model.GidxPartial, error) {

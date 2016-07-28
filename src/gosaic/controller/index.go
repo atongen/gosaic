@@ -122,8 +122,15 @@ func storeIndexPath(newIndex addIndex, env environment.Environment) {
 		return
 	}
 
-	gidx := model.NewGidx(aspect.Id, newIndex.path, newIndex.md5sum, uint(width), uint(height), orientation)
-	err = gidxService.Insert(gidx)
+	gidx := model.Gidx{
+		AspectId:    aspect.Id,
+		Path:        newIndex.path,
+		Md5sum:      newIndex.md5sum,
+		Width:       uint(width),
+		Height:      uint(height),
+		Orientation: orientation,
+	}
+	err = gidxService.Insert(&gidx)
 	if err != nil {
 		env.Println("Error storing image data", newIndex.path, err)
 	}

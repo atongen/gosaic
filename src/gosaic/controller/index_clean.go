@@ -42,9 +42,13 @@ func IndexClean(env environment.Environment) {
 	if len(toRm) == 0 {
 		env.Printf("No indexes deleted")
 	} else {
-		num, err := gidxService.Delete(toRm...)
-		if err != nil {
-			env.Printf("Error deleting indexes: %s\n", err.Error())
+		num := 0
+		for _, gidx := range toRm {
+			_, err := gidxService.Delete(gidx)
+			if err != nil {
+				env.Printf("Error deleting indexes: %s\n", err.Error())
+			}
+			num++
 		}
 		if num > 0 {
 			env.Printf("Deleted %s indexes\n", num)
