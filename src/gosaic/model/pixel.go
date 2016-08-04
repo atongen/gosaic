@@ -24,7 +24,7 @@ func PixelEncode(p Pixel) error {
 // slice of *Lab and stores in Pixels.
 func PixelDecode(p Pixel) error {
 	var pixels []*Lab
-	err := json.Unmarshal(p.GetData(), pixels)
+	err := json.Unmarshal(p.GetData(), &pixels)
 	if err != nil {
 		return err
 	}

@@ -9,8 +9,10 @@ import (
 )
 
 var (
-	aspect model.Aspect
-	cover  model.Cover
+	aspect       model.Aspect
+	cover        model.Cover
+	coverPartial model.CoverPartial
+	macro        model.Macro
 )
 
 func getTestDbMap() (*gorp.DbMap, error) {
@@ -97,4 +99,14 @@ func getTestMacroService(dbMap *gorp.DbMap) (MacroService, error) {
 	}
 
 	return macroService, nil
+}
+
+func getTestMacroPartialService(dbMap *gorp.DbMap) (MacroPartialService, error) {
+	macroPartialService := NewMacroPartialService(dbMap)
+	err := macroPartialService.Register()
+	if err != nil {
+		return nil, err
+	}
+
+	return macroPartialService, nil
 }

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"gosaic/model"
 	"gosaic/util"
 	"sync"
@@ -58,11 +59,18 @@ func (s *macroPartialServiceImpl) Get(id int64) (*model.MacroPartial, error) {
 	macro_partial, err := s.DbMap().Get(model.MacroPartial{}, id)
 	if err != nil {
 		return nil, err
-	} else if macro_partial != nil {
-		return macro_partial.(*model.MacroPartial), nil
-	} else {
+	} else if macro_partial == nil {
 		return nil, nil
 	}
+	mp, ok := macro_partial.(*model.MacroPartial)
+	if !ok {
+		return nil, fmt.Errorf("Received struct is not a MacroPartial")
+	}
+	err = mp.DecodeData()
+	if err != nil {
+		return nil, err
+	}
+	return mp, nil
 }
 
 func (s *macroPartialServiceImpl) GetOneBy(column string, value interface{}) (*model.MacroPartial, error) {
