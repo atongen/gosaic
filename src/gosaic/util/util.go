@@ -165,3 +165,31 @@ func GetAspectLab(i model.Image, aspect *model.Aspect) ([]*model.Lab, error) {
 
 	return labs, nil
 }
+
+func GetPartialLab(i model.Image, coverPartial *model.CoverPartial) ([]*model.Lab, error) {
+	img, err := OpenImage(i.GetPath())
+	if err != nil {
+		return nil, err
+	}
+
+	if i.GetOrientation() != 1 {
+		err = FixOrientation(img, i.GetOrientation())
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	cropImg := imaging.Crop((*img), coverPartial.Rectangle())
+	dataImg := imaging.Resize(cropImg, DATA_SIZE, DATA_SIZE, imaging.Lanczos)
+
+	labs := make([]*model.Lab, DATA_SIZE*DATA_SIZE)
+
+	for y := 0; y < DATA_SIZE; y++ {
+		for x := 0; x < DATA_SIZE; x++ {
+			lab := model.RgbaToLab(dataImg.At(x, y))
+			labs[y*DATA_SIZE+x] = lab
+		}
+	}
+
+	return labs, nil
+}

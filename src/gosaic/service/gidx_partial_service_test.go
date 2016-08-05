@@ -72,7 +72,7 @@ func TestGidxPartialServiceFindOrCreate(t *testing.T) {
 	}
 
 	for i, pix := range gidxPartial.Pixels {
-		if pix.L == 0.0 && pix.A == 0.0 && pix.B == 0.0 {
+		if pix.L == 0.0 && pix.A == 0.0 && pix.B == 0.0 && pix.Alpha == 0.0 {
 			t.Errorf("pixel %d was empty\n", i)
 		}
 	}

@@ -12,8 +12,8 @@ import (
 type MacroPartialService interface {
 	Service
 	Insert(*model.MacroPartial) error
-	Update(*model.MacroPartial) (int64, error)
-	Delete(*model.MacroPartial) (int64, error)
+	Update(*model.MacroPartial) error
+	Delete(*model.MacroPartial) error
 	Get(int64) (*model.MacroPartial, error)
 	GetOneBy(string, interface{}) (*model.MacroPartial, error)
 	ExistsBy(string, interface{}) (bool, error)
@@ -44,15 +44,25 @@ func (s *macroPartialServiceImpl) Register() error {
 }
 
 func (s *macroPartialServiceImpl) Insert(macroPartial *model.MacroPartial) error {
+	err := macroPartial.EncodePixels()
+	if err != nil {
+		return err
+	}
 	return s.DbMap().Insert(macroPartial)
 }
 
-func (s *macroPartialServiceImpl) Update(macroPartial *model.MacroPartial) (int64, error) {
-	return s.DbMap().Update(macroPartial)
+func (s *macroPartialServiceImpl) Update(macroPartial *model.MacroPartial) error {
+	err := macroPartial.EncodePixels()
+	if err != nil {
+		return err
+	}
+	_, err = s.DbMap().Update(macroPartial)
+	return err
 }
 
-func (s *macroPartialServiceImpl) Delete(macroPartial *model.MacroPartial) (int64, error) {
-	return s.DbMap().Delete(macroPartial)
+func (s *macroPartialServiceImpl) Delete(macroPartial *model.MacroPartial) error {
+	_, err := s.DbMap().Delete(macroPartial)
+	return err
 }
 
 func (s *macroPartialServiceImpl) Get(id int64) (*model.MacroPartial, error) {
@@ -75,12 +85,12 @@ func (s *macroPartialServiceImpl) Get(id int64) (*model.MacroPartial, error) {
 
 func (s *macroPartialServiceImpl) GetOneBy(column string, value interface{}) (*model.MacroPartial, error) {
 	var macro_partial model.MacroPartial
-	err := s.DbMap().SelectOne(&macro_partial, "select * from macro_partials where "+column+" = ?", value)
+	err := s.DbMap().SelectOne(&macro_partial, "select * from macro_partials where "+column+" = ? limit 1", value)
 	return &macro_partial, err
 }
 
 func (s *macroPartialServiceImpl) ExistsBy(column string, value interface{}) (bool, error) {
-	count, err := s.DbMap().SelectInt("select 1 from macro_partials where "+column+" = ?", value)
+	count, err := s.DbMap().SelectInt("select 1 from macro_partials where "+column+" = ? limit 1", value)
 	return count == 1, err
 }
 
@@ -125,7 +135,7 @@ func (s *macroPartialServiceImpl) doCreate(macro *model.Macro, coverPartial *mod
 		AspectId:       coverPartial.AspectId,
 	}
 
-	pixels, err := util.GetAspectLab(macro, aspect)
+	pixels, err := util.GetPartialLab(macro, coverPartial)
 	if err != nil {
 		return nil, err
 	}

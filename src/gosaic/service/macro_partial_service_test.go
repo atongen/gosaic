@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"testing"
 
 	"gosaic/model"
@@ -102,7 +101,6 @@ func TestMacroPartialServiceInsert(t *testing.T) {
 			},
 		},
 	}
-	mp.EncodePixels()
 
 	err = macroPartialService.Insert(&mp)
 	if err != nil {
@@ -126,9 +124,6 @@ func TestMacroPartialServiceInsert(t *testing.T) {
 		t.Fatal("Inserted macro partial data does not match")
 	}
 
-	fmt.Printf("mp2: %+s\n", mp2)
-	fmt.Println(len(mp2.Pixels))
-
 	if len(mp2.Pixels) != 1 {
 		t.Fatal("Macro partial pixels not serialized correctly")
 	}
@@ -142,3 +137,305 @@ func TestMacroPartialServiceInsert(t *testing.T) {
 		t.Fatal("Macro partial pixel data is not correct")
 	}
 }
+
+func TestMacroPartialServiceUpdate(t *testing.T) {
+	macroPartialService, err := setupMarcroPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer macroPartialService.DbMap().Db.Close()
+
+	mp := model.MacroPartial{
+		MacroId:        macro.Id,
+		CoverPartialId: coverPartial.Id,
+		AspectId:       aspect.Id,
+		Pixels: []*model.Lab{
+			&model.Lab{
+				L:     0.4,
+				A:     0.5,
+				B:     0.6,
+				Alpha: 0.0,
+			},
+		},
+	}
+
+	err = macroPartialService.Insert(&mp)
+	if err != nil {
+		t.Fatalf("Error inserting macro partial: %s\n", err.Error())
+	}
+
+	mp.Pixels[0].L = 0.75
+	err = macroPartialService.Update(&mp)
+	if err != nil {
+		t.Fatalf("Error updating macro partial: %s\n", err.Error())
+	}
+
+	mp2, err := macroPartialService.Get(mp.Id)
+	if err != nil {
+		t.Fatalf("Error getting updated macro partial: %s\n", err.Error())
+	} else if mp2 == nil {
+		t.Fatalf("Macro partial not inserted\n")
+	}
+
+	if mp2.Pixels[0].L != 0.75 {
+		t.Fatal("Updated macro partial data does not match")
+	}
+}
+
+func TestMacroPartialServiceDelete(t *testing.T) {
+	macroPartialService, err := setupMarcroPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer macroPartialService.DbMap().Db.Close()
+
+	mp := model.MacroPartial{
+		MacroId:        macro.Id,
+		CoverPartialId: coverPartial.Id,
+		AspectId:       aspect.Id,
+		Pixels: []*model.Lab{
+			&model.Lab{
+				L:     0.4,
+				A:     0.5,
+				B:     0.6,
+				Alpha: 0.0,
+			},
+		},
+	}
+
+	err = macroPartialService.Insert(&mp)
+	if err != nil {
+		t.Fatalf("Error inserting macro partial: %s\n", err.Error())
+	}
+
+	err = macroPartialService.Delete(&mp)
+	if err != nil {
+		t.Fatalf("Error deleting macro partial: %s\n", err.Error())
+	}
+
+	mp2, err := macroPartialService.Get(mp.Id)
+	if err != nil {
+		t.Fatalf("Error getting deleted macro partial: %s\n", err.Error())
+	} else if mp2 != nil {
+		t.Fatalf("Macro partial not deleted\n")
+	}
+}
+
+func TestMacroPartialServiceGetOneBy(t *testing.T) {
+	macroPartialService, err := setupMarcroPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer macroPartialService.DbMap().Db.Close()
+
+	mp := model.MacroPartial{
+		MacroId:        macro.Id,
+		CoverPartialId: coverPartial.Id,
+		AspectId:       aspect.Id,
+		Pixels: []*model.Lab{
+			&model.Lab{
+				L:     0.4,
+				A:     0.5,
+				B:     0.6,
+				Alpha: 0.0,
+			},
+		},
+	}
+
+	err = macroPartialService.Insert(&mp)
+	if err != nil {
+		t.Fatalf("Error inserting macro partial: %s\n", err.Error())
+	}
+
+	mp2, err := macroPartialService.GetOneBy("macro_id", mp.MacroId)
+	if err != nil {
+		t.Fatalf("Error getting one by macro partial: %s\n", err.Error())
+	} else if mp2 == nil {
+		t.Fatalf("Macro partial not found by\n")
+	}
+
+	if mp2.MacroId != mp.MacroId {
+		t.Fatal("Macro partial macro id does not match")
+	}
+}
+
+func TestMacroPartialServiceExistsBy(t *testing.T) {
+	macroPartialService, err := setupMarcroPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer macroPartialService.DbMap().Db.Close()
+
+	mp := model.MacroPartial{
+		MacroId:        macro.Id,
+		CoverPartialId: coverPartial.Id,
+		AspectId:       aspect.Id,
+		Pixels: []*model.Lab{
+			&model.Lab{
+				L:     0.4,
+				A:     0.5,
+				B:     0.6,
+				Alpha: 0.0,
+			},
+		},
+	}
+
+	err = macroPartialService.Insert(&mp)
+	if err != nil {
+		t.Fatalf("Error inserting macro partial: %s\n", err.Error())
+	}
+
+	found, err := macroPartialService.ExistsBy("macro_id", mp.MacroId)
+	if err != nil {
+		t.Fatalf("Error getting one by macro partial: %s\n", err.Error())
+	}
+
+	if !found {
+		t.Fatalf("Macro partial not exists by\n")
+	}
+}
+
+func TestMacroPartialServiceCount(t *testing.T) {
+	macroPartialService, err := setupMarcroPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer macroPartialService.DbMap().Db.Close()
+
+	mp := model.MacroPartial{
+		MacroId:        macro.Id,
+		CoverPartialId: coverPartial.Id,
+		AspectId:       aspect.Id,
+		Pixels: []*model.Lab{
+			&model.Lab{
+				L:     0.4,
+				A:     0.5,
+				B:     0.6,
+				Alpha: 0.0,
+			},
+		},
+	}
+
+	err = macroPartialService.Insert(&mp)
+	if err != nil {
+		t.Fatalf("Error inserting macro partial: %s\n", err.Error())
+	}
+
+	num, err := macroPartialService.Count()
+	if err != nil {
+		t.Fatalf("Error counting macro partial: %s\n", err.Error())
+	}
+
+	if num != int64(1) {
+		t.Fatalf("Macro partial count incorrect\n")
+	}
+}
+
+func TestMacroPartialServiceFindOrCreate(t *testing.T) {
+	macroPartialService, err := setupMarcroPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer macroPartialService.DbMap().Db.Close()
+
+	macroPartial, err := macroPartialService.FindOrCreate(&macro, &coverPartial, &aspect)
+	if err != nil {
+		t.Fatalf("Failed to FindOrCreate macroPartial: %s\n", err.Error())
+	}
+
+	if macroPartial.MacroId != macro.Id {
+		t.Errorf("macroPartial.MacroId was %d, expected %d\n", macroPartial.MacroId, macro.Id)
+	}
+
+	if macroPartial.CoverPartialId != coverPartial.Id {
+		t.Errorf("macroPartial.CoverPartialId was %d, expected %d\n", macroPartial.CoverPartialId, coverPartial.Id)
+	}
+
+	if macroPartial.AspectId != aspect.Id {
+		t.Errorf("macroPartial.AspectId was %d, expected %d\n", macroPartial.AspectId, aspect.Id)
+	}
+
+	if len(macroPartial.Data) == 0 {
+		t.Error("macroPartial.Data was empty")
+	}
+
+	numPixels := len(macroPartial.Pixels)
+	if numPixels != 100 {
+		t.Errorf("macroPartial.Pixels len was %d, expected %d\n", numPixels, 100)
+	}
+
+	for i, pix := range macroPartial.Pixels {
+		if pix.L == 0.0 && pix.A == 0.0 && pix.B == 0.0 && pix.Alpha == 0.0 {
+			t.Errorf("pixel %d was empty\n", i)
+		}
+	}
+}
+
+//func TestGidxPartialServiceFindMissing(t *testing.T) {
+//	dbMap, err := getTestDbMap()
+//	if err != nil {
+//		t.Fatalf("Unable to get test dbmap: %s\n", err.Error())
+//	}
+//	defer dbMap.Db.Close()
+//
+//	aspectService, err := getTestAspectService(dbMap)
+//	if err != nil {
+//		t.Fatalf("Unable to get aspect service: %s\n", err.Error())
+//	}
+//
+//	gidxService, err := getTestGidxService(dbMap)
+//	if err != nil {
+//		t.Fatalf("Unable to get gidx service: %s\n", err.Error())
+//	}
+//
+//	gidxPartialService, err := getTestGidxPartialService(dbMap)
+//	if err != nil {
+//		t.Fatalf("Unable to get gidx partial service: %s\n", err.Error())
+//	}
+//
+//	aspect := model.Aspect{Columns: 87, Rows: 128}
+//	err = aspectService.Insert(&aspect)
+//	if err != nil {
+//		t.Fatalf("Unable to insert test aspect: %s\n", err.Error())
+//	}
+//
+//	gidx := model.Gidx{
+//		AspectId:    aspect.Id,
+//		Path:        "testdata/matterhorn.jpg",
+//		Md5sum:      "fcaadee574094a3ae04c6badbbb9ee5e",
+//		Width:       uint(696),
+//		Height:      uint(1024),
+//		Orientation: 1,
+//	}
+//	err = gidxService.Insert(&gidx)
+//	if err != nil {
+//		t.Fatalf("Unable to insert test aspect: %s\n", err.Error())
+//	}
+//
+//	gidxs, err := gidxPartialService.FindMissing(&aspect, "gidx.id", 100, 0)
+//	if err != nil {
+//		t.Fatalf("Failed to FindMissing gidxPartial: %s\n", err.Error())
+//	}
+//
+//	if len(gidxs) != 1 {
+//		t.Fatalf("Expected 1 Missing gidxPartial, got %d\n", len(gidxs))
+//	}
+//
+//	if gidxs[0].Id != gidx.Id {
+//		t.Errorf("Expected missing gidx id %d, got %d\n", gidx.Id, gidxs[0].Id)
+//	}
+//
+//	_, err = gidxPartialService.Create(&gidx, &aspect)
+//	if err != nil {
+//		t.Fatalf("Failed to Create gidxPartial: %s\n", err.Error())
+//	}
+//
+//	gidxs, err = gidxPartialService.FindMissing(&aspect, "gidx.id", 100, 0)
+//	if err != nil {
+//		t.Fatalf("Failed to FindMissing gidxPartial: %s\n", err.Error())
+//	}
+//
+//	if len(gidxs) != 0 {
+//		t.Fatalf("Expected 0 Missing gidxPartial, got %d\n", len(gidxs))
+//	}
+//}
