@@ -3,7 +3,6 @@ package environment
 import (
 	"database/sql"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -17,7 +16,7 @@ import (
 )
 
 const (
-	DbFile = "gosaic.sqlite3"
+	DBMEM = ":memory:"
 )
 
 var (
@@ -37,7 +36,7 @@ type Environment interface {
 	CoverPartialService() (service.CoverPartialService, error)
 	MacroService() (service.MacroService, error)
 	MacroPartialService() (service.MacroPartialService, error)
-	Path() string
+	DbPath() string
 	Workers() int
 	Db() *sql.DB
 	DbMap() *gorp.DbMap
@@ -48,51 +47,53 @@ type Environment interface {
 }
 
 type environment struct {
-	path     string
+	dbPath   string
 	workers  int
 	dB       *sql.DB
 	dbMap    *gorp.DbMap
-	dbPath   string
 	log      *log.Logger
 	services map[ServiceName]service.Service
 	m        sync.Mutex
 }
 
-func NewEnvironment(path string, out io.Writer, dbPath string, workers int) (Environment, error) {
+func NewEnvironment(dbPath string, out io.Writer, workers int) (Environment, error) {
 	env := &environment{}
 
 	// setup the environment logger
 	env.log = log.New(out, "GOSAIC: ", log.Ldate|log.Ltime)
 
-	// get environment absolute path
-	path, err := filepath.Abs(path)
-	if err != nil {
-		return nil, err
+	var dbPathAbs string
+	if dbPath == DBMEM {
+		env.dbPath = dbPath
+	} else {
+		dir := filepath.Dir(dbPath)
+
+		// ensure environment dir exists
+		err := os.MkdirAll(dir, 0755)
+		if err != nil {
+			return nil, err
+		}
+
+		// get environment absolute dbPath
+		dbPathAbs, err = filepath.Abs(dbPath)
+		if err != nil {
+			return nil, err
+		}
+
+		env.dbPath = dbPathAbs
 	}
 
-	// ensure environment path exists
-	err = os.MkdirAll(path, 0755)
-	if err != nil {
-		return nil, err
-	}
-
-	env.path = path
 	env.workers = workers
-	env.dbPath = dbPath
 
 	return env, nil
 }
 
-func GetProdEnv(path string, workers int) (Environment, error) {
-	return NewEnvironment(path, os.Stdout, filepath.Join(path, DbFile), workers)
+func GetProdEnv(dbPath string, workers int) (Environment, error) {
+	return NewEnvironment(dbPath, os.Stdout, workers)
 }
 
 func GetTestEnv(out io.Writer) (Environment, error) {
-	path, err := ioutil.TempDir("", "GOSAIC")
-	if err != nil {
-		return nil, err
-	}
-	return NewEnvironment(path, out, ":memory:", 2)
+	return NewEnvironment(":memory:", out, 2)
 }
 
 func (env *environment) Init() error {
@@ -136,8 +137,8 @@ func (env *environment) Close() {
 	env.dB.Close()
 }
 
-func (env *environment) Path() string {
-	return env.path
+func (env *environment) DbPath() string {
+	return env.dbPath
 }
 
 func (env *environment) Workers() int {

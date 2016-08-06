@@ -4,15 +4,17 @@ import (
 	"fmt"
 	"gosaic/environment"
 	"os"
+	"path"
 	"runtime"
 
+	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 // global flags
 var (
-	path    string
+	dbPath  string
 	workers int
 )
 
@@ -26,16 +28,24 @@ var (
 )
 
 func init() {
-	cobra.OnInitialize(setEnv)
+	home, err := homedir.Dir()
+	if err != nil {
+		fmt.Printf("Unable to get user home directory: %s\n", err.Error())
+		os.Exit(1)
+	}
 
-	addGlobalFlag(&path, "path", "p", "", "Path to project directory")
+	defaultDb := path.Join(home, ".gosaic.sqlite3")
+
+	addGlobalFlag(&dbPath, "db", "", defaultDb, "Path to project database")
 	addGlobalIntFlag(&workers, "workers", "w", runtime.NumCPU(), "Number of workers to use")
+
+	cobra.OnInitialize(setEnv)
 }
 
 func setEnv() {
 	var err error
 	Env, err = environment.GetProdEnv(
-		viper.GetString("path"),
+		viper.GetString("db"),
 		viper.GetInt("workers"),
 	)
 	if err != nil {

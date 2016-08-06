@@ -1,9 +1,11 @@
 package controller
 
-import "gosaic/environment"
+import (
+	"gosaic/environment"
+)
 
 func Status(env environment.Environment) {
-	env.Println("Gosaic project directory:", env.Path())
+	env.Println("Gosaic project db:", env.DbPath())
 
 	gidxService, err := env.GidxService()
 	if err != nil {

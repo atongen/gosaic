@@ -71,6 +71,12 @@
 			"branch": "master"
 		},
 		{
+			"importpath": "github.com/mitchellh/go-homedir",
+			"repository": "https://github.com/mitchellh/go-homedir",
+			"revision": "756f7b183b7ab78acdbbee5c7f392838ed459dda",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/mitchellh/mapstructure",
 			"repository": "https://github.com/mitchellh/mapstructure",
 			"revision": "21a35fb16463dfb7c8eee579c65d995d95e64d1e",
