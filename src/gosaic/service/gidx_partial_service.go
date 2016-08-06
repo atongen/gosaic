@@ -43,37 +43,37 @@ func (s *gidxPartialServiceImpl) Register() error {
 	return nil
 }
 
-func (s *gidxPartialServiceImpl) Insert(gidx_partial *model.GidxPartial) error {
-	err := gidx_partial.EncodePixels()
+func (s *gidxPartialServiceImpl) Insert(gidxPartial *model.GidxPartial) error {
+	err := gidxPartial.EncodePixels()
 	if err != nil {
 		return err
 	}
-	return s.DbMap().Insert(gidx_partial)
+	return s.DbMap().Insert(gidxPartial)
 }
 
-func (s *gidxPartialServiceImpl) Update(gidx_partial *model.GidxPartial) error {
-	err := gidx_partial.EncodePixels()
+func (s *gidxPartialServiceImpl) Update(gidxPartial *model.GidxPartial) error {
+	err := gidxPartial.EncodePixels()
 	if err != nil {
 		return err
 	}
-	_, err = s.DbMap().Update(gidx_partial)
+	_, err = s.DbMap().Update(gidxPartial)
 	return err
 }
 
-func (s *gidxPartialServiceImpl) Delete(gidx_partial *model.GidxPartial) error {
-	_, err := s.DbMap().Delete(gidx_partial)
+func (s *gidxPartialServiceImpl) Delete(gidxPartial *model.GidxPartial) error {
+	_, err := s.DbMap().Delete(gidxPartial)
 	return err
 }
 
 func (s *gidxPartialServiceImpl) Get(id int64) (*model.GidxPartial, error) {
-	gidx_partial, err := s.DbMap().Get(model.GidxPartial{}, id)
+	gidxPartial, err := s.DbMap().Get(model.GidxPartial{}, id)
 	if err != nil {
 		return nil, err
-	} else if gidx_partial == nil {
+	} else if gidxPartial == nil {
 		return nil, nil
 	}
 
-	gp, ok := gidx_partial.(*model.GidxPartial)
+	gp, ok := gidxPartial.(*model.GidxPartial)
 	if !ok {
 		return nil, fmt.Errorf("Received struct is not a GidxPartial")
 	}
@@ -87,9 +87,18 @@ func (s *gidxPartialServiceImpl) Get(id int64) (*model.GidxPartial, error) {
 }
 
 func (s *gidxPartialServiceImpl) GetOneBy(column string, value interface{}) (*model.GidxPartial, error) {
-	var gidx_partial model.GidxPartial
-	err := s.DbMap().SelectOne(&gidx_partial, "select * from gidx_partials where "+column+" = ? limit 1", value)
-	return &gidx_partial, err
+	var gidxPartial model.GidxPartial
+	err := s.DbMap().SelectOne(&gidxPartial, "select * from gidx_partials where "+column+" = ? limit 1", value)
+	if err != nil {
+		return nil, err
+	}
+
+	err = gidxPartial.DecodeData()
+	if err != nil {
+		return nil, err
+	}
+
+	return &gidxPartial, err
 }
 
 func (s *gidxPartialServiceImpl) ExistsBy(column string, value interface{}) (bool, error) {

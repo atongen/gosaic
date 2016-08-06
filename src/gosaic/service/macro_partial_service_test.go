@@ -8,7 +8,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func setupMarcroPartialServiceTest() (MacroPartialService, error) {
+func setupMacroPartialServiceTest() (MacroPartialService, error) {
 	dbMap, err := getTestDbMap()
 	if err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func setupMarcroPartialServiceTest() (MacroPartialService, error) {
 		return nil, err
 	}
 
-	aspect = model.Aspect{Columns: 1, Rows: 1}
+	aspect = model.Aspect{Columns: 87, Rows: 128}
 	err = aspectService.Insert(&aspect)
 	if err != nil {
 		return nil, err
@@ -65,12 +65,12 @@ func setupMarcroPartialServiceTest() (MacroPartialService, error) {
 	}
 
 	macro = model.Macro{
-		AspectId:    aspect.Id,
 		CoverId:     cover.Id,
-		Path:        "/path/to/my/macro.jpg",
-		Md5sum:      "d41d8cd98f00b204e9800998ecf8427e",
-		Width:       1,
-		Height:      1,
+		AspectId:    aspect.Id,
+		Path:        "testdata/matterhorn.jpg",
+		Md5sum:      "fcaadee574094a3ae04c6badbbb9ee5e",
+		Width:       uint(696),
+		Height:      uint(1024),
 		Orientation: 1,
 	}
 	err = macroService.Insert(&macro)
@@ -82,7 +82,7 @@ func setupMarcroPartialServiceTest() (MacroPartialService, error) {
 }
 
 func TestMacroPartialServiceInsert(t *testing.T) {
-	macroPartialService, err := setupMarcroPartialServiceTest()
+	macroPartialService, err := setupMacroPartialServiceTest()
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
@@ -139,7 +139,7 @@ func TestMacroPartialServiceInsert(t *testing.T) {
 }
 
 func TestMacroPartialServiceUpdate(t *testing.T) {
-	macroPartialService, err := setupMarcroPartialServiceTest()
+	macroPartialService, err := setupMacroPartialServiceTest()
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
@@ -183,7 +183,7 @@ func TestMacroPartialServiceUpdate(t *testing.T) {
 }
 
 func TestMacroPartialServiceDelete(t *testing.T) {
-	macroPartialService, err := setupMarcroPartialServiceTest()
+	macroPartialService, err := setupMacroPartialServiceTest()
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
@@ -222,7 +222,7 @@ func TestMacroPartialServiceDelete(t *testing.T) {
 }
 
 func TestMacroPartialServiceGetOneBy(t *testing.T) {
-	macroPartialService, err := setupMarcroPartialServiceTest()
+	macroPartialService, err := setupMacroPartialServiceTest()
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
@@ -257,10 +257,23 @@ func TestMacroPartialServiceGetOneBy(t *testing.T) {
 	if mp2.MacroId != mp.MacroId {
 		t.Fatal("Macro partial macro id does not match")
 	}
+
+	if len(mp2.Pixels) != 1 {
+		t.Fatalf("Expected 1 macro partial pixel, got %d\n", len(mp2.Pixels))
+	}
+
+	plab := mp2.Pixels[0]
+
+	if plab.L != 0.4 &&
+		plab.A != 0.5 &&
+		plab.B != 0.6 &&
+		plab.Alpha != 0.0 {
+		t.Fatal("Macro partial pixel data is not correct")
+	}
 }
 
 func TestMacroPartialServiceExistsBy(t *testing.T) {
-	macroPartialService, err := setupMarcroPartialServiceTest()
+	macroPartialService, err := setupMacroPartialServiceTest()
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
@@ -296,7 +309,7 @@ func TestMacroPartialServiceExistsBy(t *testing.T) {
 }
 
 func TestMacroPartialServiceCount(t *testing.T) {
-	macroPartialService, err := setupMarcroPartialServiceTest()
+	macroPartialService, err := setupMacroPartialServiceTest()
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
@@ -332,13 +345,13 @@ func TestMacroPartialServiceCount(t *testing.T) {
 }
 
 func TestMacroPartialServiceFindOrCreate(t *testing.T) {
-	macroPartialService, err := setupMarcroPartialServiceTest()
+	macroPartialService, err := setupMacroPartialServiceTest()
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
 	defer macroPartialService.DbMap().Db.Close()
 
-	macroPartial, err := macroPartialService.FindOrCreate(&macro, &coverPartial, &aspect)
+	macroPartial, err := macroPartialService.FindOrCreate(&macro, &coverPartial)
 	if err != nil {
 		t.Fatalf("Failed to FindOrCreate macroPartial: %s\n", err.Error())
 	}
@@ -371,71 +384,44 @@ func TestMacroPartialServiceFindOrCreate(t *testing.T) {
 	}
 }
 
-//func TestGidxPartialServiceFindMissing(t *testing.T) {
-//	dbMap, err := getTestDbMap()
-//	if err != nil {
-//		t.Fatalf("Unable to get test dbmap: %s\n", err.Error())
-//	}
-//	defer dbMap.Db.Close()
-//
-//	aspectService, err := getTestAspectService(dbMap)
-//	if err != nil {
-//		t.Fatalf("Unable to get aspect service: %s\n", err.Error())
-//	}
-//
-//	gidxService, err := getTestGidxService(dbMap)
-//	if err != nil {
-//		t.Fatalf("Unable to get gidx service: %s\n", err.Error())
-//	}
-//
-//	gidxPartialService, err := getTestGidxPartialService(dbMap)
-//	if err != nil {
-//		t.Fatalf("Unable to get gidx partial service: %s\n", err.Error())
-//	}
-//
-//	aspect := model.Aspect{Columns: 87, Rows: 128}
-//	err = aspectService.Insert(&aspect)
-//	if err != nil {
-//		t.Fatalf("Unable to insert test aspect: %s\n", err.Error())
-//	}
-//
-//	gidx := model.Gidx{
-//		AspectId:    aspect.Id,
-//		Path:        "testdata/matterhorn.jpg",
-//		Md5sum:      "fcaadee574094a3ae04c6badbbb9ee5e",
-//		Width:       uint(696),
-//		Height:      uint(1024),
-//		Orientation: 1,
-//	}
-//	err = gidxService.Insert(&gidx)
-//	if err != nil {
-//		t.Fatalf("Unable to insert test aspect: %s\n", err.Error())
-//	}
-//
-//	gidxs, err := gidxPartialService.FindMissing(&aspect, "gidx.id", 100, 0)
-//	if err != nil {
-//		t.Fatalf("Failed to FindMissing gidxPartial: %s\n", err.Error())
-//	}
-//
-//	if len(gidxs) != 1 {
-//		t.Fatalf("Expected 1 Missing gidxPartial, got %d\n", len(gidxs))
-//	}
-//
-//	if gidxs[0].Id != gidx.Id {
-//		t.Errorf("Expected missing gidx id %d, got %d\n", gidx.Id, gidxs[0].Id)
-//	}
-//
-//	_, err = gidxPartialService.Create(&gidx, &aspect)
-//	if err != nil {
-//		t.Fatalf("Failed to Create gidxPartial: %s\n", err.Error())
-//	}
-//
-//	gidxs, err = gidxPartialService.FindMissing(&aspect, "gidx.id", 100, 0)
-//	if err != nil {
-//		t.Fatalf("Failed to FindMissing gidxPartial: %s\n", err.Error())
-//	}
-//
-//	if len(gidxs) != 0 {
-//		t.Fatalf("Expected 0 Missing gidxPartial, got %d\n", len(gidxs))
-//	}
-//}
+func TestMacroPartialServiceFindMissing(t *testing.T) {
+	macroPartialService, err := setupMacroPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer macroPartialService.DbMap().Db.Close()
+
+	coverPartials, err := macroPartialService.FindMissing(&macro, "id asc", 1000, 0)
+	if err != nil {
+		t.Fatalf("Error finding missing macro partials: %s\n", err.Error())
+	}
+
+	if len(coverPartials) != 1 {
+		t.Fatalf("Expected 1 missing macro partial, but got %d\n", len(coverPartials))
+	}
+
+	mcp := coverPartials[0]
+
+	if mcp.CoverId != coverPartial.CoverId ||
+		mcp.AspectId != coverPartial.AspectId ||
+		mcp.X1 != coverPartial.X1 ||
+		mcp.Y1 != coverPartial.Y1 ||
+		mcp.X2 != coverPartial.X2 ||
+		mcp.Y2 != coverPartial.Y2 {
+		t.Fatal("Missing macro partial does not match cover partial")
+	}
+
+	_, err = macroPartialService.Create(&macro, mcp)
+	if err != nil {
+		t.Fatalf("Error creating missing macro partial: %s\n", err.Error())
+	}
+
+	coverPartials, err = macroPartialService.FindMissing(&macro, "id asc", 1000, 0)
+	if err != nil {
+		t.Fatalf("Error finding missing macro partials: %s\n", err.Error())
+	}
+
+	if len(coverPartials) != 0 {
+		t.Fatalf("Expected 0 missing macro partials, but got %d\n", len(coverPartials))
+	}
+}

@@ -8,35 +8,34 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func TestGidxPartialServiceFindOrCreate(t *testing.T) {
+func setupGidxPartialServiceTest() (GidxPartialService, error) {
 	dbMap, err := getTestDbMap()
 	if err != nil {
-		t.Fatalf("Unable to get test dbmap: %s\n", err.Error())
+		return nil, err
 	}
-	defer dbMap.Db.Close()
 
 	aspectService, err := getTestAspectService(dbMap)
 	if err != nil {
-		t.Fatalf("Unable to get aspect service: %s\n", err.Error())
+		return nil, err
 	}
 
 	gidxService, err := getTestGidxService(dbMap)
 	if err != nil {
-		t.Fatalf("Unable to get gidx service: %s\n", err.Error())
+		return nil, err
 	}
 
 	gidxPartialService, err := getTestGidxPartialService(dbMap)
 	if err != nil {
-		t.Fatalf("Unable to get gidx partial service: %s\n", err.Error())
+		return nil, err
 	}
 
-	aspect := model.Aspect{Columns: 87, Rows: 128}
+	aspect = model.Aspect{Columns: 87, Rows: 128}
 	err = aspectService.Insert(&aspect)
 	if err != nil {
-		t.Fatalf("Unable to insert test aspect: %s\n", err.Error())
+		return nil, err
 	}
 
-	gidx := model.Gidx{
+	gidx = model.Gidx{
 		AspectId:    aspect.Id,
 		Path:        "testdata/matterhorn.jpg",
 		Md5sum:      "fcaadee574094a3ae04c6badbbb9ee5e",
@@ -46,8 +45,262 @@ func TestGidxPartialServiceFindOrCreate(t *testing.T) {
 	}
 	err = gidxService.Insert(&gidx)
 	if err != nil {
-		t.Fatalf("Unable to insert test aspect: %s\n", err.Error())
+		return nil, err
 	}
+
+	return gidxPartialService, nil
+}
+
+func TestGidxPartialServiceInsert(t *testing.T) {
+	gidxPartialService, err := setupGidxPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer gidxPartialService.DbMap().Db.Close()
+
+	mp := model.GidxPartial{
+		GidxId:   gidx.Id,
+		AspectId: aspect.Id,
+		Pixels: []*model.Lab{
+			&model.Lab{
+				L:     0.4,
+				A:     0.5,
+				B:     0.6,
+				Alpha: 0.0,
+			},
+		},
+	}
+
+	err = gidxPartialService.Insert(&mp)
+	if err != nil {
+		t.Fatalf("Error inserting gidx partial: %s\n", err.Error())
+	}
+
+	if mp.Id == int64(0) {
+		t.Fatalf("Inserted gidx partial id not set")
+	}
+
+	mp2, err := gidxPartialService.Get(mp.Id)
+	if err != nil {
+		t.Fatalf("Error getting inserted gidx partial: %s\n", err.Error())
+	} else if mp2 == nil {
+		t.Fatalf("Gidx partial not inserted\n")
+	}
+
+	if mp.Id != mp2.Id ||
+		mp.GidxId != mp2.GidxId ||
+		mp.AspectId != mp2.AspectId {
+		t.Fatal("Inserted gidx partial data does not match")
+	}
+
+	if len(mp2.Pixels) != 1 {
+		t.Fatal("Gidx partial pixels not serialized correctly")
+	}
+
+	plab := mp2.Pixels[0]
+
+	if plab.L != 0.4 &&
+		plab.A != 0.5 &&
+		plab.B != 0.6 &&
+		plab.Alpha != 0.0 {
+		t.Fatal("Gidx partial pixel data is not correct")
+	}
+}
+
+func TestGidxPartialServiceUpdate(t *testing.T) {
+	gidxPartialService, err := setupGidxPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer gidxPartialService.DbMap().Db.Close()
+
+	mp := model.GidxPartial{
+		GidxId:   gidx.Id,
+		AspectId: aspect.Id,
+		Pixels: []*model.Lab{
+			&model.Lab{
+				L:     0.4,
+				A:     0.5,
+				B:     0.6,
+				Alpha: 0.0,
+			},
+		},
+	}
+
+	err = gidxPartialService.Insert(&mp)
+	if err != nil {
+		t.Fatalf("Error inserting gidx partial: %s\n", err.Error())
+	}
+
+	mp.Pixels[0].L = 0.75
+	err = gidxPartialService.Update(&mp)
+	if err != nil {
+		t.Fatalf("Error updating gidx partial: %s\n", err.Error())
+	}
+
+	mp2, err := gidxPartialService.Get(mp.Id)
+	if err != nil {
+		t.Fatalf("Error getting updated gidx partial: %s\n", err.Error())
+	} else if mp2 == nil {
+		t.Fatalf("Gidx partial not inserted\n")
+	}
+
+	if mp2.Pixels[0].L != 0.75 {
+		t.Fatal("Updated gidx partial data does not match")
+	}
+}
+
+func TestGidxPartialServiceDelete(t *testing.T) {
+	gidxPartialService, err := setupGidxPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer gidxPartialService.DbMap().Db.Close()
+
+	mp := model.GidxPartial{
+		GidxId:   gidx.Id,
+		AspectId: aspect.Id,
+		Pixels: []*model.Lab{
+			&model.Lab{
+				L:     0.4,
+				A:     0.5,
+				B:     0.6,
+				Alpha: 0.0,
+			},
+		},
+	}
+
+	err = gidxPartialService.Insert(&mp)
+	if err != nil {
+		t.Fatalf("Error inserting gidx partial: %s\n", err.Error())
+	}
+
+	err = gidxPartialService.Delete(&mp)
+	if err != nil {
+		t.Fatalf("Error deleting gidx partial: %s\n", err.Error())
+	}
+
+	mp2, err := gidxPartialService.Get(mp.Id)
+	if err != nil {
+		t.Fatalf("Error getting deleted gidx partial: %s\n", err.Error())
+	} else if mp2 != nil {
+		t.Fatalf("Gidx partial not deleted\n")
+	}
+}
+
+func TestGidxPartialServiceGetOneBy(t *testing.T) {
+	gidxPartialService, err := setupGidxPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer gidxPartialService.DbMap().Db.Close()
+
+	mp := model.GidxPartial{
+		GidxId:   gidx.Id,
+		AspectId: aspect.Id,
+		Pixels: []*model.Lab{
+			&model.Lab{
+				L:     0.4,
+				A:     0.5,
+				B:     0.6,
+				Alpha: 0.0,
+			},
+		},
+	}
+
+	err = gidxPartialService.Insert(&mp)
+	if err != nil {
+		t.Fatalf("Error inserting gidx partial: %s\n", err.Error())
+	}
+
+	mp2, err := gidxPartialService.GetOneBy("gidx_id", mp.GidxId)
+	if err != nil {
+		t.Fatalf("Error getting one by gidx partial: %s\n", err.Error())
+	} else if mp2 == nil {
+		t.Fatalf("Gidx partial not found by\n")
+	}
+
+	if mp2.GidxId != mp.GidxId {
+		t.Fatal("Gidx partial gidx id does not match")
+	}
+}
+
+func TestGidxPartialServiceExistsBy(t *testing.T) {
+	gidxPartialService, err := setupGidxPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer gidxPartialService.DbMap().Db.Close()
+
+	mp := model.GidxPartial{
+		GidxId:   gidx.Id,
+		AspectId: aspect.Id,
+		Pixels: []*model.Lab{
+			&model.Lab{
+				L:     0.4,
+				A:     0.5,
+				B:     0.6,
+				Alpha: 0.0,
+			},
+		},
+	}
+
+	err = gidxPartialService.Insert(&mp)
+	if err != nil {
+		t.Fatalf("Error inserting gidx partial: %s\n", err.Error())
+	}
+
+	found, err := gidxPartialService.ExistsBy("gidx_id", mp.GidxId)
+	if err != nil {
+		t.Fatalf("Error getting one by gidx partial: %s\n", err.Error())
+	}
+
+	if !found {
+		t.Fatalf("Gidx partial not exists by\n")
+	}
+}
+
+func TestGidxPartialServiceCount(t *testing.T) {
+	gidxPartialService, err := setupGidxPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer gidxPartialService.DbMap().Db.Close()
+
+	mp := model.GidxPartial{
+		GidxId:   gidx.Id,
+		AspectId: aspect.Id,
+		Pixels: []*model.Lab{
+			&model.Lab{
+				L:     0.4,
+				A:     0.5,
+				B:     0.6,
+				Alpha: 0.0,
+			},
+		},
+	}
+
+	err = gidxPartialService.Insert(&mp)
+	if err != nil {
+		t.Fatalf("Error inserting gidx partial: %s\n", err.Error())
+	}
+
+	num, err := gidxPartialService.Count()
+	if err != nil {
+		t.Fatalf("Error counting gidx partial: %s\n", err.Error())
+	}
+
+	if num != int64(1) {
+		t.Fatalf("Gidx partial count incorrect\n")
+	}
+}
+
+func TestGidxPartialServiceFindOrCreate(t *testing.T) {
+	gidxPartialService, err := setupGidxPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer gidxPartialService.DbMap().Db.Close()
 
 	gidxPartial, err := gidxPartialService.FindOrCreate(&gidx, &aspect)
 	if err != nil {
@@ -79,45 +332,11 @@ func TestGidxPartialServiceFindOrCreate(t *testing.T) {
 }
 
 func TestGidxPartialServiceFindMissing(t *testing.T) {
-	dbMap, err := getTestDbMap()
+	gidxPartialService, err := setupGidxPartialServiceTest()
 	if err != nil {
-		t.Fatalf("Unable to get test dbmap: %s\n", err.Error())
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer dbMap.Db.Close()
-
-	aspectService, err := getTestAspectService(dbMap)
-	if err != nil {
-		t.Fatalf("Unable to get aspect service: %s\n", err.Error())
-	}
-
-	gidxService, err := getTestGidxService(dbMap)
-	if err != nil {
-		t.Fatalf("Unable to get gidx service: %s\n", err.Error())
-	}
-
-	gidxPartialService, err := getTestGidxPartialService(dbMap)
-	if err != nil {
-		t.Fatalf("Unable to get gidx partial service: %s\n", err.Error())
-	}
-
-	aspect := model.Aspect{Columns: 87, Rows: 128}
-	err = aspectService.Insert(&aspect)
-	if err != nil {
-		t.Fatalf("Unable to insert test aspect: %s\n", err.Error())
-	}
-
-	gidx := model.Gidx{
-		AspectId:    aspect.Id,
-		Path:        "testdata/matterhorn.jpg",
-		Md5sum:      "fcaadee574094a3ae04c6badbbb9ee5e",
-		Width:       uint(696),
-		Height:      uint(1024),
-		Orientation: 1,
-	}
-	err = gidxService.Insert(&gidx)
-	if err != nil {
-		t.Fatalf("Unable to insert test aspect: %s\n", err.Error())
-	}
+	defer gidxPartialService.DbMap().Db.Close()
 
 	gidxs, err := gidxPartialService.FindMissing(&aspect, "gidx.id", 100, 0)
 	if err != nil {

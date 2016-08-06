@@ -20,8 +20,8 @@ type MacroPartialService interface {
 	Count() (int64, error)
 	CountBy(string, interface{}) (int64, error)
 	Find(*model.Macro, *model.CoverPartial) (*model.MacroPartial, error)
-	Create(*model.Macro, *model.CoverPartial, *model.Aspect) (*model.MacroPartial, error)
-	FindOrCreate(*model.Macro, *model.CoverPartial, *model.Aspect) (*model.MacroPartial, error)
+	Create(*model.Macro, *model.CoverPartial) (*model.MacroPartial, error)
+	FindOrCreate(*model.Macro, *model.CoverPartial) (*model.MacroPartial, error)
 	FindMissing(*model.Macro, string, int, int) ([]*model.CoverPartial, error)
 }
 
@@ -66,13 +66,13 @@ func (s *macroPartialServiceImpl) Delete(macroPartial *model.MacroPartial) error
 }
 
 func (s *macroPartialServiceImpl) Get(id int64) (*model.MacroPartial, error) {
-	macro_partial, err := s.DbMap().Get(model.MacroPartial{}, id)
+	macroPartial, err := s.DbMap().Get(model.MacroPartial{}, id)
 	if err != nil {
 		return nil, err
-	} else if macro_partial == nil {
+	} else if macroPartial == nil {
 		return nil, nil
 	}
-	mp, ok := macro_partial.(*model.MacroPartial)
+	mp, ok := macroPartial.(*model.MacroPartial)
 	if !ok {
 		return nil, fmt.Errorf("Received struct is not a MacroPartial")
 	}
@@ -84,9 +84,18 @@ func (s *macroPartialServiceImpl) Get(id int64) (*model.MacroPartial, error) {
 }
 
 func (s *macroPartialServiceImpl) GetOneBy(column string, value interface{}) (*model.MacroPartial, error) {
-	var macro_partial model.MacroPartial
-	err := s.DbMap().SelectOne(&macro_partial, "select * from macro_partials where "+column+" = ? limit 1", value)
-	return &macro_partial, err
+	var macroPartial model.MacroPartial
+	err := s.DbMap().SelectOne(&macroPartial, "select * from macro_partials where "+column+" = ? limit 1", value)
+	if err != nil {
+		return nil, err
+	}
+
+	err = macroPartial.DecodeData()
+	if err != nil {
+		return nil, err
+	}
+
+	return &macroPartial, err
 }
 
 func (s *macroPartialServiceImpl) ExistsBy(column string, value interface{}) (bool, error) {
@@ -128,7 +137,7 @@ func (s *macroPartialServiceImpl) Find(macro *model.Macro, coverPartial *model.C
 	return s.doFind(macro, coverPartial)
 }
 
-func (s *macroPartialServiceImpl) doCreate(macro *model.Macro, coverPartial *model.CoverPartial, aspect *model.Aspect) (*model.MacroPartial, error) {
+func (s *macroPartialServiceImpl) doCreate(macro *model.Macro, coverPartial *model.CoverPartial) (*model.MacroPartial, error) {
 	p := model.MacroPartial{
 		MacroId:        macro.Id,
 		CoverPartialId: coverPartial.Id,
@@ -154,14 +163,14 @@ func (s *macroPartialServiceImpl) doCreate(macro *model.Macro, coverPartial *mod
 	return &p, nil
 }
 
-func (s *macroPartialServiceImpl) Create(macro *model.Macro, coverPartial *model.CoverPartial, aspect *model.Aspect) (*model.MacroPartial, error) {
+func (s *macroPartialServiceImpl) Create(macro *model.Macro, coverPartial *model.CoverPartial) (*model.MacroPartial, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	return s.doCreate(macro, coverPartial, aspect)
+	return s.doCreate(macro, coverPartial)
 }
 
-func (s *macroPartialServiceImpl) FindOrCreate(macro *model.Macro, coverPartial *model.CoverPartial, aspect *model.Aspect) (*model.MacroPartial, error) {
+func (s *macroPartialServiceImpl) FindOrCreate(macro *model.Macro, coverPartial *model.CoverPartial) (*model.MacroPartial, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
@@ -171,7 +180,7 @@ func (s *macroPartialServiceImpl) FindOrCreate(macro *model.Macro, coverPartial 
 	}
 
 	// or create
-	return s.doCreate(macro, coverPartial, aspect)
+	return s.doCreate(macro, coverPartial)
 }
 
 func (s *macroPartialServiceImpl) FindMissing(macro *model.Macro, order string, limit, offset int) ([]*model.CoverPartial, error) {
