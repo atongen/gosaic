@@ -56,4 +56,9 @@ func TestServices(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error getting macroService: %s\n", err.Error())
 	}
+
+	_, err = env.MacroPartialService()
+	if err != nil {
+		t.Fatalf("Error getting macroPartialService: %s\n", err.Error())
+	}
 }

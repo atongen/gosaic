@@ -36,6 +36,7 @@ type Environment interface {
 	CoverService() (service.CoverService, error)
 	CoverPartialService() (service.CoverPartialService, error)
 	MacroService() (service.MacroService, error)
+	MacroPartialService() (service.MacroPartialService, error)
 	Path() string
 	Workers() int
 	Db() *sql.DB

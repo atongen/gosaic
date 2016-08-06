@@ -14,6 +14,7 @@ const (
 	CoverServiceName
 	CoverPartialServiceName
 	MacroServiceName
+	MacroPartialServiceName
 )
 
 func (env *environment) getService(name ServiceName) (service.Service, error) {
@@ -40,6 +41,8 @@ func (env *environment) getService(name ServiceName) (service.Service, error) {
 		s = service.NewCoverPartialService(env.dbMap)
 	case MacroServiceName:
 		s = service.NewMacroService(env.dbMap)
+	case MacroPartialServiceName:
+		s = service.NewMacroPartialService(env.dbMap)
 	}
 	err := s.Register()
 	if err != nil {
@@ -131,4 +134,18 @@ func (env *environment) MacroService() (service.MacroService, error) {
 	}
 
 	return macroService, nil
+}
+
+func (env *environment) MacroPartialService() (service.MacroPartialService, error) {
+	s, err := env.getService(MacroPartialServiceName)
+	if err != nil {
+		return nil, err
+	}
+
+	macroPartialService, ok := s.(service.MacroPartialService)
+	if !ok {
+		return nil, fmt.Errorf("Invalid macro partial service")
+	}
+
+	return macroPartialService, nil
 }
