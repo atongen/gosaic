@@ -37,7 +37,7 @@ func init() {
 	defaultDb := path.Join(home, ".gosaic.sqlite3")
 
 	addGlobalFlag(&dbPath, "db", "", defaultDb, "Path to project database")
-	addGlobalIntFlag(&workers, "workers", "w", runtime.NumCPU(), "Number of workers to use")
+	addGlobalIntFlag(&workers, "workers", "", runtime.NumCPU(), "Number of workers to use")
 
 	cobra.OnInitialize(setEnv)
 }
