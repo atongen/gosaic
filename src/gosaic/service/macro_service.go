@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"gosaic/model"
 	"sync"
 
@@ -13,7 +14,8 @@ type MacroService interface {
 	Insert(*model.Macro) error
 	Update(*model.Macro) error
 	Delete(*model.Macro) error
-	GetOneBy(string, interface{}) (*model.Macro, error)
+	GetOneBy(string, ...interface{}) (*model.Macro, error)
+	ExistsBy(string, ...interface{}) (bool, error)
 	FindAll(string) ([]*model.Macro, error)
 }
 
@@ -60,10 +62,15 @@ func (s *macroServiceImpl) Delete(c *model.Macro) error {
 	return err
 }
 
-func (s *macroServiceImpl) GetOneBy(column string, value interface{}) (*model.Macro, error) {
+func (s *macroServiceImpl) GetOneBy(conditions string, params ...interface{}) (*model.Macro, error) {
 	var macro model.Macro
-	err := s.DbMap().SelectOne(&macro, "select * from macros where "+column+" = ? limit 1", value)
+	err := s.DbMap().SelectOne(&macro, fmt.Sprintf("select * from macros where %s limit 1", conditions), params...)
 	return &macro, err
+}
+
+func (s *macroServiceImpl) ExistsBy(conditions string, params ...interface{}) (bool, error) {
+	count, err := s.DbMap().SelectInt(fmt.Sprintf("select 1 from macros where %s limit 1", conditions), params...)
+	return count == 1, err
 }
 
 func (s *macroServiceImpl) FindAll(order string) ([]*model.Macro, error) {

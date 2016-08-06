@@ -184,7 +184,7 @@ func TestMacroServiceGetOneBy(t *testing.T) {
 		t.Fatalf("Error inserting macro: %s\n", err.Error())
 	}
 
-	c2, err := macroService.GetOneBy("md5sum", "68b329da9893e34099c7d8ad5cb9c940")
+	c2, err := macroService.GetOneBy("md5sum = ?", "68b329da9893e34099c7d8ad5cb9c940")
 	if err != nil {
 		t.Fatalf("Error getting inserted macro: %s\n", err.Error())
 	} else if c2 == nil {
@@ -200,6 +200,36 @@ func TestMacroServiceGetOneBy(t *testing.T) {
 		c1.Height != c2.Height ||
 		c1.Orientation != c2.Orientation {
 		t.Fatalf("Inserted macro (%+v) does not match: %+v\n", c2, c1)
+	}
+}
+
+func TestMacroServiceExistsBy(t *testing.T) {
+	macroService, err := setupMacroServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer macroService.DbMap().Db.Close()
+
+	c1 := model.Macro{
+		AspectId:    aspect.Id,
+		CoverId:     cover.Id,
+		Path:        "/path/to/my/macro_image.jpg",
+		Md5sum:      "68b329da9893e34099c7d8ad5cb9c940",
+		Width:       1,
+		Height:      1,
+		Orientation: 1,
+	}
+
+	err = macroService.Insert(&c1)
+	if err != nil {
+		t.Fatalf("Error inserting macro: %s\n", err.Error())
+	}
+
+	found, err := macroService.ExistsBy("cover_id = ? AND md5sum = ?", cover.Id, "68b329da9893e34099c7d8ad5cb9c940")
+	if err != nil {
+		t.Fatalf("Error checking inserted macro: %s\n", err.Error())
+	} else if !found {
+		t.Fatalf("Macro not found\n")
 	}
 }
 

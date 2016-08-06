@@ -235,7 +235,7 @@ func createMacroTable(db *sql.DB) error {
 		return err
 	}
 
-	sql = "create unique index idx_macro_md5sum on macros (md5sum);"
+	sql = "create unique index idx_macro_cover_md5sum on macros (cover_id,md5sum);"
 	_, err = db.Exec(sql)
 	return err
 }

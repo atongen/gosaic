@@ -32,13 +32,13 @@ func Md5sum(path string) (string, error) {
 	for {
 		n, err := file.Read(buf)
 		if err != nil && err != io.EOF {
-			panic(err)
+			return "", err
 		}
 		if n == 0 {
 			break
 		}
 		if _, err := io.WriteString(hash, string(buf[:n])); err != nil {
-			panic(err)
+			return "", err
 		}
 	}
 	return fmt.Sprintf("%x", hash.Sum(nil)), nil
@@ -149,6 +149,10 @@ func GetAspectLab(i model.Image, aspect *model.Aspect) ([]*model.Lab, error) {
 		}
 	}
 
+	return GetImgAspectLab(img, i, aspect)
+}
+
+func GetImgAspectLab(img *image.Image, i model.Image, aspect *model.Aspect) ([]*model.Lab, error) {
 	w, h := ScaleAspect(int(i.GetWidth()), int(i.GetHeight()), aspect.Columns, aspect.Rows)
 
 	aspectImg := imaging.Fill((*img), w, h, imaging.Center, imaging.Lanczos)
@@ -179,6 +183,10 @@ func GetPartialLab(i model.Image, coverPartial *model.CoverPartial) ([]*model.La
 		}
 	}
 
+	return GetImgAspectLab(img, i, coverPartial)
+}
+
+func GetImgPartialLab(img *image.Image, i model.Image, coverPartial *model.CoverPartial) ([]*model.Lab, error) {
 	cropImg := imaging.Crop((*img), coverPartial.Rectangle())
 	dataImg := imaging.Resize(cropImg, DATA_SIZE, DATA_SIZE, imaging.Lanczos)
 
