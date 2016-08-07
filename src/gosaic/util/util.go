@@ -51,18 +51,19 @@ func GetOrientation(path string) (int, error) {
 	}
 
 	x, err := exif.Decode(f)
+	// no exif data
 	if err != nil {
-		return 0, err
+		return 1, nil
 	}
 
 	orientation, err := x.Get(exif.Orientation)
 	if err != nil {
-		return 0, err
+		return 1, nil
 	}
 
 	val, err := orientation.Int(0)
 	if err != nil {
-		return 0, err
+		return 1, nil
 	}
 
 	return val, nil
@@ -183,7 +184,7 @@ func GetPartialLab(i model.Image, coverPartial *model.CoverPartial) ([]*model.La
 		}
 	}
 
-	return GetImgAspectLab(img, i, coverPartial)
+	return GetImgPartialLab(img, i, coverPartial)
 }
 
 func GetImgPartialLab(img *image.Image, i model.Image, coverPartial *model.CoverPartial) ([]*model.Lab, error) {

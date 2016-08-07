@@ -5,6 +5,7 @@ import (
 	"gosaic/model"
 	"gosaic/service"
 	"gosaic/util"
+	"image"
 )
 
 func Macro(env environment.Environment, path, coverName string) {
@@ -23,12 +24,6 @@ func Macro(env environment.Environment, path, coverName string) {
 	macroService, err := env.MacroService()
 	if err != nil {
 		env.Printf("Error creating macro service: %s\n", err.Error())
-		return
-	}
-
-	macroPartialService, err := env.MacroPartialService()
-	if err != nil {
-		env.Printf("Error creating macro partial service: %s\n", err.Error())
 		return
 	}
 
@@ -51,8 +46,8 @@ func Macro(env environment.Environment, path, coverName string) {
 	}
 
 	bounds := (*img).Bounds()
-	width := bounds.Max.Y
-	height := bounds.Max.X
+	width := bounds.Max.X
+	height := bounds.Max.Y
 
 	aspect, err := aspectService.FindOrCreate(width, height)
 	if err != nil {
@@ -66,11 +61,21 @@ func Macro(env environment.Environment, path, coverName string) {
 		return
 	} else if cover == nil {
 		env.Printf("Cover %s not found\n", coverName)
+		return
 	}
 
-	if aspect.Id != cover.AspectId {
-		env.Printf("Aspect of image (%dx%d) does not match aspect of cover %s\n",
-			path, aspect.Columns, aspect.Rows, cover.Name)
+	coverAspect, err := aspectService.Get(cover.AspectId)
+	if err != nil {
+		env.Printf("Error getting cover aspect: %s\n", err.Error())
+		return
+	} else if cover == nil {
+		env.Println("Cover aspect not found")
+		return
+	}
+
+	if aspect.Id != coverAspect.Id {
+		env.Printf("Aspect of image (%dx%d) does not match aspect of cover %s (%dx%d)\n",
+			aspect.Columns, aspect.Rows, cover.Name, coverAspect.Columns, coverAspect.Rows)
 		return
 	}
 
@@ -80,14 +85,12 @@ func Macro(env environment.Environment, path, coverName string) {
 		return
 	}
 
-	macro, err := macroService.GetOneBy("cover_id = ? AND md5sum = ?", cover.Id, md5sum)
-	if err != nil {
-		env.Printf("Error checking macro existence: %s\n", err.Error())
-		return
-	}
+	var macro *model.Macro
+	macro, _ = macroService.GetOneBy("cover_id = ? AND md5sum = ?", cover.Id, md5sum)
 
-	if macro == nil {
-		macro = model.Macro{
+	// macro was not found
+	if macro.Id == int64(0) {
+		macro = &model.Macro{
 			AspectId:    aspect.Id,
 			CoverId:     cover.Id,
 			Path:        path,
@@ -96,41 +99,102 @@ func Macro(env environment.Environment, path, coverName string) {
 			Height:      uint(height),
 			Orientation: orientation,
 		}
-		err = macroService.Insert(&macro)
+		err = macroService.Insert(macro)
 		if err != nil {
 			env.Printf("Error creating macro: %s\n", err.Error())
 			return
 		}
 	}
 
-	num, err := buildMacroPartials(macroPartialService, macro)
+	err = buildMacroPartials(env, img, macro, env.Workers())
 	if err != nil {
 		env.Printf("Error building macro partials: %s\n", err.Error())
-		return
 	}
-
-	env.Printf("Created macro and built %d partials\n", num)
 }
 
-func buildMacroPartials(macroPartialService service.MacroPartialService, macro *model.Macro) (int, error) {
-	batchSize := 1000
-	num := 0
+func buildMacroPartials(env environment.Environment, img *image.Image, macro *model.Macro, workers int) error {
+	macroPartialService, err := env.MacroPartialService()
+	if err != nil {
+		return err
+	}
 
-	for {
+	batchSize := 1000
+	errs := make(chan error)
+
+	go func(myErrs <-chan error) {
+		for e := range myErrs {
+			env.Println(e.Error())
+		}
+	}(errs)
+
+	for i := 0; ; i++ {
 		var coverPartials []*model.CoverPartial
 
 		coverPartials, err = macroPartialService.FindMissing(macro, "cover_partials.id ASC", batchSize, 0)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		// create batch here
-
-		if len(coverPartials) == 0 {
+		num := len(coverPartials)
+		if num == 0 {
 			break
 		}
+
+		env.Printf("Processing %d macro partials\n", num)
+		processMacroPartials(macroPartialService, img, macro, coverPartials, errs, workers)
+		if err != nil {
+			break
+		}
+
 	}
 
-	return num, nil
+	close(errs)
 
+	return err
+}
+
+func processMacroPartials(macroPartialService service.MacroPartialService, img *image.Image, macro *model.Macro, coverPartials []*model.CoverPartial, errs chan<- error, workers int) {
+	add := make(chan *model.MacroPartial)
+	sem := make(chan bool, workers)
+
+	go storeMacroPartials(macroPartialService, add, sem, errs)
+
+	for _, coverPartial := range coverPartials {
+		sem <- true
+		go storeMacroPartial(img, macro, coverPartial, add, errs)
+	}
+
+	for i := 0; i < cap(sem); i++ {
+		sem <- true
+	}
+
+	close(add)
+	close(sem)
+}
+
+func storeMacroPartial(img *image.Image, macro *model.Macro, coverPartial *model.CoverPartial, add chan<- *model.MacroPartial, errs chan<- error) {
+	macroPartial := model.MacroPartial{
+		MacroId:        macro.Id,
+		CoverPartialId: coverPartial.Id,
+		AspectId:       coverPartial.AspectId,
+	}
+
+	pixels, err := util.GetImgPartialLab(img, macro, coverPartial)
+	if err != nil {
+		errs <- err
+		return
+	}
+	macroPartial.Pixels = pixels
+
+	add <- &macroPartial
+}
+
+func storeMacroPartials(macroPartialService service.MacroPartialService, add <-chan *model.MacroPartial, sem <-chan bool, errs chan<- error) {
+	for macroPartial := range add {
+		err := macroPartialService.Insert(macroPartial)
+		if err != nil {
+			errs <- err
+		}
+		<-sem
+	}
 }

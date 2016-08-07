@@ -97,6 +97,11 @@ func storeIndexPath(newIndex addIndex, env environment.Environment) {
 	// don't actually fix orientation here, just determine
 	// if x and y need to be swapped
 	orientation, err := util.GetOrientation(newIndex.path)
+	if err != nil {
+		env.Printf("Error getting image orientation: %s\n", err.Error())
+		return
+	}
+
 	swap := false
 	if err == nil && 4 < orientation && orientation <= 8 {
 		swap = true
