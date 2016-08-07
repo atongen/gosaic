@@ -228,7 +228,8 @@ func (s *macroPartialServiceImpl) FindMissing(macro *model.Macro, order string, 
 
 	sql := `
 select * from cover_partials
-where not exists (
+where cover_partials.cover_id = ?
+and not exists (
 	select 1 from macro_partials
 	where macro_partials.macro_id = ?
 	and macro_partials.cover_partial_id = cover_partials.id
@@ -239,7 +240,7 @@ offset ?
 `
 
 	var coverPartials []*model.CoverPartial
-	_, err := s.dbMap.Select(&coverPartials, sql, macro.Id, order, limit, offset)
+	_, err := s.dbMap.Select(&coverPartials, sql, macro.CoverId, macro.Id, order, limit, offset)
 
 	return coverPartials, err
 }

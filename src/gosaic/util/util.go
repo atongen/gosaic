@@ -202,3 +202,14 @@ func GetImgPartialLab(img *image.Image, i model.Image, coverPartial *model.Cover
 
 	return labs, nil
 }
+
+func FillAspect(img *image.Image, aspectWidth, aspectHeight int) *image.Image {
+	bounds := (*img).Bounds()
+	width := bounds.Max.X
+	height := bounds.Max.Y
+
+	w, h := ScaleAspect(width, height, aspectWidth, aspectHeight)
+
+	var myImg image.Image = imaging.Fill((*img), w, h, imaging.Center, imaging.Lanczos)
+	return &myImg
+}
