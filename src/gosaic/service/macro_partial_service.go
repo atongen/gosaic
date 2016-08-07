@@ -19,6 +19,7 @@ type MacroPartialService interface {
 	ExistsBy(string, interface{}) (bool, error)
 	Count() (int64, error)
 	CountBy(string, interface{}) (int64, error)
+	FindAll(string, int, int, string, ...interface{}) ([]*model.MacroPartial, error)
 	Find(*model.Macro, *model.CoverPartial) (*model.MacroPartial, error)
 	Create(*model.Macro, *model.CoverPartial) (*model.MacroPartial, error)
 	FindOrCreate(*model.Macro, *model.CoverPartial) (*model.MacroPartial, error)
@@ -69,17 +70,26 @@ func (s *macroPartialServiceImpl) Get(id int64) (*model.MacroPartial, error) {
 	macroPartial, err := s.DbMap().Get(model.MacroPartial{}, id)
 	if err != nil {
 		return nil, err
-	} else if macroPartial == nil {
+	}
+
+	if macroPartial == nil {
 		return nil, nil
 	}
+
 	mp, ok := macroPartial.(*model.MacroPartial)
 	if !ok {
 		return nil, fmt.Errorf("Received struct is not a MacroPartial")
 	}
+
+	if mp.Id == int64(0) {
+		return nil, nil
+	}
+
 	err = mp.DecodeData()
 	if err != nil {
 		return nil, err
 	}
+
 	return mp, nil
 }
 
@@ -88,6 +98,10 @@ func (s *macroPartialServiceImpl) GetOneBy(column string, value interface{}) (*m
 	err := s.DbMap().SelectOne(&macroPartial, "select * from macro_partials where "+column+" = ? limit 1", value)
 	if err != nil {
 		return nil, err
+	}
+
+	if macroPartial.Id == int64(0) {
+		return nil, nil
 	}
 
 	err = macroPartial.DecodeData()
@@ -99,7 +113,7 @@ func (s *macroPartialServiceImpl) GetOneBy(column string, value interface{}) (*m
 }
 
 func (s *macroPartialServiceImpl) ExistsBy(column string, value interface{}) (bool, error) {
-	count, err := s.DbMap().SelectInt("select 1 from macro_partials where "+column+" = ? limit 1", value)
+	count, err := s.DbMap().SelectInt(fmt.Sprintf("select 1 from macro_partials where %s = ? limit 1", column), value)
 	return count == 1, err
 }
 
@@ -108,7 +122,28 @@ func (s *macroPartialServiceImpl) Count() (int64, error) {
 }
 
 func (s *macroPartialServiceImpl) CountBy(column string, value interface{}) (int64, error) {
-	return s.DbMap().SelectInt("select count(*) from macro_partials where "+column+" = ?", value)
+	return s.DbMap().SelectInt(fmt.Sprintf("select count(*) from macro_partials where %s = ?", column), value)
+}
+
+func (s *macroPartialServiceImpl) FindAll(order string, limit, offset int, conditions string, params ...interface{}) ([]*model.MacroPartial, error) {
+	var macroPartials []*model.MacroPartial
+
+	sql := fmt.Sprintf("select * from macro_partials where %s order by %s limit %d offset %d",
+		conditions, order, limit, offset)
+
+	_, err := s.dbMap.Select(&macroPartials, sql, params...)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, mp := range macroPartials {
+		err = mp.DecodeData()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return macroPartials, nil
 }
 
 func (s *macroPartialServiceImpl) doFind(macro *model.Macro, coverPartial *model.CoverPartial) (*model.MacroPartial, error) {
@@ -120,6 +155,10 @@ func (s *macroPartialServiceImpl) doFind(macro *model.Macro, coverPartial *model
 	err := s.DbMap().SelectOne(&p, "select * from macro_partials where macro_id = ? and cover_partial_id = ?", p.MacroId, p.CoverPartialId)
 	if err != nil {
 		return nil, err
+	}
+
+	if p.Id == int64(0) {
+		return nil, nil
 	}
 
 	err = p.DecodeData()

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"gosaic/model"
 	"sync"
 
@@ -39,11 +40,22 @@ func (s *coverServiceImpl) Get(id int64) (*model.Cover, error) {
 	c, err := s.DbMap().Get(model.Cover{}, id)
 	if err != nil {
 		return nil, err
-	} else if c != nil {
-		return c.(*model.Cover), nil
-	} else {
+	}
+
+	if c == nil {
 		return nil, nil
 	}
+
+	cc, ok := c.(*model.Cover)
+	if !ok {
+		return nil, errors.New("Unable to type cast cover")
+	}
+
+	if cc.Id == int64(0) {
+		return nil, nil
+	}
+
+	return cc, nil
 }
 
 func (s *coverServiceImpl) Insert(c *model.Cover) error {

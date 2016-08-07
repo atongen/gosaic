@@ -203,6 +203,23 @@ func TestMacroServiceGetOneBy(t *testing.T) {
 	}
 }
 
+func TestMacroServiceGetOneByNone(t *testing.T) {
+	macroService, err := setupMacroServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer macroService.DbMap().Db.Close()
+
+	c, err := macroService.GetOneBy("cover_id = ? AND md5sum = ?", int64(123), "not a valid md5")
+	if err != nil {
+		t.Fatalf("Error getting inserted macro: %s\n", err.Error())
+	}
+
+	if c != nil {
+		t.Fatal("Macro found when should not exist")
+	}
+}
+
 func TestMacroServiceExistsBy(t *testing.T) {
 	macroService, err := setupMacroServiceTest()
 	if err != nil {

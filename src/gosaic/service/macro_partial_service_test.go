@@ -344,6 +344,101 @@ func TestMacroPartialServiceCount(t *testing.T) {
 	}
 }
 
+func TestMacroPartialServiceCountBy(t *testing.T) {
+	macroPartialService, err := setupMacroPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer macroPartialService.DbMap().Db.Close()
+
+	mp := model.MacroPartial{
+		MacroId:        macro.Id,
+		CoverPartialId: coverPartial.Id,
+		AspectId:       aspect.Id,
+		Pixels: []*model.Lab{
+			&model.Lab{
+				L:     0.4,
+				A:     0.5,
+				B:     0.6,
+				Alpha: 0.0,
+			},
+		},
+	}
+
+	err = macroPartialService.Insert(&mp)
+	if err != nil {
+		t.Fatalf("Error inserting macro partial: %s\n", err.Error())
+	}
+
+	num, err := macroPartialService.CountBy("macro_id", macro.Id)
+	if err != nil {
+		t.Fatalf("Error counting macro partial: %s\n", err.Error())
+	}
+
+	if num != int64(1) {
+		t.Fatalf("Macro partial count incorrect\n")
+	}
+}
+
+func TestMacroPartialServiceFindAll(t *testing.T) {
+	macroPartialService, err := setupMacroPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer macroPartialService.DbMap().Db.Close()
+
+	mp := model.MacroPartial{
+		MacroId:        macro.Id,
+		CoverPartialId: coverPartial.Id,
+		AspectId:       aspect.Id,
+		Pixels: []*model.Lab{
+			&model.Lab{
+				L:     0.4,
+				A:     0.5,
+				B:     0.6,
+				Alpha: 0.0,
+			},
+		},
+	}
+
+	err = macroPartialService.Insert(&mp)
+	if err != nil {
+		t.Fatalf("Error inserting macro partial: %s\n", err.Error())
+	}
+
+	mps, err := macroPartialService.FindAll("id DESC", 1000, 0, "cover_partial_id = ?", coverPartial.Id)
+	if err != nil {
+		t.Fatalf("Error finding all macro partials: %s\n", err.Error())
+	}
+
+	if mps == nil {
+		t.Fatalf("No macro partial slice returned for FindAll\n")
+	}
+
+	if len(mps) != 1 {
+		t.Fatal("Inserted macro partial not found by FindAll")
+	}
+
+	mp2 := mps[0]
+
+	if mp2.MacroId != mp.MacroId {
+		t.Fatal("Macro partial macro id does not match")
+	}
+
+	if len(mp2.Pixels) != 1 {
+		t.Fatalf("Expected 1 macro partial pixel, got %d\n", len(mp2.Pixels))
+	}
+
+	plab := mp2.Pixels[0]
+
+	if plab.L != 0.4 &&
+		plab.A != 0.5 &&
+		plab.B != 0.6 &&
+		plab.Alpha != 0.0 {
+		t.Fatal("Macro partial pixel data is not correct")
+	}
+}
+
 func TestMacroPartialServiceFindOrCreate(t *testing.T) {
 	macroPartialService, err := setupMacroPartialServiceTest()
 	if err != nil {

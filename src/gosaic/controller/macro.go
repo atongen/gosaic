@@ -85,11 +85,9 @@ func Macro(env environment.Environment, path, coverName string) {
 		return
 	}
 
-	var macro *model.Macro
-	macro, _ = macroService.GetOneBy("cover_id = ? AND md5sum = ?", cover.Id, md5sum)
+	macro, _ := macroService.GetOneBy("cover_id = ? AND md5sum = ?", cover.Id, md5sum)
 
-	// macro was not found
-	if macro.Id == int64(0) {
+	if macro == nil {
 		macro = &model.Macro{
 			AspectId:    aspect.Id,
 			CoverId:     cover.Id,
@@ -109,7 +107,10 @@ func Macro(env environment.Environment, path, coverName string) {
 	err = buildMacroPartials(env, img, macro, env.Workers())
 	if err != nil {
 		env.Printf("Error building macro partials: %s\n", err.Error())
+		return
 	}
+
+	env.Printf("Built macro for %s with cover %s\n", path, coverName)
 }
 
 func buildMacroPartials(env environment.Environment, img *image.Image, macro *model.Macro, workers int) error {

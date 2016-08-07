@@ -1,6 +1,7 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 	"gosaic/model"
 	"sync"
@@ -41,11 +42,22 @@ func (s *macroServiceImpl) Get(id int64) (*model.Macro, error) {
 	c, err := s.DbMap().Get(model.Macro{}, id)
 	if err != nil {
 		return nil, err
-	} else if c != nil {
-		return c.(*model.Macro), nil
-	} else {
+	}
+
+	if c == nil {
 		return nil, nil
 	}
+
+	m, ok := c.(*model.Macro)
+	if !ok {
+		return nil, errors.New("Unable to type cast macro")
+	}
+
+	if m.Id == int64(0) {
+		return nil, nil
+	}
+
+	return m, nil
 }
 
 func (s *macroServiceImpl) Insert(c *model.Macro) error {
@@ -64,8 +76,15 @@ func (s *macroServiceImpl) Delete(c *model.Macro) error {
 
 func (s *macroServiceImpl) GetOneBy(conditions string, params ...interface{}) (*model.Macro, error) {
 	var macro model.Macro
+
 	err := s.DbMap().SelectOne(&macro, fmt.Sprintf("select * from macros where %s limit 1", conditions), params...)
-	return &macro, err
+	// returns error if none are found
+	// or if more than one is found
+	if err != nil {
+		return nil, nil
+	}
+
+	return &macro, nil
 }
 
 func (s *macroServiceImpl) ExistsBy(conditions string, params ...interface{}) (bool, error) {
