@@ -20,6 +20,6 @@ func MacroList(env environment.Environment) {
 	}
 
 	for _, macro := range macros {
-		env.Println(macro)
+		env.Printf("%d %s (%dx%d)", macro.Id, macro.Path, macro.Width, macro.Height)
 	}
 }
