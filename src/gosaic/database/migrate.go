@@ -15,6 +15,7 @@ var (
 		createCoverPartialTable,
 		createMacroTable,
 		createMacroPartialTable,
+		createPartialComparisonTable,
 	}
 )
 
@@ -265,6 +266,33 @@ func createMacroPartialTable(db *sql.DB) error {
 	}
 
 	sql = "create unique index idx_macro_partial on macro_partials (macro_id,cover_partial_id);"
+	_, err = db.Exec(sql)
+	return err
+}
+
+func createPartialComparisonTable(db *sql.DB) error {
+	sql := `
+		create table partial_comparisons (
+			id integer not null primary key,
+			macro_partial_id integer not null,
+			gidx_partial_id integer not null,
+			dist real not null,
+			FOREIGN KEY(macro_partial_id) REFENCES macro_partials(id) ON DELETE CASCADE,
+			FOREIGN KEY(gidx_partial_id) REFENCES gidx_partials(id) ON DELETE CASCADE
+		);
+	`
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	sql = "create index idx_partial_comparisons on partial_comparisons (macro_partial_id);"
+	_, err = db.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	sql = "create unique index idx_partial_comparisons_gidx on partial_comparisons (macro_partial_id,gidx_partial_id);"
 	_, err = db.Exec(sql)
 	return err
 }
