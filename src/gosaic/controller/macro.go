@@ -27,6 +27,21 @@ func Macro(env environment.Environment, path, coverName string) {
 		return
 	}
 
+	cover, err := coverService.GetOneBy("name", coverName)
+	if err != nil {
+		env.Printf("Error getting cover: %s\n", err.Error())
+		return
+	} else if cover == nil {
+		env.Printf("Cover %s not found\n", coverName)
+		return
+	}
+
+	md5sum, err := util.Md5sum(path)
+	if err != nil {
+		env.Printf("Error getting macro md5sum: %s\n", err.Error())
+		return
+	}
+
 	img, err := util.OpenImage(path)
 	if err != nil {
 		env.Printf("Failed to open image: %s\n", err.Error())
@@ -45,7 +60,9 @@ func Macro(env environment.Environment, path, coverName string) {
 		return
 	}
 
+	img = util.FillAspect(img, int(cover.Width), int(cover.Height))
 	bounds := (*img).Bounds()
+	// width and height of image after resize to fill cover aspect
 	width := bounds.Max.X
 	height := bounds.Max.Y
 
@@ -55,33 +72,11 @@ func Macro(env environment.Environment, path, coverName string) {
 		return
 	}
 
-	cover, err := coverService.GetOneBy("name", coverName)
-	if err != nil {
-		env.Printf("Error getting cover: %s\n", err.Error())
-		return
-	} else if cover == nil {
-		env.Printf("Cover %s not found\n", coverName)
-		return
-	}
-
-	coverAspect, err := aspectService.Get(cover.AspectId)
-	if err != nil {
-		env.Printf("Error getting cover aspect: %s\n", err.Error())
-		return
-	} else if cover == nil {
-		env.Println("Cover aspect not found")
-		return
-	}
-
-	if aspect.Id != coverAspect.Id {
-		env.Printf("Aspect of image (%dx%d) does not match aspect of cover %s (%dx%d)\n",
-			aspect.Columns, aspect.Rows, cover.Name, coverAspect.Columns, coverAspect.Rows)
-		return
-	}
-
-	md5sum, err := util.Md5sum(path)
-	if err != nil {
-		env.Printf("Error getting macro md5sum: %s\n", err.Error())
+	// this is an internal error, as it means our calculations
+	// above are incorrect
+	if aspect.Id != cover.AspectId {
+		env.Printf("Aspect of image (%dx%d) does not match aspect of cover %s\n",
+			aspect.Columns, aspect.Rows, cover.Name)
 		return
 	}
 

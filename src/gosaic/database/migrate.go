@@ -277,8 +277,8 @@ func createPartialComparisonTable(db *sql.DB) error {
 			macro_partial_id integer not null,
 			gidx_partial_id integer not null,
 			dist real not null,
-			FOREIGN KEY(macro_partial_id) REFENCES macro_partials(id) ON DELETE CASCADE,
-			FOREIGN KEY(gidx_partial_id) REFENCES gidx_partials(id) ON DELETE CASCADE
+			FOREIGN KEY(macro_partial_id) REFERENCES macro_partials(id) ON DELETE CASCADE,
+			FOREIGN KEY(gidx_partial_id) REFERENCES gidx_partials(id) ON DELETE CASCADE
 		);
 	`
 	_, err := db.Exec(sql)

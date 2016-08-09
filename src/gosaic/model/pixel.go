@@ -37,7 +37,7 @@ func PixelDecode(p Pixel) error {
 
 func PixelDiff(p1, p2 Pixel) (float64, error) {
 	if len(p1.GetPixels()) != len(p2.GetPixels()) {
-		return nil, errors.New("Pixel slice not the same length")
+		return 0.0, errors.New("Pixel slice not the same length")
 	}
 
 	result := float64(0.0)
@@ -48,5 +48,5 @@ func PixelDiff(p1, p2 Pixel) (float64, error) {
 		result += lab1.dist(lab2)
 	}
 
-	return result
+	return result, nil
 }
