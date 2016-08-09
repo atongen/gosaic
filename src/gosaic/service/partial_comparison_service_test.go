@@ -54,7 +54,7 @@ func setupPartialComparisonServiceTest() (PartialComparisonService, error) {
 		return nil, err
 	}
 
-	aspect = model.Aspect{Columns: 87, Rows: 128}
+	aspect = model.Aspect{Columns: 239, Rows: 170}
 	err = aspectService.Insert(&aspect)
 	if err != nil {
 		return nil, err
@@ -62,13 +62,26 @@ func setupPartialComparisonServiceTest() (PartialComparisonService, error) {
 
 	gidx = model.Gidx{
 		AspectId:    aspect.Id,
-		Path:        "testdata/matterhorn.jpg",
-		Md5sum:      "fcaadee574094a3ae04c6badbbb9ee5e",
-		Width:       uint(696),
-		Height:      uint(1024),
+		Path:        "testdata/shaq_bill.jpg",
+		Md5sum:      "394c43174e42e043e7b9049e1bb10a39",
+		Width:       uint(478),
+		Height:      uint(340),
 		Orientation: 1,
 	}
 	err = gidxService.Insert(&gidx)
+	if err != nil {
+		return nil, err
+	}
+
+	gidx2 := model.Gidx{
+		AspectId:    aspect.Id,
+		Path:        "testdata/eagle.jpg",
+		Md5sum:      "5a19b84638fc471d8ec4167ea4e659fb",
+		Width:       uint(512),
+		Height:      uint(364),
+		Orientation: 1,
+	}
+	err = gidxService.Insert(&gidx2)
 	if err != nil {
 		return nil, err
 	}
@@ -85,18 +98,28 @@ func setupPartialComparisonServiceTest() (PartialComparisonService, error) {
 	}
 	gidxPartial = *gp
 
-	coverPartial = model.CoverPartial{
-		CoverId:  cover.Id,
-		AspectId: aspect.Id,
-		X1:       0,
-		Y1:       0,
-		X2:       1,
-		Y2:       1,
-	}
-	err = coverPartialService.Insert(&coverPartial)
+	_, err = gidxPartialService.FindOrCreate(&gidx2, &aspect)
 	if err != nil {
 		return nil, err
 	}
+
+	coverPartials := make([]model.CoverPartial, 5)
+	for i := 0; i < 5; i++ {
+		cp := model.CoverPartial{
+			CoverId:  cover.Id,
+			AspectId: aspect.Id,
+			X1:       int64(i),
+			Y1:       int64(i),
+			X2:       int64(i + 1),
+			Y2:       int64(i + 1),
+		}
+		err = coverPartialService.Insert(&cp)
+		if err != nil {
+			return nil, err
+		}
+		coverPartials[i] = cp
+	}
+	coverPartial = coverPartials[0]
 
 	macro = model.Macro{
 		CoverId:     cover.Id,
@@ -112,13 +135,34 @@ func setupPartialComparisonServiceTest() (PartialComparisonService, error) {
 		return nil, err
 	}
 
-	mp, err := macroPartialService.FindOrCreate(&macro, &coverPartial)
-	if err != nil {
-		return nil, err
+	for i := 0; i < 5; i++ {
+		mp, err := macroPartialService.FindOrCreate(&macro, &coverPartials[i])
+		if err != nil {
+			return nil, err
+		}
+		if i == 0 {
+			macroPartial = *mp
+		}
 	}
-	macroPartial = *mp
 
 	return partialComparisonService, nil
+}
+
+func TestPartialComparisonServiceCountMissing(t *testing.T) {
+	partialComparisonService, err := setupPartialComparisonServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer partialComparisonService.DbMap().Db.Close()
+
+	num, err := partialComparisonService.CountMissing(&macro)
+	if err != nil {
+		t.Fatalf("Error counting missing partial comparisons: %s\n", err.Error())
+	}
+
+	if num != 10 {
+		t.Fatalf("Expected 10 missing partial comparisons, got %d\n", num)
+	}
 }
 
 func TestPartialComparisonServiceFindMissing(t *testing.T) {
@@ -128,10 +172,12 @@ func TestPartialComparisonServiceFindMissing(t *testing.T) {
 	}
 	defer partialComparisonService.DbMap().Db.Close()
 
-	partialComparisons, err := partialComparisonService.FindMissing(&macro, 1000)
+	macroGidxViews, err := partialComparisonService.FindMissing(&macro, 1000)
 	if err != nil {
 		t.Fatalf("Error finding missing partial comparisons: %s\n", err.Error())
 	}
 
-	t.Fatalf("missing partial comparisons: %d\n", len(partialComparisons))
+	if len(macroGidxViews) != 10 {
+		t.Fatalf("Expected 10 missing partial comparisons, got %d\n", len(macroGidxViews))
+	}
 }

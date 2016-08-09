@@ -23,7 +23,7 @@ type PartialComparisonService interface {
 	Create(*model.MacroPartial, *model.GidxPartial) (*model.PartialComparison, error)
 	FindOrCreate(*model.MacroPartial, *model.GidxPartial) (*model.PartialComparison, error)
 	CountMissing(macro *model.Macro) (int64, error)
-	FindMissing(*model.Macro, int) ([]*model.PartialComparison, error)
+	FindMissing(*model.Macro, int) ([]*model.MacroGidxView, error)
 }
 
 type partialComparisonServiceImpl struct {
@@ -205,14 +205,20 @@ and not exists (
 	return s.DbMap().SelectInt(sql, macro.Id)
 }
 
-func (s *partialComparisonServiceImpl) FindMissing(macro *model.Macro, limit int) ([]*model.PartialComparison, error) {
+func (s *partialComparisonServiceImpl) FindMissing(macro *model.Macro, limit int) ([]*model.MacroGidxView, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
 	sql := `
 select macro_partials.id as macro_partial_id,
-	gidx_partials.id as gidx_partial_id
-from macro_partials, gidx_partials
+	macro_partials.macro_id,
+	macro_partials.cover_partial_id,
+	macro_partials.aspect_id,
+	macro_partials.data as macro_partial_data,
+	gidx_partials.id as gidx_partial_id,
+	gidx_partials.gidx_id,
+	gidx_partials.data as gidx_partial_data
+from macro_partials join gidx_partials
 where macro_partials.macro_id = ?
 and macro_partials.aspect_id = gidx_partials.aspect_id
 and not exists (
@@ -225,8 +231,8 @@ order by macro_partials.id asc,
 limit ?
 `
 
-	var partialComparisons []*model.PartialComparison
-	_, err := s.dbMap.Select(&partialComparisons, sql, macro.Id, limit)
+	var macroGidxViews []*model.MacroGidxView
+	_, err := s.dbMap.Select(&macroGidxViews, sql, macro.Id, limit)
 
-	return partialComparisons, err
+	return macroGidxViews, err
 }
