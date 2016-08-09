@@ -95,7 +95,7 @@ func (s *macroPartialServiceImpl) Get(id int64) (*model.MacroPartial, error) {
 
 func (s *macroPartialServiceImpl) GetOneBy(column string, value interface{}) (*model.MacroPartial, error) {
 	var macroPartial model.MacroPartial
-	err := s.DbMap().SelectOne(&macroPartial, "select * from macro_partials where "+column+" = ? limit 1", value)
+	err := s.DbMap().SelectOne(&macroPartial, fmt.Sprintf("select * from macro_partials where %s = ? limit 1", column), value)
 	if err != nil {
 		return nil, err
 	}

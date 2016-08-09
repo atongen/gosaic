@@ -113,3 +113,13 @@ func getTestMacroPartialService(dbMap *gorp.DbMap) (MacroPartialService, error) 
 
 	return macroPartialService, nil
 }
+
+func getTestPartialComparisonService(dbMap *gorp.DbMap) (PartialComparisonService, error) {
+	partialComparisonService := NewPartialComparisonService(dbMap)
+	err := partialComparisonService.Register()
+	if err != nil {
+		return nil, err
+	}
+
+	return partialComparisonService, nil
+}

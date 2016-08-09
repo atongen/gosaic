@@ -15,6 +15,7 @@ const (
 	CoverPartialServiceName
 	MacroServiceName
 	MacroPartialServiceName
+	PartialComparisonServiceName
 )
 
 func (env *environment) getService(name ServiceName) (service.Service, error) {
@@ -43,6 +44,8 @@ func (env *environment) getService(name ServiceName) (service.Service, error) {
 		s = service.NewMacroService(env.dbMap)
 	case MacroPartialServiceName:
 		s = service.NewMacroPartialService(env.dbMap)
+	case PartialComparisonServiceName:
+		s = service.NewPartialComparisonService(env.dbMap)
 	}
 	err := s.Register()
 	if err != nil {
@@ -148,4 +151,18 @@ func (env *environment) MacroPartialService() (service.MacroPartialService, erro
 	}
 
 	return macroPartialService, nil
+}
+
+func (env *environment) PartialComparisonService() (service.PartialComparisonService, error) {
+	s, err := env.getService(PartialComparisonServiceName)
+	if err != nil {
+		return nil, err
+	}
+
+	partialComparisonService, ok := s.(service.PartialComparisonService)
+	if !ok {
+		return nil, fmt.Errorf("Invalid partial comparison service")
+	}
+
+	return partialComparisonService, nil
 }
