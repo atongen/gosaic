@@ -24,6 +24,7 @@ type PartialComparisonService interface {
 	FindOrCreate(*model.MacroPartial, *model.GidxPartial) (*model.PartialComparison, error)
 	CountMissing(macro *model.Macro) (int64, error)
 	FindMissing(*model.Macro, int) ([]*model.MacroGidxView, error)
+	CreateFromView(*model.MacroGidxView) (*model.PartialComparison, error)
 }
 
 type partialComparisonServiceImpl struct {
@@ -87,15 +88,11 @@ func (s *partialComparisonServiceImpl) GetOneBy(conditions string, params ...int
 		return nil, err
 	}
 
-	if partialComparison.Id == int64(0) {
-		return nil, nil
-	}
-
 	return &partialComparison, nil
 }
 
 func (s *partialComparisonServiceImpl) ExistsBy(conditions string, params ...interface{}) (bool, error) {
-	count, err := s.DbMap().SelectInt(fmt.Sprintf("select 1 from partial_comparisons where %s limit 1", conditions), params)
+	count, err := s.DbMap().SelectInt(fmt.Sprintf("select 1 from partial_comparisons where %s limit 1", conditions), params...)
 	return count == 1, err
 }
 
@@ -104,7 +101,7 @@ func (s *partialComparisonServiceImpl) Count() (int64, error) {
 }
 
 func (s *partialComparisonServiceImpl) CountBy(conditions string, params ...interface{}) (int64, error) {
-	return s.DbMap().SelectInt(fmt.Sprintf("select count(*) from partial_comparisons where %s", conditions), params)
+	return s.DbMap().SelectInt(fmt.Sprintf("select count(*) from partial_comparisons where %s", conditions), params...)
 }
 
 func (s *partialComparisonServiceImpl) FindAll(order string, limit, offset int, conditions string, params ...interface{}) ([]*model.PartialComparison, error) {
@@ -235,4 +232,39 @@ limit ?
 	_, err := s.dbMap.Select(&macroGidxViews, sql, macro.Id, limit)
 
 	return macroGidxViews, err
+}
+
+func (s *partialComparisonServiceImpl) CreateFromView(view *model.MacroGidxView) (*model.PartialComparison, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	macroPartial := view.MacroPartial()
+	err := macroPartial.DecodeData()
+	if err != nil {
+		return nil, err
+	}
+
+	gidxPartial := view.GidxPartial()
+	err = gidxPartial.DecodeData()
+	if err != nil {
+		return nil, err
+	}
+
+	dist, err := model.PixelDist(macroPartial, gidxPartial)
+	if err != nil {
+		return nil, err
+	}
+
+	pc := model.PartialComparison{
+		MacroPartialId: macroPartial.Id,
+		GidxPartialId:  gidxPartial.Id,
+		Dist:           dist,
+	}
+
+	err = s.Insert(&pc)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pc, nil
 }
