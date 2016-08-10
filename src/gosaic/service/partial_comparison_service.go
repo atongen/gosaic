@@ -11,6 +11,7 @@ import (
 type PartialComparisonService interface {
 	Service
 	Insert(*model.PartialComparison) error
+	BulkInsert([]*model.PartialComparison) error
 	Update(*model.PartialComparison) error
 	Delete(*model.PartialComparison) error
 	Get(int64) (*model.PartialComparison, error)
@@ -47,6 +48,11 @@ func (s *partialComparisonServiceImpl) Register() error {
 
 func (s *partialComparisonServiceImpl) Insert(pc *model.PartialComparison) error {
 	return s.DbMap().Insert(pc)
+}
+
+// http://stackoverflow.com/questions/12486436/golang-how-do-i-batch-sql-statements-with-package-database-sql
+func (s *partialComparisonServiceImpl) BulkInsert(partialComparisons []*model.PartialComparison) error {
+	return nil
 }
 
 func (s *partialComparisonServiceImpl) Update(pc *model.PartialComparison) error {
