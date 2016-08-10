@@ -40,7 +40,7 @@ func (s *partialComparisonServiceImpl) DbMap() *gorp.DbMap {
 }
 
 func (s *partialComparisonServiceImpl) Register() error {
-	s.DbMap().AddTableWithName(model.PartialComparison{}, "partials").SetKeys(true, "id")
+	s.DbMap().AddTableWithName(model.PartialComparison{}, "partial_comparisons").SetKeys(true, "id")
 	return nil
 }
 
