@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"fmt"
 	"gosaic/model"
 	"sync"
@@ -11,7 +12,7 @@ import (
 type PartialComparisonService interface {
 	Service
 	Insert(*model.PartialComparison) error
-	BulkInsert([]*model.PartialComparison) error
+	BulkInsert([]*model.PartialComparison) (int64, error)
 	Update(*model.PartialComparison) error
 	Delete(*model.PartialComparison) error
 	Get(int64) (*model.PartialComparison, error)
@@ -51,8 +52,36 @@ func (s *partialComparisonServiceImpl) Insert(pc *model.PartialComparison) error
 }
 
 // http://stackoverflow.com/questions/12486436/golang-how-do-i-batch-sql-statements-with-package-database-sql
-func (s *partialComparisonServiceImpl) BulkInsert(partialComparisons []*model.PartialComparison) error {
-	return nil
+func (s *partialComparisonServiceImpl) BulkInsert(partialComparisons []*model.PartialComparison) (int64, error) {
+	if len(partialComparisons) == 0 {
+		return int64(0), nil
+	} else if len(partialComparisons) == 1 {
+		return int64(1), s.Insert(partialComparisons[0])
+	}
+
+	var b bytes.Buffer
+
+	b.WriteString("insert into partial_comparisons (id, macro_partial_id, gidx_partial_id, dist) ")
+	b.WriteString(fmt.Sprintf("select null as id, %d as macro_partial_id, %d as gidx_partial_id, %f as dist",
+		partialComparisons[0].MacroPartialId, partialComparisons[0].GidxPartialId, partialComparisons[0].Dist))
+
+	for i := 1; i < len(partialComparisons); i++ {
+		b.WriteString(fmt.Sprintf(" union select null, %d, %d, %f",
+			partialComparisons[i].MacroPartialId, partialComparisons[i].GidxPartialId, partialComparisons[i].Dist))
+	}
+
+	// ignoring sql.Result
+	res, err := s.dbMap.Db.Exec(b.String())
+	if err != nil {
+		return int64(0), err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return int64(0), err
+	}
+
+	return rowsAffected, nil
 }
 
 func (s *partialComparisonServiceImpl) Update(pc *model.PartialComparison) error {

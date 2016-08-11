@@ -188,6 +188,51 @@ func TestPartialComparisonServiceInsert(t *testing.T) {
 	}
 }
 
+func TestPartialComparisonServiceBulkInsert(t *testing.T) {
+	partialComparisonService, err := setupPartialComparisonServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer partialComparisonService.DbMap().Db.Close()
+
+	macroGidxViews, err := partialComparisonService.FindMissing(&macro, 1000)
+	if err != nil {
+		t.Fatalf("Error finding missing partial comparisons: %s\n", err.Error())
+	}
+
+	if len(macroGidxViews) < 2 {
+		t.Fatalf("Expected more than 1 missing partial comparisons, got %d", len(macroGidxViews))
+	}
+
+	partialComparisons := make([]*model.PartialComparison, len(macroGidxViews))
+	for i, mgv := range macroGidxViews {
+		partialComparisons[i] = &model.PartialComparison{
+			MacroPartialId: mgv.MacroPartialId,
+			GidxPartialId:  mgv.GidxPartialId,
+			Dist:           0.5,
+		}
+	}
+
+	num, err := partialComparisonService.BulkInsert(partialComparisons)
+	if err != nil {
+		t.Fatalf("Error bulk inserting partial comparisons: %s\n", err.Error())
+	}
+
+	if num != int64(len(macroGidxViews)) {
+		t.Fatalf("Expected %d affected rows for bulk insert, got %d\n", len(macroGidxViews), num)
+	}
+
+	count, err := partialComparisonService.CountMissing(&macro)
+	if err != nil {
+		t.Fatalf("Error counting missing partial comparisons: %s\n", err.Error())
+	}
+
+	if count != 0 {
+		t.Fatalf("Expected 0 missing partial comparisons, got %d\n", count)
+	}
+
+}
+
 func TestPartialComparisonServiceUpdate(t *testing.T) {
 	partialComparisonService, err := setupPartialComparisonServiceTest()
 	if err != nil {
