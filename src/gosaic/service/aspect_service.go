@@ -1,6 +1,8 @@
 package service
 
 import (
+	"strconv"
+	"strings"
 	"sync"
 
 	"gopkg.in/gorp.v1"
@@ -14,6 +16,7 @@ type AspectService interface {
 	Get(int64) (*model.Aspect, error)
 	Count() (int64, error)
 	FindOrCreate(int, int) (*model.Aspect, error)
+	FindIn([]int64) ([]*model.Aspect, error)
 }
 
 type aspectServiceImpl struct {
@@ -73,4 +76,22 @@ func (s *aspectServiceImpl) FindOrCreate(width int, height int) (*model.Aspect, 
 	}
 
 	return &aspect, nil
+}
+
+func (s *aspectServiceImpl) FindIn(ids []int64) ([]*model.Aspect, error) {
+	aspects := make([]*model.Aspect, len(ids))
+	if len(aspects) == 0 {
+		return aspects, nil
+	}
+
+	idsStr := make([]string, len(ids))
+	for i, id := range ids {
+		idsStr[i] = strconv.FormatInt(id, 10)
+	}
+	_, err := s.DbMap().Select(&aspects, "select * from aspects where id in (?)", strings.Join(idsStr, ","))
+	if err != nil {
+		return nil, err
+	}
+
+	return aspects, nil
 }

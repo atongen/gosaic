@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"gosaic/model"
+	"gosaic/util"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -31,80 +32,129 @@ func setupAspectServiceTest() (AspectService, error) {
 func TestAspectServiceGet(t *testing.T) {
 	aspectService, err := setupAspectServiceTest()
 	if err != nil {
-		t.Error("Unable to setup database.", err)
+		t.Fatal("Unable to setup database.", err)
 	}
 	defer aspectService.DbMap().Db.Close()
 
 	aspect2, err := aspectService.Get(aspect.Id)
 	if err != nil {
-		t.Error("Error finding aspect by id", err)
+		t.Fatal("Error finding aspect by id", err)
 	}
 
 	if aspect.Id != aspect2.Id ||
 		aspect.Columns != aspect2.Columns ||
 		aspect.Rows != aspect2.Rows {
-		t.Error("Found aspect does not match data")
+		t.Fatal("Found aspect does not match data")
 	}
 }
 
 func TestAspectServiceGetMissing(t *testing.T) {
 	aspectService, err := setupAspectServiceTest()
 	if err != nil {
-		t.Error("Unable to setup database.", err)
+		t.Fatal("Unable to setup database.", err)
 	}
 	defer aspectService.DbMap().Db.Close()
 
 	aspect2, err := aspectService.Get(1234)
 	if err != nil {
-		t.Error("Error finding aspect by id", err)
+		t.Fatal("Error finding aspect by id", err)
 	}
 
 	if aspect2 != nil {
-		t.Error("Found non-existent aspect")
+		t.Fatal("Found non-existent aspect")
 	}
 }
 
 func TestAspectServiceFindOrCreate(t *testing.T) {
 	aspectService, err := setupAspectServiceTest()
 	if err != nil {
-		t.Error("Unable to setup database.", err)
+		t.Fatal("Unable to setup database.", err)
 	}
 	defer aspectService.DbMap().Db.Close()
 
 	n1, err := aspectService.Count()
 	if err != nil {
-		t.Error("Unable to count aspects")
+		t.Fatal("Unable to count aspects")
 	}
 
 	a1, err := aspectService.FindOrCreate(100, 100)
 	if err != nil {
-		t.Error("Unable to find or create 100x100 aspect")
+		t.Fatal("Unable to find or create 100x100 aspect")
 	}
 
 	a2, err := aspectService.FindOrCreate(200, 200)
 	if err != nil {
-		t.Error("Unable to find or create 200x200 aspect")
+		t.Fatal("Unable to find or create 200x200 aspect")
 	}
 
 	a3, err := aspectService.FindOrCreate(300, 300)
 	if err != nil {
-		t.Error("Unable to find or create 300x300 aspect")
+		t.Fatal("Unable to find or create 300x300 aspect")
+	}
+
+	_, err = aspectService.FindOrCreate(400, 600)
+	if err != nil {
+		t.Fatal("Unable to find or create 400x600 aspect")
 	}
 
 	n2, err := aspectService.Count()
 	if err != nil {
-		t.Error("Unable to re-count aspects")
+		t.Fatal("Unable to re-count aspects")
 	}
 
-	if n1 != n2 {
-		t.Error("Created aspect when shouldn't have")
+	if n1 != n2-1 {
+		t.Fatal("Created aspect when shouldn't have")
 	}
 
 	if a1.Id != a2.Id {
-		t.Error("Aspects not equal")
+		t.Fatal("Aspects not equal")
 	}
 
 	if a2.Id != a3.Id {
-		t.Error("Aspects not equal")
+		t.Fatal("Aspects not equal")
+	}
+}
+
+func TestAspectServiceFindIn(t *testing.T) {
+	aspectService, err := setupAspectServiceTest()
+	if err != nil {
+		t.Fatal("Unable to setup database.", err)
+	}
+	defer aspectService.DbMap().Db.Close()
+
+	a1, err := aspectService.FindOrCreate(20, 30)
+	if err != nil {
+		t.Fatal("Unable to find or create 20x30 aspect")
+	}
+
+	a2, err := aspectService.FindOrCreate(30, 40)
+	if err != nil {
+		t.Fatal("Unable to find or create 30x40 aspect")
+	}
+
+	a3, err := aspectService.FindOrCreate(40, 50)
+	if err != nil {
+		t.Fatal("Unable to find or create 40x50 aspect")
+	}
+
+	ids := make([]int64, 4)
+	ids[0] = aspect.Id
+	ids[1] = a1.Id
+	ids[2] = a2.Id
+	ids[3] = a3.Id
+
+	aspects, err := aspectService.FindIn(ids)
+	if err != nil {
+		t.Fatalf("Error finding in aspect ids: %s\n", err.Error())
+	}
+
+	if len(aspects) != 4 {
+		t.Fatalf("Expected 4 aspects, got %d\n", len(aspects))
+	}
+
+	for _, aspect := range []*model.Aspect{&aspect, a1, a2, a3} {
+		if !util.SliceContainsInt64(ids, aspect.Id) {
+			t.Fatalf("Expected %d to be in ids slice", aspect.Id)
+		}
 	}
 }
