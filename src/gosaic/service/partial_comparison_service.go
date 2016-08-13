@@ -264,35 +264,58 @@ limit ?
 `
 
 	var macroGidxViews []*model.MacroGidxView
-	_, err := s.dbMap.Select(&macroGidxViews, sql, macro.Id, limit)
+	rows, err := s.dbMap.Db.Query(sql, macro.Id, limit)
+	if err != nil {
+		return nil, err
+	}
 
-	return macroGidxViews, err
+	for rows.Next() {
+		var r model.MacroGidxView = model.MacroGidxView{
+			&model.MacroPartial{},
+			&model.GidxPartial{},
+		}
+		err = rows.Scan(
+			&r.MacroPartial.Id,
+			&r.MacroPartial.MacroId,
+			&r.MacroPartial.CoverPartialId,
+			&r.MacroPartial.AspectId,
+			&r.MacroPartial.Data,
+			&r.GidxPartial.Id,
+			&r.GidxPartial.GidxId,
+			&r.GidxPartial.Data,
+		)
+		if err != nil {
+			return nil, err
+		}
+		r.GidxPartial.AspectId = r.MacroPartial.AspectId
+		macroGidxViews = append(macroGidxViews, &r)
+	}
+
+	return macroGidxViews, nil
 }
 
 func (s *partialComparisonServiceImpl) CreateFromView(view *model.MacroGidxView) (*model.PartialComparison, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	macroPartial := view.MacroPartial()
-	err := macroPartial.DecodeData()
+	err := view.MacroPartial.DecodeData()
 	if err != nil {
 		return nil, err
 	}
 
-	gidxPartial := view.GidxPartial()
-	err = gidxPartial.DecodeData()
+	err = view.GidxPartial.DecodeData()
 	if err != nil {
 		return nil, err
 	}
 
-	dist, err := model.PixelDist(macroPartial, gidxPartial)
+	dist, err := model.PixelDist(view.MacroPartial, view.GidxPartial)
 	if err != nil {
 		return nil, err
 	}
 
 	pc := model.PartialComparison{
-		MacroPartialId: macroPartial.Id,
-		GidxPartialId:  gidxPartial.Id,
+		MacroPartialId: view.MacroPartial.Id,
+		GidxPartialId:  view.GidxPartial.Id,
 		Dist:           dist,
 	}
 

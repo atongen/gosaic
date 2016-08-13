@@ -207,8 +207,8 @@ func TestPartialComparisonServiceBulkInsert(t *testing.T) {
 	partialComparisons := make([]*model.PartialComparison, len(macroGidxViews))
 	for i, mgv := range macroGidxViews {
 		partialComparisons[i] = &model.PartialComparison{
-			MacroPartialId: mgv.MacroPartialId,
-			GidxPartialId:  mgv.GidxPartialId,
+			MacroPartialId: mgv.MacroPartial.Id,
+			GidxPartialId:  mgv.GidxPartial.Id,
 			Dist:           0.5,
 		}
 	}
