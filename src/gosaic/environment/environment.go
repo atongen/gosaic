@@ -39,6 +39,7 @@ type Environment interface {
 	PartialComparisonService() (service.PartialComparisonService, error)
 	DbPath() string
 	Workers() int
+	Log() *log.Logger
 	Db() *sql.DB
 	DbMap() *gorp.DbMap
 	Printf(format string, a ...interface{})
@@ -144,6 +145,10 @@ func (env *environment) DbPath() string {
 
 func (env *environment) Workers() int {
 	return env.workers
+}
+
+func (env *environment) Log() *log.Logger {
+	return env.log
 }
 
 func (env *environment) Db() *sql.DB {

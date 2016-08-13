@@ -24,6 +24,7 @@ type MacroPartialService interface {
 	Create(*model.Macro, *model.CoverPartial) (*model.MacroPartial, error)
 	FindOrCreate(*model.Macro, *model.CoverPartial) (*model.MacroPartial, error)
 	FindMissing(*model.Macro, string, int, int) ([]*model.CoverPartial, error)
+	AspectIds(int64) ([]int64, error)
 }
 
 type macroPartialServiceImpl struct {
@@ -243,4 +244,29 @@ offset ?
 	_, err := s.dbMap.Select(&coverPartials, sql, macro.CoverId, macro.Id, order, limit, offset)
 
 	return coverPartials, err
+}
+
+func (s *macroPartialServiceImpl) AspectIds(macroId int64) ([]int64, error) {
+	sql := `
+		select distinct aspect_id
+		from macro_partials
+		where macro_id = ?
+		order by aspect_id asc
+	`
+	aspectIds := make([]int64, 0)
+	rows, err := s.dbMap.Db.Query(sql, macroId)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var aspectId int64
+		err = rows.Scan(&aspectId)
+		if err != nil {
+			return nil, err
+		}
+		aspectIds = append(aspectIds, aspectId)
+	}
+
+	return aspectIds, nil
 }

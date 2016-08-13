@@ -520,3 +520,43 @@ func TestMacroPartialServiceFindMissing(t *testing.T) {
 		t.Fatalf("Expected 0 missing macro partials, but got %d\n", len(coverPartials))
 	}
 }
+
+func TestMacroPartialServiceAspectIds(t *testing.T) {
+	macroPartialService, err := setupMacroPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer macroPartialService.DbMap().Db.Close()
+
+	_, err = macroPartialService.FindOrCreate(&macro, &coverPartial)
+	if err != nil {
+		t.Fatalf("Failed to FindOrCreate macroPartial: %s\n", err.Error())
+	}
+
+	aspectIds, err := macroPartialService.AspectIds(macro.AspectId)
+	if err != nil {
+		t.Fatalf("Failed to get aspect ids for macro partials: %s\n", err.Error())
+	}
+
+	macroPartials, err := macroPartialService.FindAll("id asc", 100, 0, "macro_id = ?", macro.Id)
+	if err != nil {
+		t.Fatalf("Failed to get all macro partials for macro: %s\n", err.Error())
+	}
+
+	if len(macroPartials) == 0 {
+		t.Fatal("No macro partials found for macro")
+	}
+
+	for _, macroPartial := range macroPartials {
+		found := false
+		for _, aspectId := range aspectIds {
+			if macroPartial.AspectId == aspectId {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Fatalf("Expected to find aspect id %d in list of macro partials", macroPartial.AspectId)
+		}
+	}
+}

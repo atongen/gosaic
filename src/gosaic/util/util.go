@@ -213,3 +213,12 @@ func FillAspect(img *image.Image, aspectWidth, aspectHeight int) *image.Image {
 	var myImg image.Image = imaging.Fill((*img), w, h, imaging.Center, imaging.Lanczos)
 	return &myImg
 }
+
+func SliceContainsInt64(s []int64, a int64) bool {
+	for _, b := range s {
+		if a == b {
+			return true
+		}
+	}
+	return false
+}
