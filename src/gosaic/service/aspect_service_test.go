@@ -157,4 +157,10 @@ func TestAspectServiceFindIn(t *testing.T) {
 			t.Fatalf("Expected %d to be in ids slice", aspect.Id)
 		}
 	}
+
+	for _, aspect := range aspects {
+		if aspect == nil {
+			t.Fatal("Received nil aspect from FindIn")
+		}
+	}
 }

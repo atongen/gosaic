@@ -5,6 +5,7 @@ import (
 	"gosaic/model"
 	"gosaic/service"
 	"log"
+	"sync"
 )
 
 func Compare(env environment.Environment, macroId int64) {
@@ -66,8 +67,13 @@ func createMissingComparisons(l *log.Logger, partialComparisonService service.Pa
 	if err != nil {
 		l.Fatalf("Error counting missing partial comparisons %s\n", err.Error())
 	}
-	created := int64(0)
 
+	if numTotal == 0 {
+		l.Printf("No missing comparisons for macro %d\n", macro.Id)
+		return
+	}
+
+	created := int64(0)
 	for {
 		views, err := partialComparisonService.FindMissing(macro, batchSize)
 		if err != nil {
@@ -78,24 +84,62 @@ func createMissingComparisons(l *log.Logger, partialComparisonService service.Pa
 			break
 		}
 
-		partialComparisons, err := buildPartialComparisons(views)
-		if err != nil {
-			l.Fatalf("Error building partial comparisons: %s\n", err.Error())
+		partialComparisons := buildPartialComparisons(l, views)
+
+		numErrors := len(views) - len(partialComparisons)
+		if numErrors > 0 {
+			l.Printf("Failed to create %d of %d comparisons\n", numErrors, len(views))
 		}
 
-		numCreated, err := partialComparisonService.BulkInsert(partialComparisons)
-		if err != nil {
-			l.Fatalf("Error inserting partial comparisons: %s\n", err.Error())
-		}
+		if len(partialComparisons) > 0 {
+			numCreated, err := partialComparisonService.BulkInsert(partialComparisons)
+			if err != nil {
+				l.Fatalf("Error inserting partial comparisons: %s\n", err.Error())
+			}
 
-		created += numCreated
-		l.Printf("%d / %d partial comparisons created\n", created, numTotal)
+			created += numCreated
+			l.Printf("%d / %d partial comparisons created\n", created, numTotal)
+		}
 	}
 }
 
-func buildPartialComparisons(macroGidxViews []*model.MacroGidxView) ([]*model.PartialComparison, error) {
-	// TODO
-	return nil, nil
+func buildPartialComparisons(l *log.Logger, macroGidxViews []*model.MacroGidxView) []*model.PartialComparison {
+	var wg sync.WaitGroup
+	wg.Add(len(macroGidxViews))
+
+	partialComparisons := make([]*model.PartialComparison, len(macroGidxViews))
+	add := make(chan *model.PartialComparison)
+	errs := make(chan error)
+
+	go func(myLog *log.Logger, pcs []*model.PartialComparison, addCh chan *model.PartialComparison, errsCh chan error) {
+		idx := 0
+		for i := 0; i < len(pcs); i++ {
+			select {
+			case pc := <-addCh:
+				pcs[idx] = pc
+				idx++
+			case err := <-errsCh:
+				l.Printf("Error building partial comparison: %s\n", err.Error())
+			}
+			wg.Done()
+		}
+	}(l, partialComparisons, add, errs)
+
+	for _, macroGidxView := range macroGidxViews {
+		go func(mgv *model.MacroGidxView, addCh chan *model.PartialComparison, errsCh chan error) {
+			pc, err := buildPartialComparison(mgv)
+			if err != nil {
+				errsCh <- err
+				return
+			}
+			addCh <- pc
+		}(macroGidxView, add, errs)
+	}
+
+	wg.Wait()
+	close(add)
+	close(errs)
+	return partialComparisons
 }
 
 func buildPartialComparison(macroGidxView *model.MacroGidxView) (*model.PartialComparison, error) {

@@ -1,8 +1,8 @@
 package service
 
 import (
+	"bytes"
 	"strconv"
-	"strings"
 	"sync"
 
 	"gopkg.in/gorp.v1"
@@ -79,16 +79,25 @@ func (s *aspectServiceImpl) FindOrCreate(width int, height int) (*model.Aspect, 
 }
 
 func (s *aspectServiceImpl) FindIn(ids []int64) ([]*model.Aspect, error) {
-	aspects := make([]*model.Aspect, len(ids))
-	if len(aspects) == 0 {
+	aspects := make([]*model.Aspect, 0)
+	num := len(ids)
+	if num == 0 {
 		return aspects, nil
 	}
 
-	idsStr := make([]string, len(ids))
+	var b bytes.Buffer
+	b.WriteString("select * from aspects where id in (")
+	idsStr := make([]interface{}, num)
 	for i, id := range ids {
 		idsStr[i] = strconv.FormatInt(id, 10)
+		b.WriteString("?")
+		if i < num-1 {
+			b.WriteString(",")
+		}
 	}
-	_, err := s.DbMap().Select(&aspects, "select * from aspects where id in (?)", strings.Join(idsStr, ","))
+	b.WriteString(")")
+
+	_, err := s.DbMap().Select(&aspects, b.String(), idsStr...)
 	if err != nil {
 		return nil, err
 	}
