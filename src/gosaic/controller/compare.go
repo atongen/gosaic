@@ -127,7 +127,7 @@ func buildPartialComparisons(l *log.Logger, macroGidxViews []*model.MacroGidxVie
 
 	for _, macroGidxView := range macroGidxViews {
 		go func(mgv *model.MacroGidxView, addCh chan *model.PartialComparison, errsCh chan error) {
-			pc, err := buildPartialComparison(mgv)
+			pc, err := mgv.PartialComparison()
 			if err != nil {
 				errsCh <- err
 				return
@@ -140,28 +140,4 @@ func buildPartialComparisons(l *log.Logger, macroGidxViews []*model.MacroGidxVie
 	close(add)
 	close(errs)
 	return partialComparisons
-}
-
-func buildPartialComparison(macroGidxView *model.MacroGidxView) (*model.PartialComparison, error) {
-	err := macroGidxView.MacroPartial.DecodeData()
-	if err != nil {
-		return nil, err
-	}
-
-	err = macroGidxView.GidxPartial.DecodeData()
-	if err != nil {
-		return nil, err
-	}
-
-	dist, err := model.PixelDist(macroGidxView.MacroPartial, macroGidxView.GidxPartial)
-	if err != nil {
-		return nil, err
-	}
-
-	return &model.PartialComparison{
-		MacroPartialId: macroGidxView.MacroPartial.Id,
-		GidxPartialId:  macroGidxView.GidxPartial.Id,
-		Dist:           dist,
-	}, nil
-
 }

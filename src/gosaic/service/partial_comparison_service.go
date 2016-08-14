@@ -51,7 +51,6 @@ func (s *partialComparisonServiceImpl) Insert(pc *model.PartialComparison) error
 	return s.DbMap().Insert(pc)
 }
 
-// http://stackoverflow.com/questions/12486436/golang-how-do-i-batch-sql-statements-with-package-database-sql
 func (s *partialComparisonServiceImpl) BulkInsert(partialComparisons []*model.PartialComparison) (int64, error) {
 	if len(partialComparisons) == 0 {
 		return int64(0), nil
@@ -298,31 +297,15 @@ func (s *partialComparisonServiceImpl) CreateFromView(view *model.MacroGidxView)
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	err := view.MacroPartial.DecodeData()
+	pc, err := view.PartialComparison()
 	if err != nil {
 		return nil, err
 	}
 
-	err = view.GidxPartial.DecodeData()
+	err = s.Insert(pc)
 	if err != nil {
 		return nil, err
 	}
 
-	dist, err := model.PixelDist(view.MacroPartial, view.GidxPartial)
-	if err != nil {
-		return nil, err
-	}
-
-	pc := model.PartialComparison{
-		MacroPartialId: view.MacroPartial.Id,
-		GidxPartialId:  view.GidxPartial.Id,
-		Dist:           dist,
-	}
-
-	err = s.Insert(&pc)
-	if err != nil {
-		return nil, err
-	}
-
-	return &pc, nil
+	return pc, nil
 }
