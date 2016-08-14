@@ -21,7 +21,14 @@ func PartialAspect(env environment.Environment, dims ...int) {
 	}
 
 	aspects, err := aspectsFromDims(aspectService, dims)
-	createMissingGidxIndexes(env.Log(), gidxPartialService, aspects)
+	if err != nil {
+		env.Fatalf("Error getting aspects from dimesions: %s\n", err.Error())
+	}
+
+	err = createMissingGidxIndexes(env.Log(), gidxPartialService, aspects)
+	if err != nil {
+		env.Fatalf("Error creating missing indexes: %s\n", err.Error())
+	}
 }
 
 func aspectsFromDims(aspectService service.AspectService, dims []int) ([]*model.Aspect, error) {
