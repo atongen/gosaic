@@ -66,4 +66,14 @@ func TestServices(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error getting partialComparisonService: %s\n", err.Error())
 	}
+
+	_, err = env.MosaicService()
+	if err != nil {
+		t.Fatalf("Error getting mosaicService: %s\n", err.Error())
+	}
+
+	_, err = env.MosaicPartialService()
+	if err != nil {
+		t.Fatalf("Error getting mosaicPartialService: %s\n", err.Error())
+	}
 }

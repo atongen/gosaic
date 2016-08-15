@@ -123,3 +123,23 @@ func getTestPartialComparisonService(dbMap *gorp.DbMap) (PartialComparisonServic
 
 	return partialComparisonService, nil
 }
+
+func getTestMosaicService(dbMap *gorp.DbMap) (MosaicService, error) {
+	mosaicService := NewMosaicService(dbMap)
+	err := mosaicService.Register()
+	if err != nil {
+		return nil, err
+	}
+
+	return mosaicService, nil
+}
+
+func getTestMosaicPartialService(dbMap *gorp.DbMap) (MosaicPartialService, error) {
+	mosaicPartialService := NewMosaicPartialService(dbMap)
+	err := mosaicPartialService.Register()
+	if err != nil {
+		return nil, err
+	}
+
+	return mosaicPartialService, nil
+}

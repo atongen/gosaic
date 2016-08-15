@@ -16,6 +16,8 @@ const (
 	MacroServiceName
 	MacroPartialServiceName
 	PartialComparisonServiceName
+	MosaicServiceName
+	MosaicPartialServiceName
 )
 
 func (env *environment) getService(name ServiceName) (service.Service, error) {
@@ -46,6 +48,10 @@ func (env *environment) getService(name ServiceName) (service.Service, error) {
 		s = service.NewMacroPartialService(env.dbMap)
 	case PartialComparisonServiceName:
 		s = service.NewPartialComparisonService(env.dbMap)
+	case MosaicServiceName:
+		s = service.NewMosaicService(env.dbMap)
+	case MosaicPartialServiceName:
+		s = service.NewMosaicPartialService(env.dbMap)
 	}
 	err := s.Register()
 	if err != nil {
@@ -165,4 +171,32 @@ func (env *environment) PartialComparisonService() (service.PartialComparisonSer
 	}
 
 	return partialComparisonService, nil
+}
+
+func (env *environment) MosaicService() (service.MosaicService, error) {
+	s, err := env.getService(MosaicServiceName)
+	if err != nil {
+		return nil, err
+	}
+
+	mosaicService, ok := s.(service.MosaicService)
+	if !ok {
+		return nil, fmt.Errorf("Invalid mosaic service")
+	}
+
+	return mosaicService, nil
+}
+
+func (env *environment) MosaicPartialService() (service.MosaicPartialService, error) {
+	s, err := env.getService(MosaicPartialServiceName)
+	if err != nil {
+		return nil, err
+	}
+
+	mosaicPartialService, ok := s.(service.MosaicPartialService)
+	if !ok {
+		return nil, fmt.Errorf("Invalid mosaic partial service")
+	}
+
+	return mosaicPartialService, nil
 }

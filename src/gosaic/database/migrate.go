@@ -16,6 +16,8 @@ var (
 		createMacroTable,
 		createMacroPartialTable,
 		createPartialComparisonTable,
+		createMosaicTable,
+		createMosaicPartialTable,
 	}
 )
 
@@ -293,6 +295,54 @@ func createPartialComparisonTable(db *sql.DB) error {
 	}
 
 	sql = "create unique index idx_partial_comparisons_gidx on partial_comparisons (macro_partial_id,gidx_partial_id);"
+	_, err = db.Exec(sql)
+	return err
+}
+
+func createMosaicTable(db *sql.DB) error {
+	sql := `
+		create table mosaics (
+			id integer not null primary key,
+			name text not null,
+			macro_id integer not null,
+			created_at timestamp default current_timestamp not null,
+			FOREIGN KEY(macro_id) REFERENCES macros (id) ON DELETE RESTRICT
+		);
+	`
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	sql = "create unique index idx_mosaics_name on mosaics (name);"
+	_, err = db.Exec(sql)
+	return err
+}
+
+func createMosaicPartialTable(db *sql.DB) error {
+	sql := `
+		create table mosaic_partials (
+			id integer not null primary key,
+			mosaic_id integer not null,
+			macro_partial_id integer not null,
+			gidx_partial_id integer not null,
+			FOREIGN KEY(mosaic_id) REFERENCES mosaics (id) ON DELETE RESTRICT,
+			FOREIGN KEY(macro_partial_id) REFERENCES macro_partials (id) ON DELETE RESTRICT,
+			FOREIGN KEY(gidx_partial_id) REFERENCES gidx_partials (id) ON DELETE CASCADE
+		);
+	`
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	sql = "create index idx_mosaic_partials_mosaic on mosaic_partials (mosaic_id);"
+	_, err = db.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	sql = "create unique index idx_mosaic_macro_partials on mosaic_partials (mosaic_id,macro_partial_id);"
 	_, err = db.Exec(sql)
 	return err
 }

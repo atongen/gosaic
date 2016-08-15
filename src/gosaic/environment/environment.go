@@ -37,6 +37,8 @@ type Environment interface {
 	MacroService() (service.MacroService, error)
 	MacroPartialService() (service.MacroPartialService, error)
 	PartialComparisonService() (service.PartialComparisonService, error)
+	MosaicService() (service.MosaicService, error)
+	MosaicPartialService() (service.MosaicPartialService, error)
 	DbPath() string
 	Workers() int
 	Log() *log.Logger
