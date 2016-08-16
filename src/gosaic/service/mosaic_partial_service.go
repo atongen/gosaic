@@ -97,7 +97,7 @@ func (s *mosaicPartialServiceImpl) GetMissing(mosaic *model.Mosaic) *model.Macro
 		return nil
 	}
 
-	return macroPartial
+	return &macroPartial
 }
 
 func (s *mosaicPartialServiceImpl) GetRandomMissing(mosaic *model.Mosaic) *model.MacroPartial {
@@ -119,5 +119,5 @@ func (s *mosaicPartialServiceImpl) GetRandomMissing(mosaic *model.Mosaic) *model
 		return nil
 	}
 
-	return macroPartial
+	return &macroPartial
 }

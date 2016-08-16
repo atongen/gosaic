@@ -28,6 +28,16 @@ func MosaicBuild(env environment.Environment, name string, macroId int64, maxRep
 		env.Fatalf("Error getting mosaic service: %s\n", err.Error())
 	}
 
+	mosaicPartialService, err := env.MosaicPartialService()
+	if err != nil {
+		env.Fatalf("Error getting mosaic partial service: %s\n", err.Error())
+	}
+
+	partialComparisonService, err := env.PartialComparisonService()
+	if err != nil {
+		env.Fatalf("Error getting partial comparison service: %s\n", err.Error())
+	}
+
 	macro, err := macroService.Get(macroId)
 	if err != nil {
 		env.Fatalf("Error getting macro: %s\n", err.Error())
@@ -70,11 +80,11 @@ func MosaicBuild(env environment.Environment, name string, macroId int64, maxRep
 	}
 
 	env.Println("Creating mosaic with %d total partials\n", numMacroPartials)
-	createMosaicPartials(env.Log(), mosaicPartialService, mosaic, maxRepeats)
+	createMosaicPartials(env.Log(), mosaicPartialService, partialComparisonService, mosaic, maxRepeats)
 }
 
 // TODO: service tests
-func createMosaicPartials(l *log.Logger, mosaicPartialService service.MosaicPartialService, mosaic *model.Mosaic, maxRepeats int) {
+func createMosaicPartials(l *log.Logger, mosaicPartialService service.MosaicPartialService, partialComparisonService service.PartialComparisonService, mosaic *model.Mosaic, maxRepeats int) {
 	numMissing, err := mosaicPartialService.CountMissing(mosaic)
 	if err != nil {
 		l.Fatalf("Error counting missing mosaic partials: %s\n", err.Error())
@@ -88,7 +98,7 @@ func createMosaicPartials(l *log.Logger, mosaicPartialService service.MosaicPart
 	l.Println("Building %d missing mosaic partials\n", numMissing)
 
 	for {
-		macroPartial, err := mosaicPartialService.GetRandomMissing(mosaic)
+		macroPartial := mosaicPartialService.GetRandomMissing(mosaic)
 		if macroPartial == nil {
 			break
 		}
