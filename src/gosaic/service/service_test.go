@@ -9,13 +9,15 @@ import (
 )
 
 var (
-	gidx         model.Gidx
-	gidxPartial  model.GidxPartial
-	aspect       model.Aspect
-	cover        model.Cover
-	coverPartial model.CoverPartial
-	macro        model.Macro
-	macroPartial model.MacroPartial
+	gidx          model.Gidx
+	gidxPartial   model.GidxPartial
+	aspect        model.Aspect
+	cover         model.Cover
+	coverPartial  model.CoverPartial
+	macro         model.Macro
+	macroPartial  model.MacroPartial
+	mosaic        model.Mosaic
+	mosaicPartial model.MosaicPartial
 )
 
 func getTestDbMap() (*gorp.DbMap, error) {
