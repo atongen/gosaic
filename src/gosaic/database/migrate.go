@@ -294,6 +294,12 @@ func createPartialComparisonTable(db *sql.DB) error {
 		return err
 	}
 
+	sql = "create index idx_partial_comparisons_dist on partial_comparisons (macro_partial_id,dist);"
+	_, err = db.Exec(sql)
+	if err != nil {
+		return err
+	}
+
 	sql = "create unique index idx_partial_comparisons_gidx on partial_comparisons (macro_partial_id,gidx_partial_id);"
 	_, err = db.Exec(sql)
 	return err

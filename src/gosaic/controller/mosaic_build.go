@@ -69,20 +69,42 @@ func MosaicBuild(env environment.Environment, name string, macroId int64, maxRep
 		}
 	}
 
-	createMosaicPartials(env.Log(), mosaic)
+	env.Println("Creating mosaic with %d total partials\n", numMacroPartials)
+	createMosaicPartials(env.Log(), mosaicPartialService, mosaic, maxRepeats)
 }
 
 // TODO: service tests
-func createMosaicPartials(l *log.Logger, mosaicPartialService service.MosaicPartialService, mosaic *model.Mosaic) {
+func createMosaicPartials(l *log.Logger, mosaicPartialService service.MosaicPartialService, mosaic *model.Mosaic, maxRepeats int) {
+	numMissing, err := mosaicPartialService.CountMissing(mosaic)
+	if err != nil {
+		l.Fatalf("Error counting missing mosaic partials: %s\n", err.Error())
+	}
+
+	if numMissing == 0 {
+		// we are done
+		return
+	}
+
+	l.Println("Building %d missing mosaic partials\n", numMissing)
+
 	for {
 		macroPartial, err := mosaicPartialService.GetRandomMissing(mosaic)
 		if macroPartial == nil {
 			break
 		}
 
-		gidxPartialId, err := partialComparisonService.GetClosest(mosaic, macroPartial, maxRepeats)
+		var gidxPartialId int64
+		if maxRepeats == 0 {
+			gidxPartialId, err = partialComparisonService.GetClosest(macroPartial)
+		} else {
+			gidxPartialId, err = partialComparisonService.GetClosestMax(macroPartial, mosaic, maxRepeats)
+		}
 		if err != nil {
 			l.Fatalf("Error finding closest index image: %s\n", err.Error())
+		}
+
+		if gidxPartialId == int64(0) {
+			l.Fatal("Unable to find index to fill mosaic")
 		}
 
 		mosaicPartial := model.MosaicPartial{

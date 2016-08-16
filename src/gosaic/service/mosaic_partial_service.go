@@ -12,7 +12,9 @@ type MosaicPartialService interface {
 	Service
 	Get(int64) (*model.MosaicPartial, error)
 	Insert(*model.MosaicPartial) error
-	GetRandomMissing(int64) *model.MacroPartial
+	CountMissing(*model.Mosaic) (int64, error)
+	GetMissing(*model.Mosaic) *model.MacroPartial
+	GetRandomMissing(*model.Mosaic) *model.MacroPartial
 }
 
 type mosaicPartialServiceImpl struct {
@@ -59,21 +61,60 @@ func (s *mosaicPartialServiceImpl) Insert(mosaicPartial *model.MosaicPartial) er
 	return s.DbMap().Insert(mosaicPartial)
 }
 
+func (s *mosaicPartialServiceImpl) CountMissing(mosaic *model.Mosaic) (int64, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	sql := `
+		select count(*)
+		from macro_partials map
+		where map.macro_id = ?
+		and not exists (
+			select 1 from mosaic_partials mop
+			where mop.mosaic_id = ?
+			and mop.macro_partial_id = map.id
+		)
+	`
+	return s.DbMap().SelectInt(sql, mosaic.MacroId, mosaic.Id)
+}
+
+func (s *mosaicPartialServiceImpl) GetMissing(mosaic *model.Mosaic) *model.MacroPartial {
+	sql := `
+		select *
+		from macro_partials map
+		where map.macro_id = ?
+		and not exists (
+			select 1 from mosaic_partials mop
+			where mop.mosaic_id = ?
+			and mop.macro_partial_id = map.id
+		)
+		order by map.id asc
+		limit 1
+	`
+	var macroPartial model.MacroPartial
+	err := s.DbMap().SelectOne(&macroPartial, sql, mosaic.MacroId, mosaic.Id)
+	if err != nil {
+		return nil
+	}
+
+	return macroPartial
+}
+
 func (s *mosaicPartialServiceImpl) GetRandomMissing(mosaic *model.Mosaic) *model.MacroPartial {
 	sql := `
 		select *
-		from macro_partials ma
-		where ma.macro_id = ?
+		from macro_partials map
+		where map.macro_id = ?
 		and not exists (
-			select 1 from mosaic_partials mo
-			where mo.mosaic_id = ?
-			and mo.macro_id = ?
+			select 1 from mosaic_partials mop
+			where mop.mosaic_id = ?
+			and mop.macro_partial_id = map.id
 		)
 		order by random()
 		limit 1
 	`
 	var macroPartial model.MacroPartial
-	err := s.DbMap().SelectOne(&macroPartial, sql, mosaic.MacroId, mosaic.Id, mosaic.MacroId)
+	err := s.DbMap().SelectOne(&macroPartial, sql, mosaic.MacroId, mosaic.Id)
 	if err != nil {
 		return nil
 	}
