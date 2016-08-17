@@ -28,7 +28,7 @@ type PartialComparisonService interface {
 	FindMissing(*model.Macro, int) ([]*model.MacroGidxView, error)
 	CreateFromView(*model.MacroGidxView) (*model.PartialComparison, error)
 	GetClosest(*model.MacroPartial) (int64, error)
-	GetClosestMax(*model.MacroPartial, *model.Mosaic, int) (int64, error)
+	GetClosestMax(*model.MacroPartial, int) (int64, error)
 }
 
 type partialComparisonServiceImpl struct {
@@ -316,9 +316,7 @@ func (s *partialComparisonServiceImpl) GetClosest(macroPartial *model.MacroParti
 	sql := `
 		select pc.gidx_partial_id
 		from partial_comparisons pc
-		inner join macro_partials map
-			on (pc.macro_partial_id = map.id)
-		where map.id = ?
+		where pc.macro_partial_id = ?
 		order by pc.dist asc
 		limit 1
 	`
@@ -330,22 +328,22 @@ func (s *partialComparisonServiceImpl) GetClosest(macroPartial *model.MacroParti
 	return gidxPartialId, nil
 }
 
-func (s *partialComparisonServiceImpl) GetClosestMax(macroPartial *model.MacroPartial, mosaic *model.Mosaic, maxRepeats int) (int64, error) {
+func (s *partialComparisonServiceImpl) GetClosestMax(macroPartial *model.MacroPartial, maxRepeats int) (int64, error) {
 	sql := `
 		select pc.gidx_partial_id
 		from partial_comparisons pc
-		inner join macro_partials map
-			on (pc.macro_partial_id = map.id)
-		left join mosaic_partials mop
-			on (map.id = mop.macro_partial_id)
-		where map.id = ?
-		and mop.mosaic_id = ?
-		group by pc.gidx_partial_id
-		having count(pc.macro_partial_id) < ?
+		where pc.macro_partial_id = ?
+		and not exists (
+			select 1
+			from mosaic_partials mos
+			where mos.gidx_partial_id = pc.gidx_partial_id
+			group by mos.gidx_partial_id
+			having count(*) >= ?
+		)
 		order by pc.dist asc
 		limit 1
 	`
-	gidxPartialId, err := s.DbMap().SelectInt(sql, macroPartial.Id, mosaic.Id, maxRepeats)
+	gidxPartialId, err := s.DbMap().SelectInt(sql, macroPartial.Id, maxRepeats)
 	if err != nil {
 		return int64(0), err
 	}

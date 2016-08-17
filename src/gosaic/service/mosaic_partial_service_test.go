@@ -46,11 +46,6 @@ func setupMosaicPartialServiceTest() (MosaicPartialService, error) {
 		return nil, err
 	}
 
-	//partialComparisonService, err := getTestPartialComparisonService(dbMap)
-	//if err != nil {
-	//	return nil, err
-	//}
-
 	mosaicService, err := getTestMosaicService(dbMap)
 	if err != nil {
 		return nil, err
@@ -200,5 +195,114 @@ func TestMosaicPartialServiceInsert(t *testing.T) {
 		c1.MacroPartialId != c2.MacroPartialId ||
 		c1.GidxPartialId != c2.GidxPartialId {
 		t.Fatalf("Inserted mosaic partial (%+v) does not match: %+v\n", c2, c1)
+	}
+}
+
+func TestMosaicPartialServiceCountMissing(t *testing.T) {
+	mosaicPartialService, err := setupMosaicPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer mosaicPartialService.DbMap().Db.Close()
+
+	num, err := mosaicPartialService.CountMissing(&mosaic)
+	if err != nil {
+		t.Fatalf("Error counting missing mosaic partials: %s\n", err.Error())
+	}
+
+	if num != 5 {
+		t.Fatalf("Expected 5 missing mosaic partials, got %d\n", num)
+	}
+
+	c1 := model.MosaicPartial{
+		MosaicId:       mosaic.Id,
+		MacroPartialId: macroPartial.Id,
+		GidxPartialId:  gidxPartial.Id,
+	}
+
+	err = mosaicPartialService.Insert(&c1)
+	if err != nil {
+		t.Fatalf("Error inserting mosaic partial: %s\n", err.Error())
+	}
+
+	num, err = mosaicPartialService.CountMissing(&mosaic)
+	if err != nil {
+		t.Fatalf("Error counting missing mosaic partials: %s\n", err.Error())
+	}
+
+	if num != 4 {
+		t.Fatalf("Expected 4 missing mosaic partials, got %d\n", num)
+	}
+}
+
+func TestMosaicPartialServiceGetMissing(t *testing.T) {
+	mosaicPartialService, err := setupMosaicPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer mosaicPartialService.DbMap().Db.Close()
+
+	mp1 := mosaicPartialService.GetMissing(&mosaic)
+	if mp1 == nil {
+		t.Fatal("Missing macro partial not found")
+	}
+
+	if mp1.Id != int64(1) {
+		t.Fatalf("Expected first missing macro partial to have id 1, got %d\n", mp1.Id)
+	}
+
+	c1 := model.MosaicPartial{
+		MosaicId:       mosaic.Id,
+		MacroPartialId: mp1.Id,
+		GidxPartialId:  gidxPartial.Id,
+	}
+
+	err = mosaicPartialService.Insert(&c1)
+	if err != nil {
+		t.Fatalf("Error inserting mosaic partial: %s\n", err.Error())
+	}
+
+	c2 := mosaicPartialService.GetMissing(&mosaic)
+	if c2 == nil {
+		t.Fatal("Missing macro partial not found")
+	}
+
+	if c2.Id != int64(2) {
+		t.Fatalf("Expected second missing macro partial to have id 2, got %d\n", c2.Id)
+	}
+}
+
+func TestMosaicPartialServiceGetRandomMissing(t *testing.T) {
+	mosaicPartialService, err := setupMosaicPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer mosaicPartialService.DbMap().Db.Close()
+
+	mp1 := mosaicPartialService.GetRandomMissing(&mosaic)
+	if mp1 == nil {
+		t.Fatal("Missing macro partial not found")
+	}
+
+	c1 := model.MosaicPartial{
+		MosaicId:       mosaic.Id,
+		MacroPartialId: mp1.Id,
+		GidxPartialId:  gidxPartial.Id,
+	}
+
+	err = mosaicPartialService.Insert(&c1)
+	if err != nil {
+		t.Fatalf("Error inserting mosaic partial: %s\n", err.Error())
+	}
+
+	for i := 0; i < 10; i++ {
+		c2 := mosaicPartialService.GetRandomMissing(&mosaic)
+		if c2 == nil {
+			t.Fatal("Missing macro partial not found")
+		}
+
+		if c2.Id == mp1.Id {
+			t.Fatalf("Random missing macro partial has same id as inserted: %d\n", c2.Id)
+		}
 	}
 }

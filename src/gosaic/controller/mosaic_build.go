@@ -83,7 +83,6 @@ func MosaicBuild(env environment.Environment, name string, macroId int64, maxRep
 	createMosaicPartials(env.Log(), mosaicPartialService, partialComparisonService, mosaic, maxRepeats)
 }
 
-// TODO: service tests
 func createMosaicPartials(l *log.Logger, mosaicPartialService service.MosaicPartialService, partialComparisonService service.PartialComparisonService, mosaic *model.Mosaic, maxRepeats int) {
 	numMissing, err := mosaicPartialService.CountMissing(mosaic)
 	if err != nil {
@@ -107,7 +106,7 @@ func createMosaicPartials(l *log.Logger, mosaicPartialService service.MosaicPart
 		if maxRepeats == 0 {
 			gidxPartialId, err = partialComparisonService.GetClosest(macroPartial)
 		} else {
-			gidxPartialId, err = partialComparisonService.GetClosestMax(macroPartial, mosaic, maxRepeats)
+			gidxPartialId, err = partialComparisonService.GetClosestMax(macroPartial, maxRepeats)
 		}
 		if err != nil {
 			l.Fatalf("Error finding closest index image: %s\n", err.Error())
