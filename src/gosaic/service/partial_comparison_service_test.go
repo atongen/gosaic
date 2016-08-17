@@ -674,7 +674,7 @@ func TestPartialComparisonServiceGetClosestMax(t *testing.T) {
 		t.Fatalf("Error inserting mosaic partial: %s\n", err.Error())
 	}
 
-	gidxPartialId, err := partialComparisonService.GetClosestMax(&macroPartial, 1)
+	gidxPartialId, err := partialComparisonService.GetClosestMax(&macroPartial, &mosaic, 1)
 	if err != nil {
 		t.Fatalf("Error getting closest partial comparison: %s\n", err.Error())
 	}

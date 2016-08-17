@@ -106,7 +106,7 @@ func createMosaicPartials(l *log.Logger, mosaicPartialService service.MosaicPart
 		if maxRepeats == 0 {
 			gidxPartialId, err = partialComparisonService.GetClosest(macroPartial)
 		} else {
-			gidxPartialId, err = partialComparisonService.GetClosestMax(macroPartial, maxRepeats)
+			gidxPartialId, err = partialComparisonService.GetClosestMax(macroPartial, mosaic, maxRepeats)
 		}
 		if err != nil {
 			l.Fatalf("Error finding closest index image: %s\n", err.Error())
