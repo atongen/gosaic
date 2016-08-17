@@ -336,9 +336,11 @@ func (s *partialComparisonServiceImpl) GetClosestMax(macroPartial *model.MacroPa
 		and not exists (
 			select 1
 			from mosaic_partials mos
+			inner join gidx_partials gps
+			on mos.gidx_partial_id = gps.id
 			where mos.gidx_partial_id = pc.gidx_partial_id
 			and mos.mosaic_id = ?
-			group by mos.gidx_partial_id
+			group by gps.gidx_id
 			having count(*) >= ?
 		)
 		order by pc.dist asc
