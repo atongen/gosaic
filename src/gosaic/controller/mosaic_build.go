@@ -69,17 +69,17 @@ func MosaicBuild(env environment.Environment, name string, macroId int64, maxRep
 	}
 
 	if mosaic == nil {
-		mosaic := model.Mosaic{
+		mosaic = &model.Mosaic{
 			Name:    name,
 			MacroId: macro.Id,
 		}
-		err = mosaicService.Insert(&mosaic)
+		err = mosaicService.Insert(mosaic)
 		if err != nil {
 			env.Fatalf("Error creating mosaic: %s\n", err.Error())
 		}
 	}
 
-	env.Println("Creating mosaic with %d total partials\n", numMacroPartials)
+	env.Printf("Creating mosaic with %d total partials\n", numMacroPartials)
 	createMosaicPartials(env.Log(), mosaicPartialService, partialComparisonService, mosaic, maxRepeats)
 }
 
@@ -94,7 +94,7 @@ func createMosaicPartials(l *log.Logger, mosaicPartialService service.MosaicPart
 		return
 	}
 
-	l.Println("Building %d missing mosaic partials\n", numMissing)
+	l.Printf("Building %d missing mosaic partials\n", numMissing)
 
 	for {
 		macroPartial := mosaicPartialService.GetRandomMissing(mosaic)
