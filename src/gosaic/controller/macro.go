@@ -11,73 +11,69 @@ import (
 func Macro(env environment.Environment, path, coverName string) {
 	aspectService, err := env.AspectService()
 	if err != nil {
-		env.Printf("Error getting aspect service: %s\n", err.Error())
-		return
+		env.Fatalf("Error getting aspect service: %s\n", err.Error())
 	}
 
 	coverService, err := env.CoverService()
 	if err != nil {
-		env.Printf("Error creating cover service: %s\n", err.Error())
-		return
+		env.Fatalf("Error creating cover service: %s\n", err.Error())
 	}
 
 	macroService, err := env.MacroService()
 	if err != nil {
-		env.Printf("Error creating macro service: %s\n", err.Error())
-		return
+		env.Fatalf("Error creating macro service: %s\n", err.Error())
 	}
 
 	cover, err := coverService.GetOneBy("name", coverName)
 	if err != nil {
-		env.Printf("Error getting cover: %s\n", err.Error())
-		return
+		env.Fatalf("Error getting cover: %s\n", err.Error())
 	} else if cover == nil {
-		env.Printf("Cover %s not found\n", coverName)
-		return
+		env.Fatalf("Cover %s not found\n", coverName)
+	}
+
+	aspect, err := aspectService.Get(cover.AspectId)
+	if err != nil {
+		env.Fatalf("Error getting cover aspect: %s\n", err.Error())
 	}
 
 	md5sum, err := util.Md5sum(path)
 	if err != nil {
-		env.Printf("Error getting macro md5sum: %s\n", err.Error())
-		return
+		env.Fatalf("Error getting macro md5sum: %s\n", err.Error())
 	}
 
 	img, err := util.OpenImage(path)
 	if err != nil {
-		env.Printf("Failed to open image: %s\n", err.Error())
-		return
+		env.Fatalf("Failed to open image: %s\n", err.Error())
 	}
 
 	orientation, err := util.GetOrientation(path)
 	if err != nil {
-		env.Printf("Failed to get image orientation: %s\n", err.Error())
-		return
+		env.Fatalf("Failed to get image orientation: %s\n", err.Error())
 	}
 
 	err = util.FixOrientation(img, orientation)
 	if err != nil {
-		env.Printf("Failed to fix image orientation: %s\n", err.Error())
-		return
+		env.Fatalf("Failed to fix image orientation: %s\n", err.Error())
 	}
 
-	img = util.FillAspect(img, int(cover.Width), int(cover.Height))
+	img = util.FillAspect(img, aspect)
 	bounds := (*img).Bounds()
 	// width and height of image after resize to fill cover aspect
 	width := bounds.Max.X
 	height := bounds.Max.Y
 
-	aspect, err := aspectService.FindOrCreate(width, height)
+	checkAspect, err := aspectService.Find(width, height)
 	if err != nil {
-		env.Println("Error getting image aspect data", path, err)
-		return
+		env.Fatalf("Error checking aspect: %s\n", err.Error())
 	}
 
-	// this is an internal error, as it means our calculations
-	// above are incorrect
-	if aspect.Id != cover.AspectId {
-		env.Printf("Aspect of image (%dx%d) does not match aspect of cover %s\n",
-			aspect.Columns, aspect.Rows, cover.Name)
-		return
+	if checkAspect == nil {
+		env.Fatalf("No aspect for resized image found")
+	}
+
+	if aspect.Id != checkAspect.Id {
+		env.Fatalf("Aspect of image (%dx%d) does not match aspect of cover (%dx%d)\n",
+			checkAspect.Columns, checkAspect.Rows, aspect.Columns, aspect.Rows)
 	}
 
 	macro, _ := macroService.GetOneBy("cover_id = ? AND md5sum = ?", cover.Id, md5sum)
@@ -94,15 +90,13 @@ func Macro(env environment.Environment, path, coverName string) {
 		}
 		err = macroService.Insert(macro)
 		if err != nil {
-			env.Printf("Error creating macro: %s\n", err.Error())
-			return
+			env.Fatalf("Error creating macro: %s\n", err.Error())
 		}
 	}
 
 	err = buildMacroPartials(env, img, macro, env.Workers())
 	if err != nil {
-		env.Printf("Error building macro partials: %s\n", err.Error())
-		return
+		env.Fatalf("Error building macro partials: %s\n", err.Error())
 	}
 
 	env.Printf("Built macro for %s with cover %s\n", path, coverName)

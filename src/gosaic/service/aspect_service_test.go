@@ -65,6 +65,67 @@ func TestAspectServiceGetMissing(t *testing.T) {
 	}
 }
 
+func TestAspectServiceFind(t *testing.T) {
+	aspectService, err := setupAspectServiceTest()
+	if err != nil {
+		t.Fatal("Unable to setup database.", err)
+	}
+	defer aspectService.DbMap().Db.Close()
+
+	a1, err := aspectService.Find(333, 333)
+	if err != nil {
+		t.Fatal("Error finding 1:1 aspect: %s\n", err.Error())
+	}
+
+	if a1 == nil {
+		t.Fatal("Expected to find 1:1 aspect")
+	}
+
+	a2, err := aspectService.Find(13, 27)
+	if err != nil {
+		t.Fatal("Error finding 13:27 aspect: %s\n", err.Error())
+	}
+
+	if a2 != nil {
+		t.Fatal("Did not expect to find 13:27 aspect")
+	}
+}
+
+func TestAspectServiceCreate(t *testing.T) {
+	aspectService, err := setupAspectServiceTest()
+	if err != nil {
+		t.Fatal("Unable to setup database.", err)
+	}
+	defer aspectService.DbMap().Db.Close()
+
+	a1, err := aspectService.Create(123, 234)
+	if err != nil {
+		t.Fatal("Error creating 123:234 aspect: %s\n", err.Error())
+	}
+
+	if a1 == nil {
+		t.Fatal("Expected to create 123:234 aspect")
+	}
+
+	a2, err := aspectService.Find(123, 234)
+	if err != nil {
+		t.Fatal("Error finding 123:234 aspect: %s\n", err.Error())
+	}
+
+	if a2 == nil {
+		t.Fatal("Expect to find 123:234 aspect")
+	}
+
+	a3, err := aspectService.Create(123, 234)
+	if err == nil {
+		t.Fatal("Expected error creating duplicate 123:234 aspect")
+	}
+
+	if a3 != nil {
+		t.Fatal("Expected no result when creating duplicate aspect, got: %+v\n", a3)
+	}
+}
+
 func TestAspectServiceFindOrCreate(t *testing.T) {
 	aspectService, err := setupAspectServiceTest()
 	if err != nil {

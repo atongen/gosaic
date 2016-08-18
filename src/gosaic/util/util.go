@@ -7,7 +7,6 @@ import (
 	"image"
 	_ "image/jpeg"
 	"io"
-	"math"
 	"os"
 
 	"github.com/disintegration/imaging"
@@ -113,30 +112,6 @@ func OpenImage(path string) (*image.Image, error) {
 	return &img, nil
 }
 
-func ScaleAspect(image_w, image_h, aspect_w, aspect_h int) (int, int) {
-	ratio_image := float64(image_w) / float64(image_h)
-	ratio_aspect := float64(aspect_w) / float64(aspect_h)
-
-	var width, height int
-
-	if ratio_image < ratio_aspect {
-		width = image_w
-		h := float64(aspect_h) * float64(image_w) / float64(aspect_w)
-		height = Round(h)
-	} else {
-		w := float64(aspect_w) * float64(image_h) / float64(aspect_h)
-		width = Round(w)
-		height = image_h
-	}
-
-	return width, height
-}
-
-func Round(f float64) int {
-	r := math.Floor(f + .5)
-	return int(r)
-}
-
 func GetAspectLab(i model.Image, aspect *model.Aspect) ([]*model.Lab, error) {
 	img, err := OpenImage(i.GetPath())
 	if err != nil {
@@ -154,7 +129,7 @@ func GetAspectLab(i model.Image, aspect *model.Aspect) ([]*model.Lab, error) {
 }
 
 func GetImgAspectLab(img *image.Image, i model.Image, aspect *model.Aspect) ([]*model.Lab, error) {
-	w, h := ScaleAspect(int(i.GetWidth()), int(i.GetHeight()), aspect.Columns, aspect.Rows)
+	w, h := aspect.ScaleRound(int(i.GetWidth()), int(i.GetHeight()))
 
 	aspectImg := imaging.Fill((*img), w, h, imaging.Center, imaging.Lanczos)
 	dataImg := imaging.Resize(aspectImg, DATA_SIZE, DATA_SIZE, imaging.Lanczos)
@@ -203,12 +178,10 @@ func GetImgPartialLab(img *image.Image, i model.Image, coverPartial *model.Cover
 	return labs, nil
 }
 
-func FillAspect(img *image.Image, aspectWidth, aspectHeight int) *image.Image {
+func FillAspect(img *image.Image, aspect *model.Aspect) *image.Image {
 	bounds := (*img).Bounds()
-	width := bounds.Max.X
-	height := bounds.Max.Y
 
-	w, h := ScaleAspect(width, height, aspectWidth, aspectHeight)
+	w, h := aspect.Scale(bounds.Max.X, bounds.Max.Y)
 
 	var myImg image.Image = imaging.Fill((*img), w, h, imaging.Center, imaging.Lanczos)
 	return &myImg

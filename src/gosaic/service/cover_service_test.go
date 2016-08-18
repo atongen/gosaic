@@ -24,8 +24,7 @@ func setupCoverServiceTest() (CoverService, error) {
 		return nil, err
 	}
 
-	aspect = model.Aspect{}
-	aspect.SetAspect(1, 1)
+	aspect = *model.NewAspect(1, 1)
 	err = aspectService.Insert(&aspect)
 	if err != nil {
 		return nil, err

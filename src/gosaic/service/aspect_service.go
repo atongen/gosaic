@@ -15,6 +15,8 @@ type AspectService interface {
 	Insert(*model.Aspect) error
 	Get(int64) (*model.Aspect, error)
 	Count() (int64, error)
+	Find(int, int) (*model.Aspect, error)
+	Create(int, int) (*model.Aspect, error)
 	FindOrCreate(int, int) (*model.Aspect, error)
 	FindIn([]int64) ([]*model.Aspect, error)
 }
@@ -56,26 +58,52 @@ func (s *aspectServiceImpl) Count() (int64, error) {
 	return s.DbMap().SelectInt("select count(*) from aspects")
 }
 
-func (s *aspectServiceImpl) FindOrCreate(width int, height int) (*model.Aspect, error) {
+func (s *aspectServiceImpl) Find(width int, height int) (*model.Aspect, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
+	return s.doFind(width, height)
+}
 
-	aspect := model.Aspect{}
-	aspect.SetAspect(width, height)
+func (s *aspectServiceImpl) doFind(width int, height int) (*model.Aspect, error) {
+	aspect := model.NewAspect(width, height)
 
-	// find
-	err := s.DbMap().SelectOne(&aspect, "select * from aspects where columns = ? and rows = ?", aspect.Columns, aspect.Rows)
+	err := s.DbMap().SelectOne(aspect, "select * from aspects where columns = ? and rows = ?", aspect.Columns, aspect.Rows)
 	if err == nil {
-		return &aspect, nil
+		return aspect, nil
 	}
 
-	// or create
-	err = s.Insert(&aspect)
+	return nil, nil
+}
+
+func (s *aspectServiceImpl) Create(width int, height int) (*model.Aspect, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+	return s.doCreate(width, height)
+}
+
+func (s *aspectServiceImpl) doCreate(width int, height int) (*model.Aspect, error) {
+	aspect := model.NewAspect(width, height)
+
+	err := s.Insert(aspect)
 	if err != nil {
 		return nil, err
 	}
 
-	return &aspect, nil
+	return aspect, nil
+}
+
+func (s *aspectServiceImpl) FindOrCreate(width int, height int) (*model.Aspect, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	aspect, err := s.doFind(width, height)
+	if err != nil {
+		return nil, err
+	} else if aspect != nil {
+		return aspect, nil
+	}
+
+	return s.doCreate(width, height)
 }
 
 func (s *aspectServiceImpl) FindIn(ids []int64) ([]*model.Aspect, error) {
