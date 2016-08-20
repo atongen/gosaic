@@ -30,21 +30,27 @@ func NewAspectService(dbMap *gorp.DbMap) AspectService {
 	return &aspectServiceImpl{dbMap: dbMap}
 }
 
-func (s *aspectServiceImpl) DbMap() *gorp.DbMap {
-	return s.dbMap
-}
-
 func (s *aspectServiceImpl) Register() error {
-	s.DbMap().AddTableWithName(model.Aspect{}, "aspects").SetKeys(true, "id")
+	s.dbMap.AddTableWithName(model.Aspect{}, "aspects").SetKeys(true, "id")
 	return nil
 }
 
+func (s *aspectServiceImpl) Close() error {
+	return s.dbMap.Db.Close()
+}
+
 func (s *aspectServiceImpl) Insert(aspect *model.Aspect) error {
-	return s.DbMap().Insert(aspect)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	return s.dbMap.Insert(aspect)
 }
 
 func (s *aspectServiceImpl) Get(id int64) (*model.Aspect, error) {
-	aspect, err := s.DbMap().Get(model.Aspect{}, id)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	aspect, err := s.dbMap.Get(model.Aspect{}, id)
 	if err != nil {
 		return nil, err
 	} else if aspect != nil {
@@ -55,19 +61,23 @@ func (s *aspectServiceImpl) Get(id int64) (*model.Aspect, error) {
 }
 
 func (s *aspectServiceImpl) Count() (int64, error) {
-	return s.DbMap().SelectInt("select count(*) from aspects")
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	return s.dbMap.SelectInt("select count(*) from aspects")
 }
 
 func (s *aspectServiceImpl) Find(width int, height int) (*model.Aspect, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
+
 	return s.doFind(width, height)
 }
 
 func (s *aspectServiceImpl) doFind(width int, height int) (*model.Aspect, error) {
 	aspect := model.NewAspect(width, height)
 
-	err := s.DbMap().SelectOne(aspect, "select * from aspects where columns = ? and rows = ?", aspect.Columns, aspect.Rows)
+	err := s.dbMap.SelectOne(aspect, "select * from aspects where columns = ? and rows = ?", aspect.Columns, aspect.Rows)
 	if err == nil {
 		return aspect, nil
 	}
@@ -78,6 +88,7 @@ func (s *aspectServiceImpl) doFind(width int, height int) (*model.Aspect, error)
 func (s *aspectServiceImpl) Create(width int, height int) (*model.Aspect, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
+
 	return s.doCreate(width, height)
 }
 
@@ -107,6 +118,9 @@ func (s *aspectServiceImpl) FindOrCreate(width int, height int) (*model.Aspect, 
 }
 
 func (s *aspectServiceImpl) FindIn(ids []int64) ([]*model.Aspect, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	aspects := make([]*model.Aspect, 0)
 	num := len(ids)
 	if num == 0 {
@@ -125,7 +139,7 @@ func (s *aspectServiceImpl) FindIn(ids []int64) ([]*model.Aspect, error) {
 	}
 	b.WriteString(")")
 
-	_, err := s.DbMap().Select(&aspects, b.String(), idsStr...)
+	_, err := s.dbMap.Select(&aspects, b.String(), idsStr...)
 	if err != nil {
 		return nil, err
 	}

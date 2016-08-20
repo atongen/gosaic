@@ -43,7 +43,6 @@ type Environment interface {
 	Workers() int
 	Log() *log.Logger
 	Db() *sql.DB
-	DbMap() *gorp.DbMap
 	Printf(format string, a ...interface{})
 	Println(a ...interface{})
 	Fatalf(format string, a ...interface{})
@@ -155,10 +154,6 @@ func (env *environment) Log() *log.Logger {
 
 func (env *environment) Db() *sql.DB {
 	return env.dB
-}
-
-func (env *environment) DbMap() *gorp.DbMap {
-	return env.dbMap
 }
 
 func (env *environment) Fatalln(v ...interface{}) {

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"gosaic/model"
 	"sync"
 
@@ -29,29 +30,41 @@ func NewGidxService(dbMap *gorp.DbMap) GidxService {
 	return &gidxServiceImpl{dbMap: dbMap}
 }
 
-func (s *gidxServiceImpl) DbMap() *gorp.DbMap {
-	return s.dbMap
-}
-
 func (s *gidxServiceImpl) Register() error {
-	s.DbMap().AddTableWithName(model.Gidx{}, "gidx").SetKeys(true, "id")
+	s.dbMap.AddTableWithName(model.Gidx{}, "gidx").SetKeys(true, "id")
 	return nil
 }
 
+func (s *gidxServiceImpl) Close() error {
+	return s.dbMap.Db.Close()
+}
+
 func (s *gidxServiceImpl) Insert(gidx *model.Gidx) error {
-	return s.DbMap().Insert(gidx)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	return s.dbMap.Insert(gidx)
 }
 
 func (s *gidxServiceImpl) Update(gidx *model.Gidx) (int64, error) {
-	return s.DbMap().Update(gidx)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	return s.dbMap.Update(gidx)
 }
 
 func (s *gidxServiceImpl) Delete(gidx *model.Gidx) (int64, error) {
-	return s.DbMap().Delete(gidx)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	return s.dbMap.Delete(gidx)
 }
 
 func (s *gidxServiceImpl) Get(id int64) (*model.Gidx, error) {
-	gidx, err := s.DbMap().Get(model.Gidx{}, id)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	gidx, err := s.dbMap.Get(model.Gidx{}, id)
 	if err != nil {
 		return nil, err
 	} else if gidx != nil {
@@ -62,37 +75,44 @@ func (s *gidxServiceImpl) Get(id int64) (*model.Gidx, error) {
 }
 
 func (s *gidxServiceImpl) GetOneBy(column string, value interface{}) (*model.Gidx, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	var gidx model.Gidx
-	err := s.DbMap().SelectOne(&gidx, "select * from gidx where "+column+" = ? limit 1", value)
+	err := s.dbMap.SelectOne(&gidx, fmt.Sprintf("select * from gidx where %s = ? limit 1", column), value)
 	return &gidx, err
 }
 
 func (s *gidxServiceImpl) ExistsBy(column string, value interface{}) (bool, error) {
-	count, err := s.DbMap().SelectInt("select 1 from gidx where "+column+" = ?", value)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	count, err := s.dbMap.SelectInt(fmt.Sprintf("select 1 from gidx where %s = ?", column), value)
 	return count == 1, err
 }
 
 func (s *gidxServiceImpl) Count() (int64, error) {
-	return s.DbMap().SelectInt("select count(*) from gidx")
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	return s.dbMap.SelectInt("select count(*) from gidx")
 }
 
 func (s *gidxServiceImpl) CountBy(column string, value interface{}) (int64, error) {
-	return s.DbMap().SelectInt("select count(*) from gidx where "+column+" = ?", value)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	return s.dbMap.SelectInt(fmt.Sprintf("select count(*) from gidx where %s = ?", column), value)
 }
 
 func (s *gidxServiceImpl) FindAll(order string, limit, offset int) ([]*model.Gidx, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	sql := `
-select * from gidx
-order by ?
-limit ?
-offset ?
-`
+	sql := fmt.Sprintf("select * from gidx order by %s limit %d offset %d", order, limit, offset)
 
 	var gidxs []*model.Gidx
-	_, err := s.dbMap.Select(&gidxs, sql, order, limit, offset)
+	_, err := s.dbMap.Select(&gidxs, sql)
 
 	return gidxs, err
 }

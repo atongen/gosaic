@@ -27,17 +27,20 @@ func NewCoverService(dbMap *gorp.DbMap) CoverService {
 	return &coverServiceImpl{dbMap: dbMap}
 }
 
-func (s *coverServiceImpl) DbMap() *gorp.DbMap {
-	return s.dbMap
-}
-
 func (s *coverServiceImpl) Register() error {
-	s.DbMap().AddTableWithName(model.Cover{}, "covers").SetKeys(true, "id")
+	s.dbMap.AddTableWithName(model.Cover{}, "covers").SetKeys(true, "id")
 	return nil
 }
 
+func (s *coverServiceImpl) Close() error {
+	return s.dbMap.Db.Close()
+}
+
 func (s *coverServiceImpl) Get(id int64) (*model.Cover, error) {
-	c, err := s.DbMap().Get(model.Cover{}, id)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	c, err := s.dbMap.Get(model.Cover{}, id)
 	if err != nil {
 		return nil, err
 	}
@@ -59,26 +62,41 @@ func (s *coverServiceImpl) Get(id int64) (*model.Cover, error) {
 }
 
 func (s *coverServiceImpl) Insert(c *model.Cover) error {
-	return s.DbMap().Insert(c)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	return s.dbMap.Insert(c)
 }
 
 func (s *coverServiceImpl) Update(c *model.Cover) error {
-	_, err := s.DbMap().Update(c)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	_, err := s.dbMap.Update(c)
 	return err
 }
 
 func (s *coverServiceImpl) Delete(c *model.Cover) error {
-	_, err := s.DbMap().Delete(c)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	_, err := s.dbMap.Delete(c)
 	return err
 }
 
 func (s *coverServiceImpl) GetOneBy(column string, value interface{}) (*model.Cover, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	var cover model.Cover
-	err := s.DbMap().SelectOne(&cover, "select * from covers where "+column+" = ? limit 1", value)
+	err := s.dbMap.SelectOne(&cover, "select * from covers where "+column+" = ? limit 1", value)
 	return &cover, err
 }
 
 func (s *coverServiceImpl) FindAll(order string) ([]*model.Cover, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	sql := `select * from covers order by ?`
 
 	var covers []*model.Cover

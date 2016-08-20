@@ -34,39 +34,51 @@ func NewGidxPartialService(dbMap *gorp.DbMap) GidxPartialService {
 	return &gidxPartialServiceImpl{dbMap: dbMap}
 }
 
-func (s *gidxPartialServiceImpl) DbMap() *gorp.DbMap {
-	return s.dbMap
-}
-
 func (s *gidxPartialServiceImpl) Register() error {
-	s.DbMap().AddTableWithName(model.GidxPartial{}, "gidx_partials").SetKeys(true, "id")
+	s.dbMap.AddTableWithName(model.GidxPartial{}, "gidx_partials").SetKeys(true, "id")
 	return nil
 }
 
+func (s *gidxPartialServiceImpl) Close() error {
+	return s.dbMap.Db.Close()
+}
+
 func (s *gidxPartialServiceImpl) Insert(gidxPartial *model.GidxPartial) error {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	err := gidxPartial.EncodePixels()
 	if err != nil {
 		return err
 	}
-	return s.DbMap().Insert(gidxPartial)
+	return s.dbMap.Insert(gidxPartial)
 }
 
 func (s *gidxPartialServiceImpl) Update(gidxPartial *model.GidxPartial) error {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	err := gidxPartial.EncodePixels()
 	if err != nil {
 		return err
 	}
-	_, err = s.DbMap().Update(gidxPartial)
+	_, err = s.dbMap.Update(gidxPartial)
 	return err
 }
 
 func (s *gidxPartialServiceImpl) Delete(gidxPartial *model.GidxPartial) error {
-	_, err := s.DbMap().Delete(gidxPartial)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	_, err := s.dbMap.Delete(gidxPartial)
 	return err
 }
 
 func (s *gidxPartialServiceImpl) Get(id int64) (*model.GidxPartial, error) {
-	gidxPartial, err := s.DbMap().Get(model.GidxPartial{}, id)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	gidxPartial, err := s.dbMap.Get(model.GidxPartial{}, id)
 	if err != nil {
 		return nil, err
 	} else if gidxPartial == nil {
@@ -87,8 +99,11 @@ func (s *gidxPartialServiceImpl) Get(id int64) (*model.GidxPartial, error) {
 }
 
 func (s *gidxPartialServiceImpl) GetOneBy(column string, value interface{}) (*model.GidxPartial, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	var gidxPartial model.GidxPartial
-	err := s.DbMap().SelectOne(&gidxPartial, "select * from gidx_partials where "+column+" = ? limit 1", value)
+	err := s.dbMap.SelectOne(&gidxPartial, "select * from gidx_partials where "+column+" = ? limit 1", value)
 	if err != nil {
 		return nil, err
 	}
@@ -102,16 +117,25 @@ func (s *gidxPartialServiceImpl) GetOneBy(column string, value interface{}) (*mo
 }
 
 func (s *gidxPartialServiceImpl) ExistsBy(column string, value interface{}) (bool, error) {
-	count, err := s.DbMap().SelectInt("select 1 from gidx_partials where "+column+" = ? limit 1", value)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	count, err := s.dbMap.SelectInt("select 1 from gidx_partials where "+column+" = ? limit 1", value)
 	return count == 1, err
 }
 
 func (s *gidxPartialServiceImpl) Count() (int64, error) {
-	return s.DbMap().SelectInt("select count(*) from gidx_partials")
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	return s.dbMap.SelectInt("select count(*) from gidx_partials")
 }
 
 func (s *gidxPartialServiceImpl) CountBy(column string, value interface{}) (int64, error) {
-	return s.DbMap().SelectInt("select count(*) from gidx_partials where "+column+" = ?", value)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	return s.dbMap.SelectInt("select count(*) from gidx_partials where "+column+" = ?", value)
 }
 
 func (s *gidxPartialServiceImpl) doFind(gidx *model.Gidx, aspect *model.Aspect) (*model.GidxPartial, error) {
@@ -120,7 +144,7 @@ func (s *gidxPartialServiceImpl) doFind(gidx *model.Gidx, aspect *model.Aspect) 
 		AspectId: aspect.Id,
 	}
 
-	err := s.DbMap().SelectOne(&p, "select * from gidx_partials where gidx_id = ? and aspect_id = ?", p.GidxId, p.AspectId)
+	err := s.dbMap.SelectOne(&p, "select * from gidx_partials where gidx_id = ? and aspect_id = ?", p.GidxId, p.AspectId)
 	if err != nil {
 		return nil, err
 	}

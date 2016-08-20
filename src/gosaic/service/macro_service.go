@@ -29,17 +29,20 @@ func NewMacroService(dbMap *gorp.DbMap) MacroService {
 	return &macroServiceImpl{dbMap: dbMap}
 }
 
-func (s *macroServiceImpl) DbMap() *gorp.DbMap {
-	return s.dbMap
-}
-
 func (s *macroServiceImpl) Register() error {
-	s.DbMap().AddTableWithName(model.Macro{}, "macros").SetKeys(true, "id")
+	s.dbMap.AddTableWithName(model.Macro{}, "macros").SetKeys(true, "id")
 	return nil
 }
 
+func (s *macroServiceImpl) Close() error {
+	return s.dbMap.Db.Close()
+}
+
 func (s *macroServiceImpl) Get(id int64) (*model.Macro, error) {
-	c, err := s.DbMap().Get(model.Macro{}, id)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	c, err := s.dbMap.Get(model.Macro{}, id)
 	if err != nil {
 		return nil, err
 	}
@@ -61,23 +64,35 @@ func (s *macroServiceImpl) Get(id int64) (*model.Macro, error) {
 }
 
 func (s *macroServiceImpl) Insert(c *model.Macro) error {
-	return s.DbMap().Insert(c)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	return s.dbMap.Insert(c)
 }
 
 func (s *macroServiceImpl) Update(c *model.Macro) error {
-	_, err := s.DbMap().Update(c)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	_, err := s.dbMap.Update(c)
 	return err
 }
 
 func (s *macroServiceImpl) Delete(c *model.Macro) error {
-	_, err := s.DbMap().Delete(c)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	_, err := s.dbMap.Delete(c)
 	return err
 }
 
 func (s *macroServiceImpl) GetOneBy(conditions string, params ...interface{}) (*model.Macro, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	var macro model.Macro
 
-	err := s.DbMap().SelectOne(&macro, fmt.Sprintf("select * from macros where %s limit 1", conditions), params...)
+	err := s.dbMap.SelectOne(&macro, fmt.Sprintf("select * from macros where %s limit 1", conditions), params...)
 	// returns error if none are found
 	// or if more than one is found
 	if err != nil {
@@ -88,11 +103,17 @@ func (s *macroServiceImpl) GetOneBy(conditions string, params ...interface{}) (*
 }
 
 func (s *macroServiceImpl) ExistsBy(conditions string, params ...interface{}) (bool, error) {
-	count, err := s.DbMap().SelectInt(fmt.Sprintf("select 1 from macros where %s limit 1", conditions), params...)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	count, err := s.dbMap.SelectInt(fmt.Sprintf("select 1 from macros where %s limit 1", conditions), params...)
 	return count == 1, err
 }
 
 func (s *macroServiceImpl) FindAll(order string) ([]*model.Macro, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	sql := `select * from macros order by ?`
 
 	var macros []*model.Macro

@@ -36,39 +36,51 @@ func NewMacroPartialService(dbMap *gorp.DbMap) MacroPartialService {
 	return &macroPartialServiceImpl{dbMap: dbMap}
 }
 
-func (s *macroPartialServiceImpl) DbMap() *gorp.DbMap {
-	return s.dbMap
-}
-
 func (s *macroPartialServiceImpl) Register() error {
-	s.DbMap().AddTableWithName(model.MacroPartial{}, "macro_partials").SetKeys(true, "id")
+	s.dbMap.AddTableWithName(model.MacroPartial{}, "macro_partials").SetKeys(true, "id")
 	return nil
 }
 
+func (s *macroPartialServiceImpl) Close() error {
+	return s.dbMap.Db.Close()
+}
+
 func (s *macroPartialServiceImpl) Insert(macroPartial *model.MacroPartial) error {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	err := macroPartial.EncodePixels()
 	if err != nil {
 		return err
 	}
-	return s.DbMap().Insert(macroPartial)
+	return s.dbMap.Insert(macroPartial)
 }
 
 func (s *macroPartialServiceImpl) Update(macroPartial *model.MacroPartial) error {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	err := macroPartial.EncodePixels()
 	if err != nil {
 		return err
 	}
-	_, err = s.DbMap().Update(macroPartial)
+	_, err = s.dbMap.Update(macroPartial)
 	return err
 }
 
 func (s *macroPartialServiceImpl) Delete(macroPartial *model.MacroPartial) error {
-	_, err := s.DbMap().Delete(macroPartial)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	_, err := s.dbMap.Delete(macroPartial)
 	return err
 }
 
 func (s *macroPartialServiceImpl) Get(id int64) (*model.MacroPartial, error) {
-	macroPartial, err := s.DbMap().Get(model.MacroPartial{}, id)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	macroPartial, err := s.dbMap.Get(model.MacroPartial{}, id)
 	if err != nil {
 		return nil, err
 	}
@@ -95,8 +107,11 @@ func (s *macroPartialServiceImpl) Get(id int64) (*model.MacroPartial, error) {
 }
 
 func (s *macroPartialServiceImpl) GetOneBy(column string, value interface{}) (*model.MacroPartial, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	var macroPartial model.MacroPartial
-	err := s.DbMap().SelectOne(&macroPartial, fmt.Sprintf("select * from macro_partials where %s = ? limit 1", column), value)
+	err := s.dbMap.SelectOne(&macroPartial, fmt.Sprintf("select * from macro_partials where %s = ? limit 1", column), value)
 	if err != nil {
 		return nil, err
 	}
@@ -114,19 +129,31 @@ func (s *macroPartialServiceImpl) GetOneBy(column string, value interface{}) (*m
 }
 
 func (s *macroPartialServiceImpl) ExistsBy(column string, value interface{}) (bool, error) {
-	count, err := s.DbMap().SelectInt(fmt.Sprintf("select 1 from macro_partials where %s = ? limit 1", column), value)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	count, err := s.dbMap.SelectInt(fmt.Sprintf("select 1 from macro_partials where %s = ? limit 1", column), value)
 	return count == 1, err
 }
 
 func (s *macroPartialServiceImpl) Count() (int64, error) {
-	return s.DbMap().SelectInt("select count(*) from macro_partials")
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	return s.dbMap.SelectInt("select count(*) from macro_partials")
 }
 
 func (s *macroPartialServiceImpl) CountBy(column string, value interface{}) (int64, error) {
-	return s.DbMap().SelectInt(fmt.Sprintf("select count(*) from macro_partials where %s = ?", column), value)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	return s.dbMap.SelectInt(fmt.Sprintf("select count(*) from macro_partials where %s = ?", column), value)
 }
 
 func (s *macroPartialServiceImpl) FindAll(order string, limit, offset int, conditions string, params ...interface{}) ([]*model.MacroPartial, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	var macroPartials []*model.MacroPartial
 
 	sql := fmt.Sprintf("select * from macro_partials where %s order by %s limit %d offset %d",
@@ -153,7 +180,7 @@ func (s *macroPartialServiceImpl) doFind(macro *model.Macro, coverPartial *model
 		CoverPartialId: coverPartial.Id,
 	}
 
-	err := s.DbMap().SelectOne(&p, "select * from macro_partials where macro_id = ? and cover_partial_id = ?", p.MacroId, p.CoverPartialId)
+	err := s.dbMap.SelectOne(&p, "select * from macro_partials where macro_id = ? and cover_partial_id = ?", p.MacroId, p.CoverPartialId)
 	if err != nil {
 		return nil, err
 	}
@@ -247,6 +274,9 @@ offset ?
 }
 
 func (s *macroPartialServiceImpl) AspectIds(macroId int64) ([]int64, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	sql := `
 		select distinct aspect_id
 		from macro_partials

@@ -28,17 +28,20 @@ func NewMosaicPartialService(dbMap *gorp.DbMap) MosaicPartialService {
 	return &mosaicPartialServiceImpl{dbMap: dbMap}
 }
 
-func (s *mosaicPartialServiceImpl) DbMap() *gorp.DbMap {
-	return s.dbMap
-}
-
 func (s *mosaicPartialServiceImpl) Register() error {
-	s.DbMap().AddTableWithName(model.MosaicPartial{}, "mosaic_partials").SetKeys(true, "id")
+	s.dbMap.AddTableWithName(model.MosaicPartial{}, "mosaic_partials").SetKeys(true, "id")
 	return nil
 }
 
+func (s *mosaicPartialServiceImpl) Close() error {
+	return s.dbMap.Db.Close()
+}
+
 func (s *mosaicPartialServiceImpl) Get(id int64) (*model.MosaicPartial, error) {
-	c, err := s.DbMap().Get(model.MosaicPartial{}, id)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	c, err := s.dbMap.Get(model.MosaicPartial{}, id)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +63,10 @@ func (s *mosaicPartialServiceImpl) Get(id int64) (*model.MosaicPartial, error) {
 }
 
 func (s *mosaicPartialServiceImpl) Insert(mosaicPartial *model.MosaicPartial) error {
-	return s.DbMap().Insert(mosaicPartial)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	return s.dbMap.Insert(mosaicPartial)
 }
 
 func (s *mosaicPartialServiceImpl) CountMissing(mosaic *model.Mosaic) (int64, error) {
@@ -77,7 +83,7 @@ func (s *mosaicPartialServiceImpl) CountMissing(mosaic *model.Mosaic) (int64, er
 			and mop.macro_partial_id = map.id
 		)
 	`
-	return s.DbMap().SelectInt(sql, mosaic.MacroId, mosaic.Id)
+	return s.dbMap.SelectInt(sql, mosaic.MacroId, mosaic.Id)
 }
 
 func (s *mosaicPartialServiceImpl) Count(mosaic *model.Mosaic) (int64, error) {
@@ -89,7 +95,7 @@ func (s *mosaicPartialServiceImpl) Count(mosaic *model.Mosaic) (int64, error) {
 		from mosaic_partials
 		where mosaic_partials.mosaic_id = ?
 	`
-	return s.DbMap().SelectInt(sql, mosaic.Id)
+	return s.dbMap.SelectInt(sql, mosaic.Id)
 }
 
 func (s *mosaicPartialServiceImpl) GetMissing(mosaic *model.Mosaic) *model.MacroPartial {
@@ -109,7 +115,7 @@ func (s *mosaicPartialServiceImpl) GetMissing(mosaic *model.Mosaic) *model.Macro
 		limit 1
 	`
 	var macroPartial model.MacroPartial
-	err := s.DbMap().SelectOne(&macroPartial, sql, mosaic.MacroId, mosaic.Id)
+	err := s.dbMap.SelectOne(&macroPartial, sql, mosaic.MacroId, mosaic.Id)
 	if err != nil {
 		return nil
 	}
@@ -134,7 +140,7 @@ func (s *mosaicPartialServiceImpl) GetRandomMissing(mosaic *model.Mosaic) *model
 		limit 1
 	`
 	var macroPartial model.MacroPartial
-	err := s.DbMap().SelectOne(&macroPartial, sql, mosaic.MacroId, mosaic.Id)
+	err := s.dbMap.SelectOne(&macroPartial, sql, mosaic.MacroId, mosaic.Id)
 	if err != nil {
 		return nil
 	}

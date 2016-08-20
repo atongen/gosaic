@@ -40,20 +40,26 @@ func NewPartialComparisonService(dbMap *gorp.DbMap) PartialComparisonService {
 	return &partialComparisonServiceImpl{dbMap: dbMap}
 }
 
-func (s *partialComparisonServiceImpl) DbMap() *gorp.DbMap {
-	return s.dbMap
-}
-
 func (s *partialComparisonServiceImpl) Register() error {
-	s.DbMap().AddTableWithName(model.PartialComparison{}, "partial_comparisons").SetKeys(true, "id")
+	s.dbMap.AddTableWithName(model.PartialComparison{}, "partial_comparisons").SetKeys(true, "id")
 	return nil
 }
 
+func (s *partialComparisonServiceImpl) Close() error {
+	return s.dbMap.Db.Close()
+}
+
 func (s *partialComparisonServiceImpl) Insert(pc *model.PartialComparison) error {
-	return s.DbMap().Insert(pc)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	return s.dbMap.Insert(pc)
 }
 
 func (s *partialComparisonServiceImpl) BulkInsert(partialComparisons []*model.PartialComparison) (int64, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	if len(partialComparisons) == 0 {
 		return int64(0), nil
 	} else if len(partialComparisons) == 1 {
@@ -86,17 +92,26 @@ func (s *partialComparisonServiceImpl) BulkInsert(partialComparisons []*model.Pa
 }
 
 func (s *partialComparisonServiceImpl) Update(pc *model.PartialComparison) error {
-	_, err := s.DbMap().Update(pc)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	_, err := s.dbMap.Update(pc)
 	return err
 }
 
 func (s *partialComparisonServiceImpl) Delete(pc *model.PartialComparison) error {
-	_, err := s.DbMap().Delete(pc)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	_, err := s.dbMap.Delete(pc)
 	return err
 }
 
 func (s *partialComparisonServiceImpl) Get(id int64) (*model.PartialComparison, error) {
-	partialComparison, err := s.DbMap().Get(model.PartialComparison{}, id)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	partialComparison, err := s.dbMap.Get(model.PartialComparison{}, id)
 	if err != nil {
 		return nil, err
 	}
@@ -118,8 +133,11 @@ func (s *partialComparisonServiceImpl) Get(id int64) (*model.PartialComparison, 
 }
 
 func (s *partialComparisonServiceImpl) GetOneBy(conditions string, params ...interface{}) (*model.PartialComparison, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	var partialComparison model.PartialComparison
-	err := s.DbMap().SelectOne(&partialComparison, fmt.Sprintf("select * from partial_comparisons where %s limit 1", conditions), params...)
+	err := s.dbMap.SelectOne(&partialComparison, fmt.Sprintf("select * from partial_comparisons where %s limit 1", conditions), params...)
 	if err != nil {
 		return nil, err
 	}
@@ -128,19 +146,31 @@ func (s *partialComparisonServiceImpl) GetOneBy(conditions string, params ...int
 }
 
 func (s *partialComparisonServiceImpl) ExistsBy(conditions string, params ...interface{}) (bool, error) {
-	count, err := s.DbMap().SelectInt(fmt.Sprintf("select 1 from partial_comparisons where %s limit 1", conditions), params...)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	count, err := s.dbMap.SelectInt(fmt.Sprintf("select 1 from partial_comparisons where %s limit 1", conditions), params...)
 	return count == 1, err
 }
 
 func (s *partialComparisonServiceImpl) Count() (int64, error) {
-	return s.DbMap().SelectInt("select count(*) from partial_comparisons")
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	return s.dbMap.SelectInt("select count(*) from partial_comparisons")
 }
 
 func (s *partialComparisonServiceImpl) CountBy(conditions string, params ...interface{}) (int64, error) {
-	return s.DbMap().SelectInt(fmt.Sprintf("select count(*) from partial_comparisons where %s", conditions), params...)
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	return s.dbMap.SelectInt(fmt.Sprintf("select count(*) from partial_comparisons where %s", conditions), params...)
 }
 
 func (s *partialComparisonServiceImpl) FindAll(order string, limit, offset int, conditions string, params ...interface{}) ([]*model.PartialComparison, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	var partialComparisons []*model.PartialComparison
 
 	sql := fmt.Sprintf("select * from partial_comparisons where %s order by %s limit %d offset %d",
@@ -160,7 +190,7 @@ func (s *partialComparisonServiceImpl) doFind(macroPartial *model.MacroPartial, 
 		GidxPartialId:  gidxPartial.Id,
 	}
 
-	err := s.DbMap().SelectOne(&p, "select * from partial_comparisons where macro_partial_id = ? and gidx_partial_id = ? limit 1", p.MacroPartialId, p.GidxPartialId)
+	err := s.dbMap.SelectOne(&p, "select * from partial_comparisons where macro_partial_id = ? and gidx_partial_id = ? limit 1", p.MacroPartialId, p.GidxPartialId)
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +265,7 @@ and not exists (
 )
 `
 
-	return s.DbMap().SelectInt(sql, macro.Id)
+	return s.dbMap.SelectInt(sql, macro.Id)
 }
 
 func (s *partialComparisonServiceImpl) FindMissing(macro *model.Macro, limit int) ([]*model.MacroGidxView, error) {
@@ -323,7 +353,7 @@ func (s *partialComparisonServiceImpl) GetClosest(macroPartial *model.MacroParti
 		order by pc.dist asc
 		limit 1
 	`
-	gidxPartialId, err := s.DbMap().SelectInt(sql, macroPartial.Id)
+	gidxPartialId, err := s.dbMap.SelectInt(sql, macroPartial.Id)
 	if err != nil {
 		return int64(0), err
 	}
@@ -352,7 +382,7 @@ func (s *partialComparisonServiceImpl) GetClosestMax(macroPartial *model.MacroPa
 		order by pc.dist asc
 		limit 1
 	`
-	gidxPartialId, err := s.DbMap().SelectInt(sql, macroPartial.Id, mosaic.Id, maxRepeats)
+	gidxPartialId, err := s.dbMap.SelectInt(sql, macroPartial.Id, mosaic.Id, maxRepeats)
 	if err != nil {
 		return int64(0), err
 	}
