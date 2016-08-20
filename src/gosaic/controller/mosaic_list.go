@@ -18,7 +18,7 @@ func MosaicList(env environment.Environment) {
 		return
 	}
 
-	mosaics, err := mosaicService.FindAll("mosaics.name ASC")
+	mosaics, err := mosaicService.FindAll("mosaics.id desc")
 	if err != nil {
 		env.Printf("Error finding mosaics: %s\n", err.Error())
 		return

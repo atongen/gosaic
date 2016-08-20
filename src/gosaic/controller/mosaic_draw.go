@@ -97,5 +97,5 @@ func MosaicDraw(env environment.Environment, mosaicId int64, outfile string) {
 		env.Fatalf("Error writing mosaic to %s: %s\n", outfile, err.Error())
 	}
 
-	env.Println("Wrote mosaic %s to %s\n", mosaic.Name, outfile)
+	env.Printf("Wrote mosaic %s to %s\n", mosaic.Name, outfile)
 }

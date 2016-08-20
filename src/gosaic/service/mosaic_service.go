@@ -79,7 +79,7 @@ func (s *mosaicServiceImpl) GetOneBy(conditions string, params ...interface{}) (
 }
 
 func (s *mosaicServiceImpl) FindAll(order string) ([]*model.Mosaic, error) {
-	sql := `select * from mosaics order by ?`
+	sql := fmt.Sprintf("select * from mosaics order by %s", order)
 
 	var mosaics []*model.Mosaic
 	_, err := s.dbMap.Select(&mosaics, sql, order)
