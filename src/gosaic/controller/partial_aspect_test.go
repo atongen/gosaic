@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestCompare(t *testing.T) {
+func TestPartialAspect(t *testing.T) {
 	env, out, err := setupControllerTest()
 	if err != nil {
 		t.Fatalf("Error getting test environment: %s\n", err.Error())
@@ -13,20 +13,18 @@ func TestCompare(t *testing.T) {
 	defer env.Close()
 
 	Index(env, []string{"testdata", "../service/testdata"})
-	_, macro := MacroAspect(env, "testdata/jumping_bunny.jpg", 1000, 1000, 2, 3, 10)
+	cover := CoverAspect(env, "macroTest", 594, 554, 2, 3, 10)
+	macro := Macro(env, "testdata/jumping_bunny.jpg", cover.Id)
 	PartialAspect(env, macro.Id)
-	Compare(env, macro.Id)
 
 	result := out.String()
-
 	expect := []string{
+		"Indexing 4 images...",
+		"Building 160 cover partials...",
+		"Created cover macroTest",
+		"Building 160 macro partials",
+		"Created macro for path testdata/jumping_bunny.jpg with cover macroTest",
 		"Creating 4 aspect partials for indexed images",
-		"100 / 600 partial comparisons created",
-		"200 / 600 partial comparisons created",
-		"300 / 600 partial comparisons created",
-		"400 / 600 partial comparisons created",
-		"500 / 600 partial comparisons created",
-		"600 / 600 partial comparisons created",
 	}
 
 	for _, e := range expect {

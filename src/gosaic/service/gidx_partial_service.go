@@ -1,9 +1,11 @@
 package service
 
 import (
+	"bytes"
 	"fmt"
 	"gosaic/model"
 	"gosaic/util"
+	"strconv"
 	"sync"
 
 	"gopkg.in/gorp.v1"
@@ -23,6 +25,7 @@ type GidxPartialService interface {
 	Create(*model.Gidx, *model.Aspect) (*model.GidxPartial, error)
 	FindOrCreate(*model.Gidx, *model.Aspect) (*model.GidxPartial, error)
 	FindMissing(*model.Aspect, string, int, int) ([]*model.Gidx, error)
+	CountMissing([]*model.Aspect) (int64, error)
 }
 
 type gidxPartialServiceImpl struct {
@@ -214,7 +217,8 @@ func (s *gidxPartialServiceImpl) FindMissing(aspect *model.Aspect, order string,
 	defer s.m.Unlock()
 
 	sql := fmt.Sprintf(`
-select * from gidx
+select *
+from gidx
 where not exists (
 	select 1 from gidx_partials
 	where gidx_partials.gidx_id = gidx.id
@@ -229,4 +233,33 @@ offset %d
 	_, err := s.dbMap.Select(&gidxs, sql, aspect.Id)
 
 	return gidxs, err
+}
+
+func (s *gidxPartialServiceImpl) CountMissing(aspects []*model.Aspect) (int64, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	num := len(aspects)
+	if num == 0 {
+		return 0, nil
+	}
+
+	var b bytes.Buffer
+	b.WriteString(`
+		select count(*)
+		from gidx
+		where not exists (
+			select 1 from gidx_partials
+			where gidx_partials.gidx_id = gidx.id
+			and gidx_partials.aspect_id in (`)
+	idsStr := make([]interface{}, num)
+	for i, aspect := range aspects {
+		idsStr[i] = strconv.FormatInt(aspect.Id, 10)
+		b.WriteString("?")
+		if i < num-1 {
+			b.WriteString(",")
+		}
+	}
+	b.WriteString("))")
+	return s.dbMap.SelectInt(b.String(), idsStr...)
 }

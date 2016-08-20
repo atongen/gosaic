@@ -9,24 +9,9 @@ import (
 )
 
 func Compare(env environment.Environment, macroId int64) {
-	aspectService, err := env.AspectService()
-	if err != nil {
-		env.Fatalf("Error getting aspect service: %s\n", err.Error())
-	}
-
-	gidxPartialService, err := env.GidxPartialService()
-	if err != nil {
-		env.Fatalf("Error getting gidx partial service: %s\n", err.Error())
-	}
-
 	macroService, err := env.MacroService()
 	if err != nil {
 		env.Fatalf("Error getting macro service: %s\n", err.Error())
-	}
-
-	macroPartialService, err := env.MacroPartialService()
-	if err != nil {
-		env.Fatalf("Error getting macro partial service: %s\n", err.Error())
 	}
 
 	partialComparisonService, err := env.PartialComparisonService()
@@ -36,26 +21,7 @@ func Compare(env environment.Environment, macroId int64) {
 
 	macro, err := macroService.Get(macroId)
 	if err != nil {
-		env.Fatalf("Error getting macro %d: %s\n", macroId, err.Error())
-	}
-
-	aspectIds, err := macroPartialService.AspectIds(macro.Id)
-	if err != nil {
-		env.Fatalf("Error getting aspect ids: %s\n", err.Error())
-	}
-
-	if len(aspectIds) == 0 {
-		env.Fatalln("No aspects found for this macro's partials")
-	}
-
-	aspects, err := aspectService.FindIn(aspectIds)
-	if err != nil {
-		env.Fatalf("Error getting aspects: %s\n", err.Error())
-	}
-
-	err = createMissingGidxIndexes(env.Log(), gidxPartialService, aspects)
-	if err != nil {
-		env.Fatalf("Error creating gidx partial aspects: %s\n", err.Error())
+		env.Fatalf("Error getting macro: %s\n", err.Error())
 	}
 
 	createMissingComparisons(env.Log(), partialComparisonService, macro)

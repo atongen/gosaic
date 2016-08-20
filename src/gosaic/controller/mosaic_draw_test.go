@@ -22,9 +22,10 @@ func TestMosaicDraw(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	Index(env, []string{"testdata", "../service/testdata"})
-	MacroAspect(env, "testdata/jumping_bunny.jpg", 1000, 1000, 2, 3, 10)
-	Compare(env, int64(1))
-	MosaicBuild(env, "Jumping Bunny", int64(1), 0)
+	_, macro := MacroAspect(env, "testdata/jumping_bunny.jpg", 1000, 1000, 2, 3, 10)
+	PartialAspect(env, macro.Id)
+	Compare(env, macro.Id)
+	MosaicBuild(env, "Jumping Bunny", macro.Id, 0)
 	MosaicDraw(env, int64(1), filepath.Join(dir, "jumping_bunny_mosaic.jpg"))
 
 	result := out.String()
@@ -35,7 +36,7 @@ func TestMosaicDraw(t *testing.T) {
 		"Created cover testdata/jumping_bunny.jpg-",
 		"Building 150 macro partials",
 		"Created macro for path testdata/jumping_bunny.jpg with cover testdata/jumping_bunny.jpg-",
-		"Creating 4 index partials for aspect 2x3",
+		"Creating 4 aspect partials for indexed images",
 		"100 / 600 partial comparisons created",
 		"200 / 600 partial comparisons created",
 		"300 / 600 partial comparisons created",

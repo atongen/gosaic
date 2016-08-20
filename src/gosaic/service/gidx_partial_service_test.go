@@ -365,3 +365,34 @@ func TestGidxPartialServiceFindMissing(t *testing.T) {
 		t.Fatalf("Expected 0 Missing gidxPartial, got %d\n", len(gidxs))
 	}
 }
+
+func TestGidxPartialServiceCountMissing(t *testing.T) {
+	gidxPartialService, err := setupGidxPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer gidxPartialService.Close()
+
+	num, err := gidxPartialService.CountMissing([]*model.Aspect{&aspect})
+	if err != nil {
+		t.Fatalf("Failed to CountMissing gidxPartial: %s\n", err.Error())
+	}
+
+	if num != 1 {
+		t.Fatalf("Expected 1 Missing gidxPartial, got %d\n", num)
+	}
+
+	_, err = gidxPartialService.Create(&gidx, &aspect)
+	if err != nil {
+		t.Fatalf("Failed to Create gidxPartial: %s\n", err.Error())
+	}
+
+	num, err = gidxPartialService.CountMissing([]*model.Aspect{&aspect})
+	if err != nil {
+		t.Fatalf("Failed to CountMissing gidxPartial: %s\n", err.Error())
+	}
+
+	if num != 0 {
+		t.Fatalf("Expected 0 Missing gidxPartial, got %d\n", num)
+	}
+}
