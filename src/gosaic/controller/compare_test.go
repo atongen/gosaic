@@ -21,12 +21,7 @@ func TestCompare(t *testing.T) {
 
 	expect := []string{
 		"Creating 4 aspect partials for indexed images",
-		"100 / 600 partial comparisons created",
-		"200 / 600 partial comparisons created",
-		"300 / 600 partial comparisons created",
-		"400 / 600 partial comparisons created",
-		"500 / 600 partial comparisons created",
-		"600 / 600 partial comparisons created",
+		"Creating 600 partial image comparisons...",
 	}
 
 	for _, e := range expect {

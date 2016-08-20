@@ -6,6 +6,8 @@ import (
 	"gosaic/service"
 	"log"
 	"sync"
+
+	"gopkg.in/cheggaaa/pb.v1"
 )
 
 func Compare(env environment.Environment, macroId int64) {
@@ -39,7 +41,9 @@ func createMissingComparisons(l *log.Logger, partialComparisonService service.Pa
 		return
 	}
 
-	created := int64(0)
+	l.Printf("Creating %d partial image comparisons...\n", numTotal)
+	bar := pb.StartNew(int(numTotal))
+
 	for {
 		views, err := partialComparisonService.FindMissing(macro, batchSize)
 		if err != nil {
@@ -52,21 +56,16 @@ func createMissingComparisons(l *log.Logger, partialComparisonService service.Pa
 
 		partialComparisons := buildPartialComparisons(l, views)
 
-		numErrors := len(views) - len(partialComparisons)
-		if numErrors > 0 {
-			l.Printf("Failed to create %d of %d comparisons\n", numErrors, len(views))
-		}
-
 		if len(partialComparisons) > 0 {
 			numCreated, err := partialComparisonService.BulkInsert(partialComparisons)
 			if err != nil {
 				l.Fatalf("Error inserting partial comparisons: %s\n", err.Error())
 			}
 
-			created += numCreated
-			l.Printf("%d / %d partial comparisons created\n", created, numTotal)
+			bar.Add(int(numCreated))
 		}
 	}
+	bar.Finish()
 }
 
 func buildPartialComparisons(l *log.Logger, macroGidxViews []*model.MacroGidxView) []*model.PartialComparison {

@@ -27,12 +27,7 @@ func TestMosaicBuild(t *testing.T) {
 		"Building 150 macro partials",
 		"Created macro for path testdata/jumping_bunny.jpg with cover testdata/jumping_bunny.jpg-",
 		"Creating 4 aspect partials for indexed images",
-		"100 / 600 partial comparisons created",
-		"200 / 600 partial comparisons created",
-		"300 / 600 partial comparisons created",
-		"400 / 600 partial comparisons created",
-		"500 / 600 partial comparisons created",
-		"600 / 600 partial comparisons created",
+		"Creating 600 partial image comparisons...",
 		"Creating mosaic with 150 total partials",
 		"Building 150 missing mosaic partials",
 	}
