@@ -15,6 +15,7 @@ type MosaicService interface {
 	Get(int64) (*model.Mosaic, error)
 	Insert(*model.Mosaic) error
 	GetOneBy(string, ...interface{}) (*model.Mosaic, error)
+	FindAll(string) ([]*model.Mosaic, error)
 }
 
 type mosaicServiceImpl struct {
@@ -75,4 +76,13 @@ func (s *mosaicServiceImpl) GetOneBy(conditions string, params ...interface{}) (
 	}
 
 	return &mosaic, nil
+}
+
+func (s *mosaicServiceImpl) FindAll(order string) ([]*model.Mosaic, error) {
+	sql := `select * from mosaics order by ?`
+
+	var mosaics []*model.Mosaic
+	_, err := s.dbMap.Select(&mosaics, sql, order)
+
+	return mosaics, err
 }

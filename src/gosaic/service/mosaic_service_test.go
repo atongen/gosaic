@@ -150,3 +150,49 @@ func TestMosaicServiceGetOneByNot(t *testing.T) {
 		t.Fatal("Mosaic found when should not exist")
 	}
 }
+
+func TestMosaicServiceFindAll(t *testing.T) {
+	mosaicService, err := setupMosaicServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer mosaicService.DbMap().Db.Close()
+
+	c1 := model.Mosaic{
+		Name:    "test1",
+		MacroId: macro.Id,
+	}
+
+	err = mosaicService.Insert(&c1)
+	if err != nil {
+		t.Fatalf("Error inserting mosaic: %s\n", err.Error())
+	}
+
+	if c1.Id == int64(0) {
+		t.Fatalf("Inserted mosaic id not set")
+	}
+
+	mosaics, err := mosaicService.FindAll("id asc")
+	if err != nil {
+		t.Fatalf("Error finding all mosaics: %s\n", err.Error())
+	}
+
+	if len(mosaics) != 1 {
+		t.Fatalf("Expected 1 mosaic, got %d\n", len(mosaics))
+	}
+
+	c2 := mosaics[0]
+
+	if c1.Id != c2.Id ||
+		c1.Name != c2.Name ||
+		c1.MacroId != c2.MacroId {
+		t.Fatalf("Inserted mosaic (%+v) does not match: %+v\n", c2, c1)
+	}
+
+	if c1.CreatedAt.IsZero() ||
+		c2.CreatedAt.IsZero() {
+		t.Fatal("Mosaic created at not set")
+	} else if c1.CreatedAt.Unix() != c2.CreatedAt.Unix() {
+		t.Fatal("Inserted mosaic created at does not match")
+	}
+}
