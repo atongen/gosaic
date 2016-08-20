@@ -12,14 +12,14 @@ var (
 	coverAspectWidth  int
 	coverAspectHeight int
 	coverAspect       string
-	coverAspectNum    int
+	coverAspectSize   int
 )
 
 func init() {
 	addLocalIntFlag(&coverAspectWidth, "width", "", 0, "Pixel width of cover", CoverAspectCmd)
 	addLocalIntFlag(&coverAspectHeight, "height", "", 0, "Pixel height of cover", CoverAspectCmd)
 	addLocalFlag(&coverAspect, "aspect", "a", "1x1", "Aspect of cover partials (CxR)", CoverAspectCmd)
-	addLocalIntFlag(&coverAspectNum, "size", "s", 0, "Number of partials in smallest dimension", CoverAspectCmd)
+	addLocalIntFlag(&coverAspectSize, "size", "s", 0, "Number of partials in smallest dimension", CoverAspectCmd)
 	RootCmd.AddCommand(CoverAspectCmd)
 }
 
@@ -79,9 +79,9 @@ var CoverAspectCmd = &cobra.Command{
 			Env.Fatalln("aspect rows must be greater than zero")
 		}
 
-		if coverAspectNum == 0 {
+		if coverAspectSize == 0 {
 			Env.Fatalln("num is required")
-		} else if coverAspectNum < 0 {
+		} else if coverAspectSize < 0 {
 			Env.Fatalln("num must be greater than zero")
 		}
 
@@ -91,6 +91,6 @@ var CoverAspectCmd = &cobra.Command{
 		}
 		defer Env.Close()
 
-		controller.CoverAspect(Env, args[0], coverAspectWidth, coverAspectHeight, aw, ah, coverAspectNum)
+		controller.CoverAspect(Env, args[0], coverAspectWidth, coverAspectHeight, aw, ah, coverAspectSize)
 	},
 }

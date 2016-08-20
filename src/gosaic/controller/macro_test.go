@@ -27,7 +27,7 @@ func TestMacro(t *testing.T) {
 	Macro(env, "testdata/jumping_bunny.jpg", "macroTest")
 
 	result := out.String()
-	if !strings.Contains(result, "Created cover macroTest with") {
+	if !strings.Contains(result, "Created cover macroTest") {
 		t.Fatal("Cover controller output not found")
 	}
 

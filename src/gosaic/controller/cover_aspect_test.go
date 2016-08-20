@@ -15,9 +15,16 @@ func TestCoverAspect(t *testing.T) {
 	CoverAspect(env, "test", 1, 1, 1, 1, 1)
 
 	result := out.String()
-	if !strings.Contains(result, "Created cover test with 1 partials") ||
-		strings.Contains(result, "Error") {
-		t.Fatalf("CoverAspect failed: %s\n", result)
+
+	expect := []string{
+		"Created cover test",
+		"Building 1 cover partials...",
+	}
+
+	for _, e := range expect {
+		if !strings.Contains(result, e) {
+			t.Fatalf("Expected result to contain '%s', but it did not", e)
+		}
 	}
 
 	for _, ne := range []string{"fail", "error"} {

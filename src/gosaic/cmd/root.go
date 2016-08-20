@@ -12,8 +12,8 @@ import (
 	"github.com/spf13/viper"
 )
 
-// global flags
 var (
+	// global flags
 	dbPath  string
 	workers int
 )

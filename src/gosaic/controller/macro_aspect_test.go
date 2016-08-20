@@ -19,7 +19,7 @@ func TestMacroAspect(t *testing.T) {
 	fmt.Println(result)
 	expect := []string{
 		"Created cover testdata/jumping_bunny.jpg-",
-		"with 150 partials",
+		"Building 150 cover partials...",
 		"Processing 150 macro partials",
 		"Built macro for testdata/jumping_bunny.jpg with cover testdata/jumping_bunny.jpg-",
 	}

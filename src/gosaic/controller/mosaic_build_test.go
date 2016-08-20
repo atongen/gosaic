@@ -21,7 +21,7 @@ func TestMosaicBuild(t *testing.T) {
 
 	expect := []string{
 		"Created cover testdata/jumping_bunny.jpg-",
-		"with 150 partials",
+		"Building 150 cover partials...",
 		"Processing 150 macro partials",
 		"Built macro for testdata/jumping_bunny.jpg with cover testdata/jumping_bunny.jpg-",
 		"Creating 4 index partials for aspect 2x3",
