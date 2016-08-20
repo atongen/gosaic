@@ -220,3 +220,12 @@ func SliceContainsInt64(s []int64, a int64) bool {
 	}
 	return false
 }
+
+func SliceContainsString(s []string, a string) bool {
+	for _, b := range s {
+		if a == b {
+			return true
+		}
+	}
+	return false
+}

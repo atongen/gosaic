@@ -3,10 +3,14 @@ package controller
 import (
 	"gosaic/environment"
 	"gosaic/model"
+	"gosaic/service"
 	"gosaic/util"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"gopkg.in/cheggaaa/pb.v1"
 )
 
 type addIndex struct {
@@ -14,128 +18,132 @@ type addIndex struct {
 	md5sum string
 }
 
-func Index(env environment.Environment, path string) {
-	paths, err := getJpgPaths(path, env)
+func Index(env environment.Environment, paths []string) {
+	gidxService, err := env.GidxService()
 	if err != nil {
-		env.Printf("Error finding images in path %s: %s\n", path, err.Error())
-		return
+		env.Fatalf("Error getting index service: %s\n", err.Error())
 	}
 
+	aspectService, err := env.AspectService()
+	if err != nil {
+		env.Fatalf("Error getting aspect service: %s\n", err.Error())
+	}
+
+	found := getJpgPaths(env.Log(), paths)
+	processIndexPaths(env.Log(), env.Workers(), found, gidxService, aspectService)
+}
+
+func getJpgPaths(l *log.Logger, paths []string) []string {
+	found := make([]string, 0)
+
+	for _, myPath := range paths {
+		err := filepath.Walk(myPath, func(path string, f os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if !f.Mode().IsRegular() {
+				return nil
+			}
+			ext := strings.ToLower(filepath.Ext(path))
+			if ext != ".jpg" && ext != ".jpeg" && ext != ".png" {
+				return nil
+			}
+			absPath, err := filepath.Abs(path)
+			if err != nil {
+				return err
+			}
+			if !util.SliceContainsString(found, absPath) {
+				found = append(found, absPath)
+			}
+			return nil
+		})
+
+		if err != nil {
+			l.Printf("Error building indexing for path %s: %s\n", myPath, err.Error())
+		}
+	}
+
+	return found
+}
+
+func processIndexPaths(l *log.Logger, workers int, paths []string, gidxService service.GidxService, aspectService service.AspectService) {
 	num := len(paths)
 	if num == 0 {
-		env.Printf("No images found at path %s\n", path)
 		return
 	}
 
-	env.Printf("Processing %d images\n", num)
-	err = processIndexPaths(paths, env)
-	if err != nil {
-		env.Printf("Error indexing images: %s\n", err.Error())
-	}
-}
+	l.Printf("Indexing %d images...\n", num)
 
-func getJpgPaths(path string, env environment.Environment) ([]string, error) {
-	paths := make([]string, 0)
+	bar := pb.StartNew(num)
 
-	err := filepath.Walk(path, func(path string, f os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if !f.Mode().IsRegular() {
-			return nil
-		}
-		ext := strings.ToLower(filepath.Ext(path))
-		if ext != ".jpg" {
-			return nil
-		}
-		absPath, err := filepath.Abs(path)
-		if err != nil {
-			return err
-		}
-		paths = append(paths, absPath)
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return paths, nil
-}
-
-func processIndexPaths(paths []string, env environment.Environment) error {
 	add := make(chan addIndex)
-	sem := make(chan bool, env.Workers())
+	sem := make(chan bool, workers)
+	done := make(chan bool)
 
-	go storeIndexPaths(add, sem, env)
+	go func(myLog *log.Logger, myBar *pb.ProgressBar, addCh <-chan addIndex, semCh <-chan bool, doneCh <-chan bool, myGidxService service.GidxService, myAspectService service.AspectService) {
+		for {
+			select {
+			case newIndex := <-addCh:
+				err := storeIndexPath(myLog, newIndex, myGidxService, myAspectService)
+				if err != nil {
+					l.Printf("Error indexing path %s: %s\n", newIndex.path, err.Error())
+				}
+				myBar.Increment()
+				<-semCh
+			case <-doneCh:
+				return
+			}
+		}
+	}(l, bar, add, sem, done, gidxService, aspectService)
 
 	for _, p := range paths {
 		sem <- true
-		go func(myPath string) {
+		go func(myLog *log.Logger, myPath string) {
 			md5sum, err := util.Md5sum(myPath)
 			if err != nil {
-				env.Printf("Unable to get md5 sum for path %s\n", myPath)
+				myLog.Printf("Error getting md5 sum for path %s: %s\n", myPath, err.Error())
 				return
 			}
 			add <- addIndex{myPath, md5sum}
-		}(p)
+		}(l, p)
 	}
 
 	for i := 0; i < cap(sem); i++ {
 		sem <- true
 	}
 
-	return nil
+	done <- true
+	close(add)
+	close(sem)
+	close(done)
+
+	bar.Finish()
 }
 
-func storeIndexPaths(add <-chan addIndex, sem <-chan bool, env environment.Environment) {
-	for newIndex := range add {
-		storeIndexPath(newIndex, env)
-		<-sem
-	}
-}
-
-func storeIndexPath(newIndex addIndex, env environment.Environment) {
-	gidxService, err := env.GidxService()
-	if err != nil {
-		env.Println(err.Error())
-		return
-	}
-
-	aspectService, err := env.AspectService()
-	if err != nil {
-		env.Println(err.Error())
-		return
-	}
-
+func storeIndexPath(l *log.Logger, newIndex addIndex, gidxService service.GidxService, aspectService service.AspectService) error {
 	exists, err := gidxService.ExistsBy("md5sum", newIndex.md5sum)
 	if err != nil {
-		env.Println("Failed to lookup md5sum", newIndex.md5sum, err)
-		return
+		return err
 	}
 
 	if exists {
-		return
+		return nil
 	}
-
-	env.Println(newIndex.path)
 
 	img, err := util.OpenImage(newIndex.path)
 	if err != nil {
-		env.Println("Can't open image", newIndex.path, err)
-		return
+		return err
 	}
 
 	// don't actually fix orientation here, just determine
 	// if x and y need to be swapped
 	orientation, err := util.GetOrientation(newIndex.path)
 	if err != nil {
-		env.Printf("Error getting image orientation: %s\n", err.Error())
-		return
+		return err
 	}
 
 	swap := false
-	if err == nil && 4 < orientation && orientation <= 8 {
+	if 4 < orientation && orientation <= 8 {
 		swap = true
 	}
 	if orientation == 0 {
@@ -155,8 +163,7 @@ func storeIndexPath(newIndex addIndex, env environment.Environment) {
 
 	aspect, err := aspectService.FindOrCreate(width, height)
 	if err != nil {
-		env.Println("Error getting image aspect data", newIndex.path, err)
-		return
+		return err
 	}
 
 	gidx := model.Gidx{
@@ -169,6 +176,8 @@ func storeIndexPath(newIndex addIndex, env environment.Environment) {
 	}
 	err = gidxService.Insert(&gidx)
 	if err != nil {
-		env.Println("Error storing image data", newIndex.path, err)
+		return err
 	}
+
+	return nil
 }
