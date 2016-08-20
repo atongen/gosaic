@@ -5,6 +5,7 @@ import (
 	"gosaic/model"
 	"gosaic/service"
 	"log"
+	"math"
 )
 
 func MosaicBuild(env environment.Environment, name string, macroId int64, maxRepeats int) {
@@ -57,7 +58,16 @@ func MosaicBuild(env environment.Environment, name string, macroId int64, maxRep
 		env.Fatalf("Error counting index images: %s\n", err.Error())
 	}
 
-	if maxRepeats > 0 {
+	// maxRepeats == 0 is unrestricted
+	// maxRepeats > 0 sets explicitly
+	// maxRepeats == -1 (<0) calculates minimum
+	if maxRepeats < 0 {
+		if numGidxs > numMacroPartials {
+			maxRepeats = 1
+		} else {
+			maxRepeats = int(math.Ceil(float64(numMacroPartials) / float64(numGidxs)))
+		}
+	} else if maxRepeats > 0 {
 		if numGidxs*int64(maxRepeats) < numMacroPartials {
 			env.Fatalf("Not enough index images (%d) to fill mosaic (%d) with max repeats set to %d", numGidxs, numMacroPartials, maxRepeats)
 		}
