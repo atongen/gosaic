@@ -19,4 +19,10 @@ func TestCoverAspect(t *testing.T) {
 		strings.Contains(result, "Error") {
 		t.Fatalf("CoverAspect failed: %s\n", result)
 	}
+
+	for _, ne := range []string{"fail", "error"} {
+		if strings.Contains(strings.ToLower(result), ne) {
+			t.Fatalf("Did not expect result to contain: %s, but it did\n", ne)
+		}
+	}
 }

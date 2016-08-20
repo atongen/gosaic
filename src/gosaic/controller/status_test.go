@@ -13,7 +13,15 @@ func TestStatus(t *testing.T) {
 	defer env.Close()
 
 	Status(env)
-	if !strings.Contains(out.String(), "Status: OK") {
+	result := out.String()
+
+	if !strings.Contains(result, "Status: OK") {
 		t.Error("The status was not ok.")
+	}
+
+	for _, ne := range []string{"fail", "error"} {
+		if strings.Contains(strings.ToLower(result), ne) {
+			t.Fatalf("Did not expect result to contain: %s, but it did\n", ne)
+		}
 	}
 }

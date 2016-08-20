@@ -13,8 +13,17 @@ func TestIndex(t *testing.T) {
 	defer env.Close()
 
 	Index(env, "testdata")
-	if !strings.Contains(out.String(), "Processing 1 images") ||
-		strings.Contains(out.String(), "Error indexing images") {
-		t.Errorf("Indexing failed: %s", out.String())
+
+	result := out.String()
+
+	if !strings.Contains(result, "Processing 1 images") ||
+		strings.Contains(result, "Error indexing images") {
+		t.Errorf("Indexing failed: %s", result)
+	}
+
+	for _, ne := range []string{"fail", "error"} {
+		if strings.Contains(strings.ToLower(result), ne) {
+			t.Fatalf("Did not expect result to contain: %s, but it did\n", ne)
+		}
 	}
 }

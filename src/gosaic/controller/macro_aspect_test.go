@@ -29,4 +29,10 @@ func TestMacroAspect(t *testing.T) {
 			t.Fatalf("Expected result to contain '%s', but it did not", e)
 		}
 	}
+
+	for _, ne := range []string{"fail", "error"} {
+		if strings.Contains(strings.ToLower(result), ne) {
+			t.Fatalf("Did not expect result to contain: %s, but it did\n", ne)
+		}
+	}
 }
