@@ -86,7 +86,7 @@ func TestMacroPartialServiceInsert(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer macroPartialService.DbMap().Db.Close()
+	defer macroPartialService.Close()
 
 	mp := model.MacroPartial{
 		MacroId:        macro.Id,
@@ -143,7 +143,7 @@ func TestMacroPartialServiceUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer macroPartialService.DbMap().Db.Close()
+	defer macroPartialService.Close()
 
 	mp := model.MacroPartial{
 		MacroId:        macro.Id,
@@ -187,7 +187,7 @@ func TestMacroPartialServiceDelete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer macroPartialService.DbMap().Db.Close()
+	defer macroPartialService.Close()
 
 	mp := model.MacroPartial{
 		MacroId:        macro.Id,
@@ -226,7 +226,7 @@ func TestMacroPartialServiceGetOneBy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer macroPartialService.DbMap().Db.Close()
+	defer macroPartialService.Close()
 
 	mp := model.MacroPartial{
 		MacroId:        macro.Id,
@@ -277,7 +277,7 @@ func TestMacroPartialServiceExistsBy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer macroPartialService.DbMap().Db.Close()
+	defer macroPartialService.Close()
 
 	mp := model.MacroPartial{
 		MacroId:        macro.Id,
@@ -313,7 +313,7 @@ func TestMacroPartialServiceCount(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer macroPartialService.DbMap().Db.Close()
+	defer macroPartialService.Close()
 
 	mp := model.MacroPartial{
 		MacroId:        macro.Id,
@@ -349,7 +349,7 @@ func TestMacroPartialServiceCountBy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer macroPartialService.DbMap().Db.Close()
+	defer macroPartialService.Close()
 
 	mp := model.MacroPartial{
 		MacroId:        macro.Id,
@@ -385,7 +385,7 @@ func TestMacroPartialServiceFindAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer macroPartialService.DbMap().Db.Close()
+	defer macroPartialService.Close()
 
 	mp := model.MacroPartial{
 		MacroId:        macro.Id,
@@ -444,7 +444,7 @@ func TestMacroPartialServiceFindOrCreate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer macroPartialService.DbMap().Db.Close()
+	defer macroPartialService.Close()
 
 	macroPartial, err := macroPartialService.FindOrCreate(&macro, &coverPartial)
 	if err != nil {
@@ -484,7 +484,7 @@ func TestMacroPartialServiceFindMissing(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer macroPartialService.DbMap().Db.Close()
+	defer macroPartialService.Close()
 
 	coverPartials, err := macroPartialService.FindMissing(&macro, "id asc", 1000, 0)
 	if err != nil {
@@ -526,7 +526,7 @@ func TestMacroPartialServiceAspectIds(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer macroPartialService.DbMap().Db.Close()
+	defer macroPartialService.Close()
 
 	_, err = macroPartialService.FindOrCreate(&macro, &coverPartial)
 	if err != nil {

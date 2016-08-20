@@ -181,7 +181,7 @@ func (s *gidxPartialServiceImpl) doCreate(gidx *model.Gidx, aspect *model.Aspect
 		return nil, err
 	}
 
-	err = s.Insert(&p)
+	err = s.dbMap.Insert(&p)
 	if err != nil {
 		return nil, err
 	}

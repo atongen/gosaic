@@ -49,7 +49,7 @@ func TestCoverPartialServiceInsert(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup services: %s\n", err.Error())
 	}
-	defer coverPartialService.DbMap().Db.Close()
+	defer coverPartialService.Close()
 
 	p1 := model.CoverPartial{
 		CoverId:  cover.Id,
@@ -92,7 +92,7 @@ func TestCoverPartialServiceUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup services: %s\n", err.Error())
 	}
-	defer coverPartialService.DbMap().Db.Close()
+	defer coverPartialService.Close()
 
 	p1 := model.CoverPartial{
 		CoverId:  cover.Id,
@@ -129,7 +129,7 @@ func TestCoverPartialServiceDelete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup services: %s\n", err.Error())
 	}
-	defer coverPartialService.DbMap().Db.Close()
+	defer coverPartialService.Close()
 
 	p1 := model.CoverPartial{
 		CoverId:  cover.Id,
@@ -163,7 +163,7 @@ func TestCoverPartialServiceFindAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup services: %s\n", err.Error())
 	}
-	defer coverPartialService.DbMap().Db.Close()
+	defer coverPartialService.Close()
 
 	cps := []model.CoverPartial{
 		model.CoverPartial{CoverId: cover.Id, AspectId: aspect.Id, X1: 0, Y1: 0, X2: 1, Y2: 1},

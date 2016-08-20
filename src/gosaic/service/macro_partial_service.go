@@ -222,7 +222,7 @@ func (s *macroPartialServiceImpl) doCreate(macro *model.Macro, coverPartial *mod
 		return nil, err
 	}
 
-	err = s.Insert(&p)
+	err = s.dbMap.Insert(&p)
 	if err != nil {
 		return nil, err
 	}

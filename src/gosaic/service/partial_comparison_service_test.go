@@ -156,7 +156,7 @@ func TestPartialComparisonServiceInsert(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer partialComparisonService.DbMap().Db.Close()
+	defer partialComparisonService.Close()
 
 	pc := model.PartialComparison{
 		MacroPartialId: macroPartial.Id,
@@ -193,7 +193,7 @@ func TestPartialComparisonServiceBulkInsert(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer partialComparisonService.DbMap().Db.Close()
+	defer partialComparisonService.Close()
 
 	macroGidxViews, err := partialComparisonService.FindMissing(&macro, 1000)
 	if err != nil {
@@ -238,7 +238,7 @@ func TestPartialComparisonServiceUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer partialComparisonService.DbMap().Db.Close()
+	defer partialComparisonService.Close()
 
 	pc := model.PartialComparison{
 		MacroPartialId: macroPartial.Id,
@@ -274,7 +274,7 @@ func TestPartialComparisonServiceDelete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer partialComparisonService.DbMap().Db.Close()
+	defer partialComparisonService.Close()
 
 	pc := model.PartialComparison{
 		MacroPartialId: macroPartial.Id,
@@ -305,7 +305,7 @@ func TestPartialComparisonServiceGetOneBy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer partialComparisonService.DbMap().Db.Close()
+	defer partialComparisonService.Close()
 
 	pc := model.PartialComparison{
 		MacroPartialId: macroPartial.Id,
@@ -336,7 +336,7 @@ func TestPartialComparisonServiceGetOneByNot(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer partialComparisonService.DbMap().Db.Close()
+	defer partialComparisonService.Close()
 
 	_, err = partialComparisonService.GetOneBy("macro_partial_id = ? and gidx_partial_id = ?", macroPartial.Id, gidxPartial.Id)
 	if err == nil {
@@ -349,7 +349,7 @@ func TestPartialComparisonServiceExistsBy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer partialComparisonService.DbMap().Db.Close()
+	defer partialComparisonService.Close()
 
 	pc := model.PartialComparison{
 		MacroPartialId: macroPartial.Id,
@@ -377,7 +377,7 @@ func TestPartialComparisonServiceExistsByNot(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer partialComparisonService.DbMap().Db.Close()
+	defer partialComparisonService.Close()
 
 	found, err := partialComparisonService.ExistsBy("macro_partial_id = ? and gidx_partial_id = ?", macroPartial.Id, gidxPartial.Id)
 	if err != nil {
@@ -394,7 +394,7 @@ func TestPartialComparisonServiceCount(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer partialComparisonService.DbMap().Db.Close()
+	defer partialComparisonService.Close()
 
 	pc := model.PartialComparison{
 		MacroPartialId: macroPartial.Id,
@@ -422,7 +422,7 @@ func TestPartialComparisonServiceCountBy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer partialComparisonService.DbMap().Db.Close()
+	defer partialComparisonService.Close()
 
 	pc := model.PartialComparison{
 		MacroPartialId: macroPartial.Id,
@@ -450,7 +450,7 @@ func TestPartialComparisonServiceFindAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer partialComparisonService.DbMap().Db.Close()
+	defer partialComparisonService.Close()
 
 	pc := model.PartialComparison{
 		MacroPartialId: macroPartial.Id,
@@ -489,7 +489,7 @@ func TestPartialComparisonServiceFindOrCreate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer partialComparisonService.DbMap().Db.Close()
+	defer partialComparisonService.Close()
 
 	partialComparison, err := partialComparisonService.FindOrCreate(&macroPartial, &gidxPartial)
 	if err != nil {
@@ -514,7 +514,7 @@ func TestPartialComparisonServiceCountMissing(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer partialComparisonService.DbMap().Db.Close()
+	defer partialComparisonService.Close()
 
 	num, err := partialComparisonService.CountMissing(&macro)
 	if err != nil {
@@ -531,7 +531,7 @@ func TestPartialComparisonServiceFindMissing(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer partialComparisonService.DbMap().Db.Close()
+	defer partialComparisonService.Close()
 
 	macroGidxViews, err := partialComparisonService.FindMissing(&macro, 1000)
 	if err != nil {
@@ -548,7 +548,7 @@ func TestPartialComparisonServiceCreateFromView(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer partialComparisonService.DbMap().Db.Close()
+	defer partialComparisonService.Close()
 
 	macroGidxViews, err := partialComparisonService.FindMissing(&macro, 1000)
 	if err != nil {
@@ -583,7 +583,7 @@ func TestPartialComparisonServiceGetClosest(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer partialComparisonService.DbMap().Db.Close()
+	defer partialComparisonService.Close()
 
 	pc1 := model.PartialComparison{
 		MacroPartialId: macroPartial.Id,
@@ -620,8 +620,12 @@ func TestPartialComparisonServiceGetClosestMax(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	dbMap := partialComparisonService.DbMap()
-	defer dbMap.Db.Close()
+	defer partialComparisonService.Close()
+
+	dbMap, err := getCachedTestDbMap()
+	if err != nil {
+		t.Fatalf("Error getting db map: %s\n", err.Error())
+	}
 
 	mosaicService, err := getTestMosaicService(dbMap)
 	if err != nil {

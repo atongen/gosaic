@@ -4,11 +4,15 @@ import (
 	"database/sql"
 	"gosaic/database"
 	"gosaic/model"
+	"sync"
 
 	"gopkg.in/gorp.v1"
 )
 
 var (
+	m           sync.Mutex
+	cachedDbMap *gorp.DbMap
+
 	gidx          model.Gidx
 	gidxPartial   model.GidxPartial
 	aspect        model.Aspect
@@ -21,6 +25,25 @@ var (
 )
 
 func getTestDbMap() (*gorp.DbMap, error) {
+	m.Lock()
+	defer m.Unlock()
+
+	return buildCachedTestDbMap()
+}
+
+func getCachedTestDbMap() (*gorp.DbMap, error) {
+	m.Lock()
+	defer m.Unlock()
+
+	if cachedDbMap == nil {
+		return buildCachedTestDbMap()
+	}
+	return cachedDbMap, nil
+}
+
+func buildCachedTestDbMap() (*gorp.DbMap, error) {
+	cachedDbMap = nil
+
 	db, err := sql.Open("sqlite3", ":memory:")
 	if err != nil {
 		return nil, err
@@ -41,9 +64,9 @@ func getTestDbMap() (*gorp.DbMap, error) {
 		return nil, err
 	}
 
-	dbMap := gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
+	cachedDbMap = &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
 
-	return &dbMap, nil
+	return cachedDbMap, nil
 }
 
 func getTestGidxService(dbMap *gorp.DbMap) (GidxService, error) {

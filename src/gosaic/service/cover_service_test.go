@@ -38,7 +38,7 @@ func TestCoverServiceInsert(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer coverService.DbMap().Db.Close()
+	defer coverService.Close()
 
 	c1 := model.Cover{
 		Name:     "test1",
@@ -79,7 +79,7 @@ func TestCoverServiceUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer coverService.DbMap().Db.Close()
+	defer coverService.Close()
 
 	c1 := model.Cover{
 		Name:     "test1",
@@ -115,7 +115,7 @@ func TestCoverServiceDelete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer coverService.DbMap().Db.Close()
+	defer coverService.Close()
 
 	c1 := model.Cover{
 		Name:     "test1",
@@ -148,7 +148,7 @@ func TestCoverServiceGetOneBy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer coverService.DbMap().Db.Close()
+	defer coverService.Close()
 
 	c1 := model.Cover{
 		Name:     "test1",
@@ -185,7 +185,7 @@ func TestCoverServiceFindAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer coverService.DbMap().Db.Close()
+	defer coverService.Close()
 
 	covers := []model.Cover{
 		model.Cover{Name: "test1", Type: "test", AspectId: aspect.Id, Width: 600, Height: 400},

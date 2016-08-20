@@ -62,7 +62,7 @@ func TestGidxServiceGet(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer gidxService.DbMap().Db.Close()
+	defer gidxService.Close()
 
 	gidx, err := gidxService.Get(testGidx1.Id)
 	if err != nil {
@@ -85,7 +85,7 @@ func TestGidxServiceGetMissing(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer gidxService.DbMap().Db.Close()
+	defer gidxService.Close()
 
 	gidx, err := gidxService.Get(1234)
 	if err != nil {
@@ -102,7 +102,7 @@ func TestGidxServiceGetOneBy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer gidxService.DbMap().Db.Close()
+	defer gidxService.Close()
 
 	gidx, err := gidxService.GetOneBy("md5sum", testGidx1.Md5sum)
 	if err != nil {
@@ -125,7 +125,7 @@ func TestGidxServiceExistBy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer gidxService.DbMap().Db.Close()
+	defer gidxService.Close()
 
 	val, err := gidxService.ExistsBy("md5sum", testGidx1.Md5sum)
 	if err != nil {
@@ -142,7 +142,7 @@ func TestGidxServiceUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer gidxService.DbMap().Db.Close()
+	defer gidxService.Close()
 
 	newPath := "/home/user/tmp/other.jpg"
 	updateGidx := model.Gidx{
@@ -179,7 +179,7 @@ func TestGidxServiceDelete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer gidxService.DbMap().Db.Close()
+	defer gidxService.Close()
 
 	num, err := gidxService.Delete(&model.Gidx{Id: testGidx1.Id})
 	if err != nil {
@@ -205,7 +205,7 @@ func TestGidxServiceCount(t *testing.T) {
 	if err != nil {
 		t.Error("Unable to setup database", err)
 	}
-	defer gidxService.DbMap().Db.Close()
+	defer gidxService.Close()
 
 	num, err := gidxService.Count()
 	if err != nil {
@@ -222,7 +222,7 @@ func TestGidxServiceCountBy(t *testing.T) {
 	if err != nil {
 		t.Error("Unable to setup database", err)
 	}
-	defer gidxService.DbMap().Db.Close()
+	defer gidxService.Close()
 
 	num, err := gidxService.CountBy("md5sum", testGidx1.Md5sum)
 	if err != nil {

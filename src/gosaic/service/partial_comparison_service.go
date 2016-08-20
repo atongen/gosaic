@@ -221,7 +221,7 @@ func (s *partialComparisonServiceImpl) doCreate(macroPartial *model.MacroPartial
 	}
 	p.Dist = dist
 
-	err = s.Insert(&p)
+	err = s.dbMap.Insert(&p)
 	if err != nil {
 		return nil, err
 	}
@@ -334,7 +334,7 @@ func (s *partialComparisonServiceImpl) CreateFromView(view *model.MacroGidxView)
 		return nil, err
 	}
 
-	err = s.Insert(pc)
+	err = s.dbMap.Insert(pc)
 	if err != nil {
 		return nil, err
 	}

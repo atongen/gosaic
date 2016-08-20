@@ -167,7 +167,7 @@ func TestMosaicPartialServiceInsert(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer mosaicPartialService.DbMap().Db.Close()
+	defer mosaicPartialService.Close()
 
 	c1 := model.MosaicPartial{
 		MosaicId:       mosaic.Id,
@@ -203,7 +203,7 @@ func TestMosaicPartialServiceCount(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer mosaicPartialService.DbMap().Db.Close()
+	defer mosaicPartialService.Close()
 
 	num, err := mosaicPartialService.Count(&mosaic)
 	if err != nil {
@@ -240,7 +240,7 @@ func TestMosaicPartialServiceCountMissing(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer mosaicPartialService.DbMap().Db.Close()
+	defer mosaicPartialService.Close()
 
 	num, err := mosaicPartialService.CountMissing(&mosaic)
 	if err != nil {
@@ -277,7 +277,7 @@ func TestMosaicPartialServiceGetMissing(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer mosaicPartialService.DbMap().Db.Close()
+	defer mosaicPartialService.Close()
 
 	mp1 := mosaicPartialService.GetMissing(&mosaic)
 	if mp1 == nil {
@@ -314,7 +314,7 @@ func TestMosaicPartialServiceGetRandomMissing(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer mosaicPartialService.DbMap().Db.Close()
+	defer mosaicPartialService.Close()
 
 	mp1 := mosaicPartialService.GetRandomMissing(&mosaic)
 	if mp1 == nil {
@@ -349,7 +349,7 @@ func TestMosaicPartialServiceFindAllPartialViews(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer mosaicPartialService.DbMap().Db.Close()
+	defer mosaicPartialService.Close()
 
 	c1 := model.MosaicPartial{
 		MosaicId:       mosaic.Id,

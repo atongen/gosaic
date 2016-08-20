@@ -65,7 +65,7 @@ func TestMosaicServiceInsert(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer mosaicService.DbMap().Db.Close()
+	defer mosaicService.Close()
 
 	c1 := model.Mosaic{
 		Name:    "test1",
@@ -107,7 +107,7 @@ func TestMosaicServiceGetOneBy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer mosaicService.DbMap().Db.Close()
+	defer mosaicService.Close()
 
 	c1 := model.Mosaic{
 		MacroId: macro.Id,
@@ -139,7 +139,7 @@ func TestMosaicServiceGetOneByNot(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer mosaicService.DbMap().Db.Close()
+	defer mosaicService.Close()
 
 	c, err := mosaicService.GetOneBy("macro_id = ? and name = ?", int64(123), "not a valid name")
 	if err != nil {
@@ -156,7 +156,7 @@ func TestMosaicServiceFindAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer mosaicService.DbMap().Db.Close()
+	defer mosaicService.Close()
 
 	c1 := model.Mosaic{
 		Name:    "test1",

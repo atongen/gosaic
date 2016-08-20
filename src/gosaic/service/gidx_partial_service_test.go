@@ -56,7 +56,7 @@ func TestGidxPartialServiceInsert(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer gidxPartialService.DbMap().Db.Close()
+	defer gidxPartialService.Close()
 
 	mp := model.GidxPartial{
 		GidxId:   gidx.Id,
@@ -112,7 +112,7 @@ func TestGidxPartialServiceUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer gidxPartialService.DbMap().Db.Close()
+	defer gidxPartialService.Close()
 
 	mp := model.GidxPartial{
 		GidxId:   gidx.Id,
@@ -155,7 +155,7 @@ func TestGidxPartialServiceDelete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer gidxPartialService.DbMap().Db.Close()
+	defer gidxPartialService.Close()
 
 	mp := model.GidxPartial{
 		GidxId:   gidx.Id,
@@ -193,7 +193,7 @@ func TestGidxPartialServiceGetOneBy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer gidxPartialService.DbMap().Db.Close()
+	defer gidxPartialService.Close()
 
 	mp := model.GidxPartial{
 		GidxId:   gidx.Id,
@@ -230,7 +230,7 @@ func TestGidxPartialServiceExistsBy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer gidxPartialService.DbMap().Db.Close()
+	defer gidxPartialService.Close()
 
 	mp := model.GidxPartial{
 		GidxId:   gidx.Id,
@@ -265,7 +265,7 @@ func TestGidxPartialServiceCount(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer gidxPartialService.DbMap().Db.Close()
+	defer gidxPartialService.Close()
 
 	mp := model.GidxPartial{
 		GidxId:   gidx.Id,
@@ -300,7 +300,7 @@ func TestGidxPartialServiceFindOrCreate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer gidxPartialService.DbMap().Db.Close()
+	defer gidxPartialService.Close()
 
 	gidxPartial, err := gidxPartialService.FindOrCreate(&gidx, &aspect)
 	if err != nil {
@@ -336,7 +336,7 @@ func TestGidxPartialServiceFindMissing(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer gidxPartialService.DbMap().Db.Close()
+	defer gidxPartialService.Close()
 
 	gidxs, err := gidxPartialService.FindMissing(&aspect, "gidx.id", 100, 0)
 	if err != nil {

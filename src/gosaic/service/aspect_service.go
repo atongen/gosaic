@@ -95,7 +95,7 @@ func (s *aspectServiceImpl) Create(width int, height int) (*model.Aspect, error)
 func (s *aspectServiceImpl) doCreate(width int, height int) (*model.Aspect, error) {
 	aspect := model.NewAspect(width, height)
 
-	err := s.Insert(aspect)
+	err := s.dbMap.Insert(aspect)
 	if err != nil {
 		return nil, err
 	}

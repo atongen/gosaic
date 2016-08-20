@@ -49,7 +49,7 @@ func TestMacroServiceInsert(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer macroService.DbMap().Db.Close()
+	defer macroService.Close()
 
 	c1 := model.Macro{
 		AspectId:    aspect.Id,
@@ -94,7 +94,7 @@ func TestMacroServiceUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer macroService.DbMap().Db.Close()
+	defer macroService.Close()
 
 	c1 := model.Macro{
 		AspectId:    aspect.Id,
@@ -132,7 +132,7 @@ func TestMacroServiceDelete(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer macroService.DbMap().Db.Close()
+	defer macroService.Close()
 
 	c1 := model.Macro{
 		AspectId:    aspect.Id,
@@ -167,7 +167,7 @@ func TestMacroServiceGetOneBy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer macroService.DbMap().Db.Close()
+	defer macroService.Close()
 
 	c1 := model.Macro{
 		AspectId:    aspect.Id,
@@ -208,7 +208,7 @@ func TestMacroServiceGetOneByNone(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer macroService.DbMap().Db.Close()
+	defer macroService.Close()
 
 	c, err := macroService.GetOneBy("cover_id = ? AND md5sum = ?", int64(123), "not a valid md5")
 	if err != nil {
@@ -225,7 +225,7 @@ func TestMacroServiceExistsBy(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer macroService.DbMap().Db.Close()
+	defer macroService.Close()
 
 	c1 := model.Macro{
 		AspectId:    aspect.Id,
@@ -255,7 +255,7 @@ func TestMacroServiceFindAll(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to setup database: %s\n", err.Error())
 	}
-	defer macroService.DbMap().Db.Close()
+	defer macroService.Close()
 
 	macros := []model.Macro{
 		model.Macro{
