@@ -334,43 +334,7 @@ func TestMacroPartialServiceCount(t *testing.T) {
 		t.Fatalf("Error inserting macro partial: %s\n", err.Error())
 	}
 
-	num, err := macroPartialService.Count()
-	if err != nil {
-		t.Fatalf("Error counting macro partial: %s\n", err.Error())
-	}
-
-	if num != int64(1) {
-		t.Fatalf("Macro partial count incorrect\n")
-	}
-}
-
-func TestMacroPartialServiceCountBy(t *testing.T) {
-	macroPartialService, err := setupMacroPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
-	defer macroPartialService.Close()
-
-	mp := model.MacroPartial{
-		MacroId:        macro.Id,
-		CoverPartialId: coverPartial.Id,
-		AspectId:       aspect.Id,
-		Pixels: []*model.Lab{
-			&model.Lab{
-				L:     0.4,
-				A:     0.5,
-				B:     0.6,
-				Alpha: 0.0,
-			},
-		},
-	}
-
-	err = macroPartialService.Insert(&mp)
-	if err != nil {
-		t.Fatalf("Error inserting macro partial: %s\n", err.Error())
-	}
-
-	num, err := macroPartialService.CountBy("macro_id", macro.Id)
+	num, err := macroPartialService.Count(&macro)
 	if err != nil {
 		t.Fatalf("Error counting macro partial: %s\n", err.Error())
 	}
@@ -476,6 +440,37 @@ func TestMacroPartialServiceFindOrCreate(t *testing.T) {
 		if pix.L == 0.0 && pix.A == 0.0 && pix.B == 0.0 && pix.Alpha == 0.0 {
 			t.Errorf("pixel %d was empty\n", i)
 		}
+	}
+}
+
+func TestMacroPartialServiceCountMissing(t *testing.T) {
+	macroPartialService, err := setupMacroPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer macroPartialService.Close()
+
+	num, err := macroPartialService.CountMissing(&macro)
+	if err != nil {
+		t.Fatalf("Error counting missing macro partials: %s\n", err.Error())
+	}
+
+	if num != 1 {
+		t.Fatalf("Expected 1 missing macro partial, but got %d\n", num)
+	}
+
+	_, err = macroPartialService.Create(&macro, &coverPartial)
+	if err != nil {
+		t.Fatalf("Error creating missing macro partial: %s\n", err.Error())
+	}
+
+	num, err = macroPartialService.CountMissing(&macro)
+	if err != nil {
+		t.Fatalf("Error counting missing macro partials: %s\n", err.Error())
+	}
+
+	if num != 0 {
+		t.Fatalf("Expected 0 missing macro partials, but got %d\n", num)
 	}
 }
 

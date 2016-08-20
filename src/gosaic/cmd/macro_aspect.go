@@ -12,14 +12,14 @@ var (
 	macroAspectWidth  int
 	macroAspectHeight int
 	macroAspect       string
-	macroAspectNum    int
+	macroAspectSize   int
 )
 
 func init() {
-	addLocalIntFlag(&macroAspectWidth, "width", "", 0, "Pixel width of cover", MacroAspectCmd)
-	addLocalIntFlag(&macroAspectHeight, "height", "", 0, "Pixel height of cover", MacroAspectCmd)
+	addLocalIntFlag(&macroAspectWidth, "width", "", 0, "Pixel width of cover, 0 maintains aspect from height", MacroAspectCmd)
+	addLocalIntFlag(&macroAspectHeight, "height", "", 0, "Pixel height of cover, 0 maintains aspect from width", MacroAspectCmd)
 	addLocalFlag(&macroAspect, "aspect", "a", "1x1", "Aspect of cover partials (CxR)", MacroAspectCmd)
-	addLocalIntFlag(&macroAspectNum, "size", "s", 0, "Number of partials in smallest dimension", MacroAspectCmd)
+	addLocalIntFlag(&macroAspectSize, "size", "s", 0, "Number of partials in smallest dimension", MacroAspectCmd)
 	RootCmd.AddCommand(MacroAspectCmd)
 }
 
@@ -36,16 +36,16 @@ var MacroAspectCmd = &cobra.Command{
 			Env.Fatalln("Macro path is required")
 		}
 
-		if macroAspectWidth == 0 {
-			Env.Fatalln("width is required")
-		} else if macroAspectWidth < 0 {
+		if macroAspectWidth < 0 {
 			Env.Fatalln("width must be greater than zero")
 		}
 
-		if macroAspectHeight == 0 {
-			Env.Fatalln("height is required")
-		} else if macroAspectHeight < 0 {
+		if macroAspectHeight < 0 {
 			Env.Fatalln("height must be greater than zero")
+		}
+
+		if macroAspectWidth == 0 && macroAspectHeight == 0 {
+			Env.Fatalln("either width or height may be zero, but not both")
 		}
 
 		if macroAspect == "" {
@@ -79,9 +79,9 @@ var MacroAspectCmd = &cobra.Command{
 			Env.Fatalln("aspect rows must be greater than zero")
 		}
 
-		if macroAspectNum == 0 {
+		if macroAspectSize == 0 {
 			Env.Fatalln("num is required")
-		} else if macroAspectNum < 0 {
+		} else if macroAspectSize < 0 {
 			Env.Fatalln("num must be greater than zero")
 		}
 
@@ -91,6 +91,6 @@ var MacroAspectCmd = &cobra.Command{
 		}
 		defer Env.Close()
 
-		controller.MacroAspect(Env, args[0], macroAspectWidth, macroAspectHeight, aw, ah, macroAspectNum)
+		controller.MacroAspect(Env, args[0], macroAspectWidth, macroAspectHeight, aw, ah, macroAspectSize)
 	},
 }

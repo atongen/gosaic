@@ -17,12 +17,12 @@ type MacroPartialService interface {
 	Get(int64) (*model.MacroPartial, error)
 	GetOneBy(string, interface{}) (*model.MacroPartial, error)
 	ExistsBy(string, interface{}) (bool, error)
-	Count() (int64, error)
-	CountBy(string, interface{}) (int64, error)
+	Count(*model.Macro) (int64, error)
 	FindAll(string, int, int, string, ...interface{}) ([]*model.MacroPartial, error)
 	Find(*model.Macro, *model.CoverPartial) (*model.MacroPartial, error)
 	Create(*model.Macro, *model.CoverPartial) (*model.MacroPartial, error)
 	FindOrCreate(*model.Macro, *model.CoverPartial) (*model.MacroPartial, error)
+	CountMissing(*model.Macro) (int64, error)
 	FindMissing(*model.Macro, string, int, int) ([]*model.CoverPartial, error)
 	AspectIds(int64) ([]int64, error)
 }
@@ -136,18 +136,11 @@ func (s *macroPartialServiceImpl) ExistsBy(column string, value interface{}) (bo
 	return count == 1, err
 }
 
-func (s *macroPartialServiceImpl) Count() (int64, error) {
+func (s *macroPartialServiceImpl) Count(macro *model.Macro) (int64, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	return s.dbMap.SelectInt("select count(*) from macro_partials")
-}
-
-func (s *macroPartialServiceImpl) CountBy(column string, value interface{}) (int64, error) {
-	s.m.Lock()
-	defer s.m.Unlock()
-
-	return s.dbMap.SelectInt(fmt.Sprintf("select count(*) from macro_partials where %s = ?", column), value)
+	return s.dbMap.SelectInt("select count(*) from macro_partials where macro_id = ?", macro.Id)
 }
 
 func (s *macroPartialServiceImpl) FindAll(order string, limit, offset int, conditions string, params ...interface{}) ([]*model.MacroPartial, error) {
@@ -250,22 +243,41 @@ func (s *macroPartialServiceImpl) FindOrCreate(macro *model.Macro, coverPartial 
 	return s.doCreate(macro, coverPartial)
 }
 
+func (s *macroPartialServiceImpl) CountMissing(macro *model.Macro) (int64, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	sql := `
+		select count(*)
+		from cover_partials
+		where cover_partials.cover_id = ?
+		and not exists (
+			select 1 from macro_partials
+			where macro_partials.macro_id = ?
+			and macro_partials.cover_partial_id = cover_partials.id
+		)
+	`
+
+	return s.dbMap.SelectInt(sql, macro.CoverId, macro.Id)
+}
+
 func (s *macroPartialServiceImpl) FindMissing(macro *model.Macro, order string, limit, offset int) ([]*model.CoverPartial, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
 	sql := fmt.Sprintf(`
-select * from cover_partials
-where cover_partials.cover_id = ?
-and not exists (
-	select 1 from macro_partials
-	where macro_partials.macro_id = ?
-	and macro_partials.cover_partial_id = cover_partials.id
-)
-order by %s
-limit %d
-offset %d
-`, order, limit, offset)
+		select *
+		from cover_partials
+		where cover_partials.cover_id = ?
+		and not exists (
+			select 1 from macro_partials
+			where macro_partials.macro_id = ?
+			and macro_partials.cover_partial_id = cover_partials.id
+		)
+		order by %s
+		limit %d
+		offset %d
+	`, order, limit, offset)
 
 	var coverPartials []*model.CoverPartial
 	_, err := s.dbMap.Select(&coverPartials, sql, macro.CoverId, macro.Id)

@@ -9,7 +9,8 @@ index
 ## Usage
 
 1. index
-1. macro_aspect
+1. cover_aspect
+1. macro
 1. compare
 1. mosaic_build
 1. mosaic_draw

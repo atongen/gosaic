@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 )
@@ -16,12 +15,12 @@ func TestMacroAspect(t *testing.T) {
 	MacroAspect(env, "testdata/jumping_bunny.jpg", 1000, 1000, 2, 3, 10)
 
 	result := out.String()
-	fmt.Println(result)
+
 	expect := []string{
-		"Created cover testdata/jumping_bunny.jpg-",
 		"Building 150 cover partials...",
-		"Processing 150 macro partials",
-		"Built macro for testdata/jumping_bunny.jpg with cover testdata/jumping_bunny.jpg-",
+		"Created cover testdata/jumping_bunny.jpg-",
+		"Building 150 macro partials",
+		"Created macro for path testdata/jumping_bunny.jpg with cover testdata/jumping_bunny.jpg-",
 	}
 
 	for _, e := range expect {

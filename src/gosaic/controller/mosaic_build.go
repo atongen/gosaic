@@ -48,7 +48,7 @@ func MosaicBuild(env environment.Environment, name string, macroId int64, maxRep
 		env.Fatalf("Macro %d not found\n", macroId)
 	}
 
-	numMacroPartials, err := macroPartialService.CountBy("macro_id", macro.Id)
+	numMacroPartials, err := macroPartialService.Count(macro)
 	if err != nil {
 		env.Fatalf("Error counting macro partials: %s\n", err.Error())
 	}

@@ -6,25 +6,30 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	coverId int
+)
+
 func init() {
+	addLocalIntFlag(&coverId, "cover_id", "", 0, "Id of cover to use for macro", MacroCmd)
 	RootCmd.AddCommand(MacroCmd)
 }
 
 var MacroCmd = &cobra.Command{
-	Use:   "macro PATH COVER_NAME",
+	Use:   "macro PATH",
 	Short: "Add macro",
 	Long:  "Add macro",
 	Run: func(c *cobra.Command, args []string) {
-		if len(args) != 2 {
-			Env.Fatalln("Macro path and cover name are required")
+		if len(args) != 1 {
+			Env.Fatalln("Macro path is required")
 		}
 
 		if args[0] == "" {
 			Env.Fatalln("Macro path is required")
 		}
 
-		if args[1] == "" {
-			Env.Fatalln("Cover name is required")
+		if coverId == 0 {
+			Env.Fatalln("Cover id is required")
 		}
 
 		err := Env.Init()
@@ -33,6 +38,6 @@ var MacroCmd = &cobra.Command{
 		}
 		defer Env.Close()
 
-		controller.Macro(Env, args[0], args[1])
+		controller.Macro(Env, args[0], int64(coverId))
 	},
 }
