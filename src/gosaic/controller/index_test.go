@@ -12,11 +12,11 @@ func TestIndex(t *testing.T) {
 	}
 	defer env.Close()
 
-	Index(env, "testdata")
+	Index(env, []string{"testdata"})
 
 	result := out.String()
 
-	if !strings.Contains(result, "Processing 1 images") ||
+	if !strings.Contains(result, "Indexing 1 images...") ||
 		strings.Contains(result, "Error indexing images") {
 		t.Errorf("Indexing failed: %s", result)
 	}

@@ -21,8 +21,7 @@ func TestMosaicDraw(t *testing.T) {
 	}
 	defer os.RemoveAll(dir)
 
-	Index(env, "testdata")
-	Index(env, "../service/testdata")
+	Index(env, []string{"testdata", "../service/testdata"})
 	MacroAspect(env, "testdata/jumping_bunny.jpg", 1000, 1000, 2, 3, 10)
 	Compare(env, int64(1))
 	MosaicBuild(env, "Jumping Bunny", int64(1), 0)
@@ -31,11 +30,6 @@ func TestMosaicDraw(t *testing.T) {
 	result := out.String()
 
 	expect := []string{
-		"gosaic/src/gosaic/controller/testdata/jumping_bunny.jpg",
-		"Processing 3 images",
-		"gosaic/src/gosaic/service/testdata/eagle.jpg",
-		"gosaic/src/gosaic/service/testdata/matterhorn.jpg",
-		"gosaic/src/gosaic/service/testdata/shaq_bill.jpg",
 		"Created cover testdata/jumping_bunny.jpg-",
 		"with 150 partials",
 		"Processing 150 macro partials",

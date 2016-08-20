@@ -12,8 +12,7 @@ func TestCompare(t *testing.T) {
 	}
 	defer env.Close()
 
-	Index(env, "testdata")
-	Index(env, "../service/testdata")
+	Index(env, []string{"testdata", "../service/testdata"})
 	MacroAspect(env, "testdata/jumping_bunny.jpg", 1000, 1000, 2, 3, 10)
 	Compare(env, int64(1))
 
