@@ -29,7 +29,6 @@ func TestMosaicDraw(t *testing.T) {
 	MosaicDraw(env, int64(1), filepath.Join(dir, "jumping_bunny_mosaic.jpg"))
 
 	result := out.String()
-
 	expect := []string{
 		"Indexing 4 images...",
 		"Building 150 cover partials...",
@@ -39,8 +38,9 @@ func TestMosaicDraw(t *testing.T) {
 		"Creating 4 aspect partials for indexed images",
 		"Creating mosaic with 150 total partials",
 		"Creating 600 partial image comparisons...",
-		"Building 150 missing mosaic partials",
-		"Wrote mosaic Jumping Bunny to ",
+		"Building 150 mosaic partials",
+		"Drawing 150 mosaic partials",
+		"Wrote mosaic Jumping Bunny to",
 		"jumping_bunny_mosaic.jpg",
 	}
 

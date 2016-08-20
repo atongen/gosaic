@@ -2,8 +2,13 @@ package controller
 
 import (
 	"gosaic/environment"
+	"gosaic/model"
+	"gosaic/service"
 	"gosaic/util"
 	"image/color"
+	"log"
+
+	"gopkg.in/cheggaaa/pb.v1"
 
 	"github.com/disintegration/imaging"
 )
@@ -56,13 +61,18 @@ func MosaicDraw(env environment.Environment, mosaicId int64, outfile string) {
 		env.Fatalf("cover id %d does not exist", macro.CoverId)
 	}
 
+	drawMosaic(env.Log(), mosaic, cover, mosaicPartialService, outfile)
+	env.Printf("Wrote mosaic %s to %s\n", mosaic.Name, outfile)
+}
+
+func drawMosaic(l *log.Logger, mosaic *model.Mosaic, cover *model.Cover, mosaicPartialService service.MosaicPartialService, outfile string) {
 	numPartials, err := mosaicPartialService.Count(mosaic)
 	if err != nil {
-		env.Fatalf("Error counting mosaic partials: %s\n", err.Error())
+		l.Fatalf("Error counting mosaic partials: %s\n", err.Error())
 	}
 
 	if numPartials == 0 {
-		env.Println("This mosaic has 0 partials")
+		l.Println("This mosaic has 0 partials")
 		return
 	}
 
@@ -71,31 +81,36 @@ func MosaicDraw(env environment.Environment, mosaicId int64, outfile string) {
 	batchSize := 100
 	numCreated := 0
 
+	l.Printf("Drawing %d mosaic partials\n", numPartials)
+	bar := pb.StartNew(int(numPartials))
+
 	for {
 		mosaicPartialViews, err := mosaicPartialService.FindAllPartialViews(mosaic, "mosaic_partials.id asc", batchSize, numCreated)
 		if err != nil {
-			env.Fatalf("Error finding mosaic partials: %s\n", err.Error())
+			l.Fatalf("Error finding mosaic partials: %s\n", err.Error())
 		}
 
-		if len(mosaicPartialViews) == 0 {
+		num := len(mosaicPartialViews)
+		if num == 0 {
 			break
 		}
 
 		for _, view := range mosaicPartialViews {
 			img, err := util.GetImageCoverPartial(view.Gidx, view.CoverPartial)
 			if err != nil {
-				env.Fatalf("Error getting mosaic partial image: %s\n", err.Error())
+				l.Fatalf("Error getting mosaic partial image: %s\n", err.Error())
 			}
 			dst = imaging.Paste(dst, *img, view.CoverPartial.Pt())
 		}
 
-		numCreated += len(mosaicPartialViews)
+		numCreated += num
+		bar.Add(num)
 	}
+
+	bar.Finish()
 
 	err = imaging.Save(dst, outfile)
 	if err != nil {
-		env.Fatalf("Error writing mosaic to %s: %s\n", outfile, err.Error())
+		l.Fatalf("Error writing mosaic to %s: %s\n", outfile, err.Error())
 	}
-
-	env.Printf("Wrote mosaic %s to %s\n", mosaic.Name, outfile)
 }

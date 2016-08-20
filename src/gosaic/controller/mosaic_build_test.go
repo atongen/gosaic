@@ -19,7 +19,6 @@ func TestMosaicBuild(t *testing.T) {
 	MosaicBuild(env, "Jumping Bunny", macro.Id, 0)
 
 	result := out.String()
-
 	expect := []string{
 		"Indexing 4 images...",
 		"Building 150 cover partials...",
@@ -29,7 +28,7 @@ func TestMosaicBuild(t *testing.T) {
 		"Creating 4 aspect partials for indexed images",
 		"Creating 600 partial image comparisons...",
 		"Creating mosaic with 150 total partials",
-		"Building 150 missing mosaic partials",
+		"Building 150 mosaic partials",
 	}
 
 	for _, e := range expect {

@@ -6,9 +6,11 @@ import (
 	"gosaic/service"
 	"log"
 	"math"
+
+	"gopkg.in/cheggaaa/pb.v1"
 )
 
-func MosaicBuild(env environment.Environment, name string, macroId int64, maxRepeats int) {
+func MosaicBuild(env environment.Environment, name string, macroId int64, maxRepeats int) *model.Mosaic {
 	gidxService, err := env.GidxService()
 	if err != nil {
 		env.Fatalf("Error getting index service: %s\n", err.Error())
@@ -91,6 +93,8 @@ func MosaicBuild(env environment.Environment, name string, macroId int64, maxRep
 
 	env.Printf("Creating mosaic with %d total partials\n", numMacroPartials)
 	createMosaicPartials(env.Log(), mosaicPartialService, partialComparisonService, mosaic, maxRepeats)
+
+	return mosaic
 }
 
 func createMosaicPartials(l *log.Logger, mosaicPartialService service.MosaicPartialService, partialComparisonService service.PartialComparisonService, mosaic *model.Mosaic, maxRepeats int) {
@@ -104,7 +108,8 @@ func createMosaicPartials(l *log.Logger, mosaicPartialService service.MosaicPart
 		return
 	}
 
-	l.Printf("Building %d missing mosaic partials\n", numMissing)
+	l.Printf("Building %d mosaic partials\n", numMissing)
+	bar := pb.StartNew(int(numMissing))
 
 	for {
 		macroPartial := mosaicPartialService.GetRandomMissing(mosaic)
@@ -135,5 +140,8 @@ func createMosaicPartials(l *log.Logger, mosaicPartialService service.MosaicPart
 		if err != nil {
 			l.Fatalf("Error inserting mosaic partial: %s\n", err.Error())
 		}
+		bar.Increment()
 	}
+
+	bar.Finish()
 }
