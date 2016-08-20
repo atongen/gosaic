@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"gosaic/model"
 	"sync"
 
@@ -89,7 +90,7 @@ func (s *coverServiceImpl) GetOneBy(column string, value interface{}) (*model.Co
 	defer s.m.Unlock()
 
 	var cover model.Cover
-	err := s.dbMap.SelectOne(&cover, "select * from covers where "+column+" = ? limit 1", value)
+	err := s.dbMap.SelectOne(&cover, fmt.Sprintf("select * from covers where %s = ? limit 1", column), value)
 	return &cover, err
 }
 
@@ -97,10 +98,10 @@ func (s *coverServiceImpl) FindAll(order string) ([]*model.Cover, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	sql := `select * from covers order by ?`
+	sql := fmt.Sprintf("select * from covers order by %s", order)
 
 	var covers []*model.Cover
-	_, err := s.dbMap.Select(&covers, sql, order)
+	_, err := s.dbMap.Select(&covers, sql)
 
 	return covers, err
 }

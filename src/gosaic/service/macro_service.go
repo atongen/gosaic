@@ -114,7 +114,7 @@ func (s *macroServiceImpl) FindAll(order string) ([]*model.Macro, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	sql := `select * from macros order by ?`
+	sql := fmt.Sprintf(`select * from macros order by %s`, order)
 
 	var macros []*model.Macro
 	_, err := s.dbMap.Select(&macros, sql, order)

@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"gosaic/model"
 	"sync"
 
@@ -152,7 +153,7 @@ func (s *mosaicPartialServiceImpl) FindAllPartialViews(mosaic *model.Mosaic, ord
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	sql := `
+	sql := fmt.Sprintf(`
 		select mosaic_partials.id as mosaic_partial_id,
 			gidx.id as gidx_id,
 			gidx.aspect_id as gidx_aspect_id,
@@ -178,13 +179,13 @@ func (s *mosaicPartialServiceImpl) FindAllPartialViews(mosaic *model.Mosaic, ord
 		inner join cover_partials
 			on macro_partials.cover_partial_id = cover_partials.id
 		where mosaic_partials.mosaic_id = ?
-		order by ?
-		limit ?
-		offset ?
-	`
+		order by %s
+		limit %d
+		offset %d
+	`, order, limit, offset)
 
 	var mosaicPartialViews []*model.MosaicPartialView
-	rows, err := s.dbMap.Db.Query(sql, mosaic.Id, order, limit, offset)
+	rows, err := s.dbMap.Db.Query(sql, mosaic.Id)
 	if err != nil {
 		return nil, err
 	}

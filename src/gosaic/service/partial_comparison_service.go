@@ -77,7 +77,6 @@ func (s *partialComparisonServiceImpl) BulkInsert(partialComparisons []*model.Pa
 			partialComparisons[i].MacroPartialId, partialComparisons[i].GidxPartialId, partialComparisons[i].Dist))
 	}
 
-	// ignoring sql.Result
 	res, err := s.dbMap.Db.Exec(b.String())
 	if err != nil {
 		return int64(0), err
@@ -272,7 +271,7 @@ func (s *partialComparisonServiceImpl) FindMissing(macro *model.Macro, limit int
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	sql := `
+	sql := fmt.Sprintf(`
 select macro_partials.id as macro_partial_id,
 	macro_partials.macro_id,
 	macro_partials.cover_partial_id,
@@ -291,11 +290,11 @@ and not exists (
 )
 order by macro_partials.id asc,
 	gidx_partials.id asc
-limit ?
-`
+limit %d
+`, limit)
 
 	var macroGidxViews []*model.MacroGidxView
-	rows, err := s.dbMap.Db.Query(sql, macro.Id, limit)
+	rows, err := s.dbMap.Db.Query(sql, macro.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -365,7 +364,7 @@ func (s *partialComparisonServiceImpl) GetClosestMax(macroPartial *model.MacroPa
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	sql := `
+	sql := fmt.Sprintf(`
 		select pc.gidx_partial_id
 		from partial_comparisons pc
 		where pc.macro_partial_id = ?
@@ -377,11 +376,12 @@ func (s *partialComparisonServiceImpl) GetClosestMax(macroPartial *model.MacroPa
 			where mos.gidx_partial_id = pc.gidx_partial_id
 			and mos.mosaic_id = ?
 			group by gps.gidx_id
-			having count(*) >= ?
+			having count(*) >= %d
 		)
 		order by pc.dist asc
 		limit 1
-	`
+	`, maxRepeats)
+
 	gidxPartialId, err := s.dbMap.SelectInt(sql, macroPartial.Id, mosaic.Id, maxRepeats)
 	if err != nil {
 		return int64(0), err

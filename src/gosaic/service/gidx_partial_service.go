@@ -103,7 +103,7 @@ func (s *gidxPartialServiceImpl) GetOneBy(column string, value interface{}) (*mo
 	defer s.m.Unlock()
 
 	var gidxPartial model.GidxPartial
-	err := s.dbMap.SelectOne(&gidxPartial, "select * from gidx_partials where "+column+" = ? limit 1", value)
+	err := s.dbMap.SelectOne(&gidxPartial, fmt.Sprintf("select * from gidx_partials where %s = ? limit 1", column), value)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func (s *gidxPartialServiceImpl) ExistsBy(column string, value interface{}) (boo
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	count, err := s.dbMap.SelectInt("select 1 from gidx_partials where "+column+" = ? limit 1", value)
+	count, err := s.dbMap.SelectInt(fmt.Sprintf("select 1 from gidx_partials where %s = ? limit 1", column), value)
 	return count == 1, err
 }
 
@@ -135,7 +135,7 @@ func (s *gidxPartialServiceImpl) CountBy(column string, value interface{}) (int6
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	return s.dbMap.SelectInt("select count(*) from gidx_partials where "+column+" = ?", value)
+	return s.dbMap.SelectInt(fmt.Sprintf("select count(*) from gidx_partials where %s = ?", column), value)
 }
 
 func (s *gidxPartialServiceImpl) doFind(gidx *model.Gidx, aspect *model.Aspect) (*model.GidxPartial, error) {
@@ -213,20 +213,20 @@ func (s *gidxPartialServiceImpl) FindMissing(aspect *model.Aspect, order string,
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	sql := `
+	sql := fmt.Sprintf(`
 select * from gidx
 where not exists (
 	select 1 from gidx_partials
 	where gidx_partials.gidx_id = gidx.id
 	and gidx_partials.aspect_id = ?
 )
-order by ?
-limit ?
-offset ?
-`
+order by %s
+limit %d
+offset %d
+`, order, limit, offset)
 
 	var gidxs []*model.Gidx
-	_, err := s.dbMap.Select(&gidxs, sql, aspect.Id, order, limit, offset)
+	_, err := s.dbMap.Select(&gidxs, sql, aspect.Id)
 
 	return gidxs, err
 }

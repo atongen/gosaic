@@ -77,7 +77,7 @@ func (s *aspectServiceImpl) Find(width int, height int) (*model.Aspect, error) {
 func (s *aspectServiceImpl) doFind(width int, height int) (*model.Aspect, error) {
 	aspect := model.NewAspect(width, height)
 
-	err := s.dbMap.SelectOne(aspect, "select * from aspects where columns = ? and rows = ?", aspect.Columns, aspect.Rows)
+	err := s.dbMap.SelectOne(aspect, "select * from aspects where columns = ? and rows = ? limit 1", aspect.Columns, aspect.Rows)
 	if err == nil {
 		return aspect, nil
 	}
