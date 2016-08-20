@@ -313,6 +313,9 @@ func (s *partialComparisonServiceImpl) CreateFromView(view *model.MacroGidxView)
 }
 
 func (s *partialComparisonServiceImpl) GetClosest(macroPartial *model.MacroPartial) (int64, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	sql := `
 		select pc.gidx_partial_id
 		from partial_comparisons pc
@@ -329,6 +332,9 @@ func (s *partialComparisonServiceImpl) GetClosest(macroPartial *model.MacroParti
 }
 
 func (s *partialComparisonServiceImpl) GetClosestMax(macroPartial *model.MacroPartial, mosaic *model.Mosaic, maxRepeats int) (int64, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
 	sql := `
 		select pc.gidx_partial_id
 		from partial_comparisons pc

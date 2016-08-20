@@ -8,6 +8,8 @@ type GidxPartial struct {
 	Pixels   []*Lab `db:"-"`
 }
 
+// implement Pixel interface
+
 func (p *GidxPartial) GetData() []byte {
 	return p.Data
 }

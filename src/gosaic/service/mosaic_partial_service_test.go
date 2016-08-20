@@ -198,6 +198,43 @@ func TestMosaicPartialServiceInsert(t *testing.T) {
 	}
 }
 
+func TestMosaicPartialServiceCount(t *testing.T) {
+	mosaicPartialService, err := setupMosaicPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer mosaicPartialService.DbMap().Db.Close()
+
+	num, err := mosaicPartialService.Count(&mosaic)
+	if err != nil {
+		t.Fatalf("Error counting missing mosaic partials: %s\n", err.Error())
+	}
+
+	if num != 0 {
+		t.Fatalf("Expected 5 mosaic partials, got %d\n", num)
+	}
+
+	c1 := model.MosaicPartial{
+		MosaicId:       mosaic.Id,
+		MacroPartialId: macroPartial.Id,
+		GidxPartialId:  gidxPartial.Id,
+	}
+
+	err = mosaicPartialService.Insert(&c1)
+	if err != nil {
+		t.Fatalf("Error inserting mosaic partial: %s\n", err.Error())
+	}
+
+	num, err = mosaicPartialService.Count(&mosaic)
+	if err != nil {
+		t.Fatalf("Error counting missing mosaic partials: %s\n", err.Error())
+	}
+
+	if num != 1 {
+		t.Fatalf("Expected 4 missing mosaic partials, got %d\n", num)
+	}
+}
+
 func TestMosaicPartialServiceCountMissing(t *testing.T) {
 	mosaicPartialService, err := setupMosaicPartialServiceTest()
 	if err != nil {
@@ -304,5 +341,62 @@ func TestMosaicPartialServiceGetRandomMissing(t *testing.T) {
 		if c2.Id == mp1.Id {
 			t.Fatalf("Random missing macro partial has same id as inserted: %d\n", c2.Id)
 		}
+	}
+}
+
+func TestMosaicPartialServiceFindAllPartialViews(t *testing.T) {
+	mosaicPartialService, err := setupMosaicPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer mosaicPartialService.DbMap().Db.Close()
+
+	c1 := model.MosaicPartial{
+		MosaicId:       mosaic.Id,
+		MacroPartialId: macroPartial.Id,
+		GidxPartialId:  gidxPartial.Id,
+	}
+
+	err = mosaicPartialService.Insert(&c1)
+	if err != nil {
+		t.Fatalf("Error inserting mosaic partial: %s\n", err.Error())
+	}
+
+	if c1.Id == int64(0) {
+		t.Fatalf("Inserted mosaic paritial id not set")
+	}
+
+	views, err := mosaicPartialService.FindAllPartialViews(&mosaic, "mosaic_partials.id asc", 1000, 0)
+	if err != nil {
+		t.Fatalf("Error finding all mosaic partial views: %s\n", err.Error())
+	}
+
+	if len(views) != 1 {
+		t.Fatalf("Expected 1 mosaic partial view, got: %d\n", len(views))
+	}
+
+	view := views[0]
+	if view.MosaicPartialId != c1.Id {
+		t.Fatalf("Expected mosaic partial id %d, got: %d\n", c1.Id, view.MosaicPartialId)
+	}
+
+	if gidx.Id != view.Gidx.Id ||
+		gidx.AspectId != view.Gidx.AspectId ||
+		gidx.Md5sum != view.Gidx.Md5sum ||
+		gidx.Path != view.Gidx.Path ||
+		gidx.Width != view.Gidx.Width ||
+		gidx.Height != view.Gidx.Height ||
+		gidx.Orientation != view.Gidx.Orientation {
+		t.Error("Found view gidx does not match data")
+	}
+
+	if coverPartial.Id != view.CoverPartial.Id ||
+		coverPartial.CoverId != view.CoverPartial.CoverId ||
+		coverPartial.AspectId != view.CoverPartial.AspectId ||
+		coverPartial.X1 != view.CoverPartial.X1 ||
+		coverPartial.Y1 != view.CoverPartial.Y1 ||
+		coverPartial.X2 != view.CoverPartial.X2 ||
+		coverPartial.Y2 != view.CoverPartial.Y2 {
+		t.Fatalf("Inserted cover partial (%+v) does not match: %+v\n", view.CoverPartial, coverPartial)
 	}
 }

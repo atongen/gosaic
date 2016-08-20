@@ -9,6 +9,8 @@ type MacroPartial struct {
 	Pixels         []*Lab `db:"-"`
 }
 
+// implement Pixel interface
+
 func (p *MacroPartial) GetData() []byte {
 	return p.Data
 }

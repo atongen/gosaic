@@ -15,3 +15,15 @@ type CoverPartial struct {
 func (cp *CoverPartial) Rectangle() image.Rectangle {
 	return image.Rect(int(cp.X1), int(cp.Y1), int(cp.X2), int(cp.Y2))
 }
+
+func (cp *CoverPartial) Pt() image.Point {
+	return image.Point{int(cp.X1), int(cp.Y1)}
+}
+
+func (cp *CoverPartial) Width() int {
+	return int(cp.X2 - cp.X1)
+}
+
+func (cp *CoverPartial) Height() int {
+	return int(cp.Y2 - cp.Y1)
+}

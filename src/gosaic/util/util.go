@@ -103,6 +103,10 @@ func FixOrientation(img *image.Image, orientation int) error {
 	return nil
 }
 
+func OpenImg(i model.Image) (*image.Image, error) {
+	return OpenImage(i.GetPath())
+}
+
 func OpenImage(path string) (*image.Image, error) {
 	img, err := imaging.Open(path)
 	if err != nil {
@@ -113,7 +117,7 @@ func OpenImage(path string) (*image.Image, error) {
 }
 
 func GetAspectLab(i model.Image, aspect *model.Aspect) ([]*model.Lab, error) {
-	img, err := OpenImage(i.GetPath())
+	img, err := OpenImg(i)
 	if err != nil {
 		return nil, err
 	}
@@ -146,8 +150,8 @@ func GetImgAspectLab(img *image.Image, i model.Image, aspect *model.Aspect) ([]*
 	return labs, nil
 }
 
-func GetPartialLab(i model.Image, coverPartial *model.CoverPartial) ([]*model.Lab, error) {
-	img, err := OpenImage(i.GetPath())
+func GetImageCoverPartial(i model.Image, coverPartial *model.CoverPartial) (*image.Image, error) {
+	img, err := OpenImg(i)
 	if err != nil {
 		return nil, err
 	}
@@ -159,10 +163,31 @@ func GetPartialLab(i model.Image, coverPartial *model.CoverPartial) ([]*model.La
 		}
 	}
 
-	return GetImgPartialLab(img, i, coverPartial)
+	return GetImgCoverPartial(img, coverPartial), nil
 }
 
-func GetImgPartialLab(img *image.Image, i model.Image, coverPartial *model.CoverPartial) ([]*model.Lab, error) {
+func GetImgCoverPartial(img *image.Image, coverPartial *model.CoverPartial) *image.Image {
+	var myImg image.Image = imaging.Fill((*img), coverPartial.Width(), coverPartial.Height(), imaging.Center, imaging.Lanczos)
+	return &myImg
+}
+
+func GetPartialLab(i model.Image, coverPartial *model.CoverPartial) ([]*model.Lab, error) {
+	img, err := OpenImg(i)
+	if err != nil {
+		return nil, err
+	}
+
+	if i.GetOrientation() != 1 {
+		err = FixOrientation(img, i.GetOrientation())
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return GetImgPartialLab(img, coverPartial)
+}
+
+func GetImgPartialLab(img *image.Image, coverPartial *model.CoverPartial) ([]*model.Lab, error) {
 	cropImg := imaging.Crop((*img), coverPartial.Rectangle())
 	dataImg := imaging.Resize(cropImg, DATA_SIZE, DATA_SIZE, imaging.Lanczos)
 

@@ -169,7 +169,7 @@ func storeMacroPartial(img *image.Image, macro *model.Macro, coverPartial *model
 		AspectId:       coverPartial.AspectId,
 	}
 
-	pixels, err := util.GetImgPartialLab(img, macro, coverPartial)
+	pixels, err := util.GetImgPartialLab(img, coverPartial)
 	if err != nil {
 		errs <- err
 		return

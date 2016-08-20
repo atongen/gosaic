@@ -11,6 +11,8 @@ type Macro struct {
 	Orientation int    `db:"orientation"`
 }
 
+// implement Image interface
+
 func (g *Macro) GetPath() string {
 	return g.Path
 }

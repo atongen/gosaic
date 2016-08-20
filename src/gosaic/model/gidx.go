@@ -10,6 +10,8 @@ type Gidx struct {
 	Orientation int    `db:"orientation"`
 }
 
+// implement Image interface
+
 func (g *Gidx) GetPath() string {
 	return g.Path
 }
