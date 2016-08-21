@@ -63,7 +63,11 @@ func (s *partialComparisonServiceImpl) BulkInsert(partialComparisons []*model.Pa
 	if len(partialComparisons) == 0 {
 		return int64(0), nil
 	} else if len(partialComparisons) == 1 {
-		return int64(1), s.Insert(partialComparisons[0])
+		err := s.dbMap.Insert(partialComparisons[0])
+		if err != nil {
+			return int64(0), err
+		}
+		return int64(1), nil
 	}
 
 	var b bytes.Buffer

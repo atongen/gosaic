@@ -65,7 +65,7 @@ func createMissingGidxIndexes(l *log.Logger, gidxPartialService service.GidxPart
 		return nil
 	}
 
-	l.Printf("Creating %d aspect partials for indexed images\n", count)
+	l.Printf("Creating %d aspect partials for indexed images...\n", count)
 	bar := pb.StartNew(int(count))
 
 	for _, aspect := range aspects {

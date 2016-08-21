@@ -113,6 +113,7 @@ func addCoverAspectPartials(l *log.Logger, coverPartialService service.CoverPart
 	bar := pb.StartNew(count)
 
 	for i := 0; i < columns; i++ {
+		var coverPartials []*model.CoverPartial = make([]*model.CoverPartial, rows)
 		for j := 0; j < rows; j++ {
 			x1 := i*width + xOffset
 			y1 := j*height + yOffset
@@ -127,12 +128,13 @@ func addCoverAspectPartials(l *log.Logger, coverPartialService service.CoverPart
 				X2:       int64(x2),
 				Y2:       int64(y2),
 			}
-			err := coverPartialService.Insert(&coverPartial)
-			if err != nil {
-				return err
-			}
-			bar.Increment()
+			coverPartials[j] = &coverPartial
 		}
+		num, err := coverPartialService.BulkInsert(coverPartials)
+		if err != nil {
+			return err
+		}
+		bar.Add(int(num))
 	}
 
 	bar.Finish()

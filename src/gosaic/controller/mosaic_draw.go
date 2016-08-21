@@ -101,10 +101,10 @@ func drawMosaic(l *log.Logger, mosaic *model.Mosaic, cover *model.Cover, mosaicP
 				l.Fatalf("Error getting mosaic partial image: %s\n", err.Error())
 			}
 			dst = imaging.Paste(dst, *img, view.CoverPartial.Pt())
+			bar.Increment()
 		}
 
 		numCreated += num
-		bar.Add(num)
 	}
 
 	bar.Finish()

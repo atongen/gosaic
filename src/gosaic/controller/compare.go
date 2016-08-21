@@ -30,7 +30,7 @@ func Compare(env environment.Environment, macroId int64) {
 }
 
 func createMissingComparisons(l *log.Logger, partialComparisonService service.PartialComparisonService, macro *model.Macro) {
-	batchSize := 100
+	batchSize := 500
 	numTotal, err := partialComparisonService.CountMissing(macro)
 	if err != nil {
 		l.Fatalf("Error counting missing partial comparisons %s\n", err.Error())

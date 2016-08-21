@@ -7,11 +7,11 @@ import (
 )
 
 var (
-	macroId int
+	compareMacroId int
 )
 
 func init() {
-	addLocalIntFlag(&macroId, "macro_id", "", 0, "Id of macro for comparison", CompareCmd)
+	addLocalIntFlag(&compareMacroId, "macro_id", "", 0, "Id of macro for comparison", CompareCmd)
 	RootCmd.AddCommand(CompareCmd)
 }
 
@@ -20,7 +20,7 @@ var CompareCmd = &cobra.Command{
 	Short: "Build comparisons for macro against index",
 	Long:  "Build comparisons for macro against index",
 	Run: func(c *cobra.Command, args []string) {
-		if macroId == 0 {
+		if compareMacroId == 0 {
 			Env.Fatalln("Macro id is required")
 		}
 
@@ -30,6 +30,6 @@ var CompareCmd = &cobra.Command{
 		}
 		defer Env.Close()
 
-		controller.Compare(Env, int64(macroId))
+		controller.Compare(Env, int64(compareMacroId))
 	},
 }

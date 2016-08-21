@@ -8,6 +8,8 @@ import (
 	"image"
 	"log"
 
+	"github.com/disintegration/imaging"
+
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
@@ -63,26 +65,10 @@ func Macro(env environment.Environment, path string, coverId int64) *model.Macro
 	if err != nil {
 		env.Fatalf("Failed to fix image orientation: %s\n", err.Error())
 	}
-
-	img = util.FillAspect(img, aspect)
 	bounds := (*img).Bounds()
-	// width and height of image after resize to fill cover aspect
-	width := bounds.Max.X
-	height := bounds.Max.Y
 
-	checkAspect, err := aspectService.Find(width, height)
-	if err != nil {
-		env.Fatalf("Error checking aspect: %s\n", err.Error())
-	}
-
-	if checkAspect == nil {
-		env.Fatalf("No aspect for resized image found")
-	}
-
-	if aspect.Id != checkAspect.Id {
-		env.Fatalf("Aspect of image (%dx%d) does not match aspect of cover (%dx%d)\n",
-			checkAspect.Columns, checkAspect.Rows, aspect.Columns, aspect.Rows)
-	}
+	var imgCov image.Image
+	imgCov = imaging.Fill(*img, int(cover.Width), int(cover.Height), imaging.Center, imaging.Lanczos)
 
 	macro, _ := macroService.GetOneBy("cover_id = ? AND md5sum = ?", cover.Id, md5sum)
 
@@ -92,8 +78,8 @@ func Macro(env environment.Environment, path string, coverId int64) *model.Macro
 			CoverId:     cover.Id,
 			Path:        path,
 			Md5sum:      md5sum,
-			Width:       uint(width),
-			Height:      uint(height),
+			Width:       uint(bounds.Max.X),
+			Height:      uint(bounds.Max.Y),
 			Orientation: orientation,
 		}
 		err = macroService.Insert(macro)
@@ -102,7 +88,7 @@ func Macro(env environment.Environment, path string, coverId int64) *model.Macro
 		}
 	}
 
-	err = buildMacroPartials(env.Log(), macroPartialService, img, macro, env.Workers())
+	err = buildMacroPartials(env.Log(), macroPartialService, &imgCov, macro, env.Workers())
 	if err != nil {
 		env.Fatalf("Error building macro partials: %s\n", err.Error())
 	}
@@ -122,7 +108,7 @@ func buildMacroPartials(l *log.Logger, macroPartialService service.MacroPartialS
 		return nil
 	}
 
-	l.Printf("Building %d macro partials\n", countMissing)
+	l.Printf("Building %d macro partials...\n", countMissing)
 
 	bar := pb.StartNew(int(countMissing))
 

@@ -30,7 +30,7 @@ func MacroList(env environment.Environment) {
 		return
 	}
 
-	macros, err := macroService.FindAll("macros.name ASC")
+	macros, err := macroService.FindAll("macros.id desc")
 	if err != nil {
 		env.Printf("Error finding macros: %s\n", err.Error())
 		return

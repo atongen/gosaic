@@ -45,7 +45,7 @@ func getJpgPaths(l *log.Logger, paths []string) []string {
 				return nil
 			}
 			ext := strings.ToLower(filepath.Ext(path))
-			if ext != ".jpg" && ext != ".jpeg" && ext != ".png" {
+			if ext != ".jpg" && ext != ".jpeg" {
 				return nil
 			}
 			absPath, err := filepath.Abs(path)

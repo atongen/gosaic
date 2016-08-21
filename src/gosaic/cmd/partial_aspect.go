@@ -6,8 +6,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	partialAspectMacroId int
+)
+
 func init() {
-	addLocalIntFlag(&macroId, "macro_id", "", 0, "Id of macro to build partials", CompareCmd)
+	addLocalIntFlag(&partialAspectMacroId, "macro_id", "", 0, "Id of macro to build partials", PartialAspectCmd)
 	RootCmd.AddCommand(PartialAspectCmd)
 }
 
@@ -22,10 +26,10 @@ var PartialAspectCmd = &cobra.Command{
 		}
 		defer Env.Close()
 
-		if macroId == 0 {
+		if partialAspectMacroId == 0 {
 			Env.Fatalf("Macro id is required")
 		}
 
-		controller.PartialAspect(Env, int64(macroId))
+		controller.PartialAspect(Env, int64(partialAspectMacroId))
 	},
 }

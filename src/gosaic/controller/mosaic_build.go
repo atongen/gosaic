@@ -108,7 +108,7 @@ func createMosaicPartials(l *log.Logger, mosaicPartialService service.MosaicPart
 		return
 	}
 
-	l.Printf("Building %d mosaic partials\n", numMissing)
+	l.Printf("Building %d mosaic partials...\n", numMissing)
 	bar := pb.StartNew(int(numMissing))
 
 	for {

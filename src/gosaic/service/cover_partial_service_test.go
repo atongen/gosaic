@@ -87,6 +87,44 @@ func TestCoverPartialServiceInsert(t *testing.T) {
 	}
 }
 
+func TestCoverPartialServiceBulkInsert(t *testing.T) {
+	coverPartialService, err := setupCoverPartialServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup services: %s\n", err.Error())
+	}
+	defer coverPartialService.Close()
+
+	coverPartials := make([]*model.CoverPartial, 5)
+	for i := 0; i < 5; i++ {
+		coverPartials[i] = &model.CoverPartial{
+			CoverId:  cover.Id,
+			AspectId: aspect.Id,
+			X1:       int64(i),
+			Y1:       int64(i),
+			X2:       int64(i + 1),
+			Y2:       int64(i + 1),
+		}
+	}
+
+	num, err := coverPartialService.BulkInsert(coverPartials)
+	if err != nil {
+		t.Fatalf("Error bulk inserting cover partials: %s\n", err.Error())
+	}
+
+	if num != 5 {
+		t.Fatalf("Expected bulk insert result to be 5, but got %d\n", num)
+	}
+
+	icps, err := coverPartialService.FindAll(cover.Id, "id asc")
+	if err != nil {
+		t.Fatalf("Error finding bulk inserted cover partials: %s\n", err.Error())
+	}
+
+	if len(icps) != 5 {
+		t.Fatalf("Expected 5 bulk inserted cover partials, got %d\n", len(icps))
+	}
+}
+
 func TestCoverPartialServiceUpdate(t *testing.T) {
 	coverPartialService, err := setupCoverPartialServiceTest()
 	if err != nil {

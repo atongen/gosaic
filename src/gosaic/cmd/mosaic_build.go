@@ -7,11 +7,12 @@ import (
 )
 
 var (
-	maxRepeats int
+	maxRepeats         int
+	mosaicBuildMacroId int
 )
 
 func init() {
-	addLocalIntFlag(&macroId, "macro_id", "", 0, "Id of macro to use to build mosaic", MosaicBuildCmd)
+	addLocalIntFlag(&mosaicBuildMacroId, "macro_id", "", 0, "Id of macro to use to build mosaic", MosaicBuildCmd)
 	addLocalIntFlag(&maxRepeats, "max_repeats", "", 0, "Number of times an index image can be repeated in the mosaic, 0 indicates unlimited", MosaicBuildCmd)
 	RootCmd.AddCommand(MosaicBuildCmd)
 }
@@ -29,7 +30,7 @@ var MosaicBuildCmd = &cobra.Command{
 			Env.Fatalln("Mosaic name is required")
 		}
 
-		if macroId == 0 {
+		if mosaicBuildMacroId == 0 {
 			Env.Fatalln("Macro id is required")
 		}
 
@@ -39,6 +40,6 @@ var MosaicBuildCmd = &cobra.Command{
 		}
 		defer Env.Close()
 
-		controller.MosaicBuild(Env, args[0], int64(macroId), maxRepeats)
+		controller.MosaicBuild(Env, args[0], int64(mosaicBuildMacroId), maxRepeats)
 	},
 }
