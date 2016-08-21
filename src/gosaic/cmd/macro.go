@@ -7,11 +7,13 @@ import (
 )
 
 var (
-	coverId int
+	macroCoverId int
+	macroOutfile string
 )
 
 func init() {
-	addLocalIntFlag(&coverId, "cover_id", "", 0, "Id of cover to use for macro", MacroCmd)
+	addLocalIntFlag(&macroCoverId, "cover_id", "", 0, "Id of cover to use for macro", MacroCmd)
+	addLocalFlag(&macroOutfile, "out", "", "", "Outfile for resized macro image", MacroCmd)
 	RootCmd.AddCommand(MacroCmd)
 }
 
@@ -28,7 +30,7 @@ var MacroCmd = &cobra.Command{
 			Env.Fatalln("Macro path is required")
 		}
 
-		if coverId == 0 {
+		if macroCoverId == 0 {
 			Env.Fatalln("Cover id is required")
 		}
 
@@ -38,6 +40,6 @@ var MacroCmd = &cobra.Command{
 		}
 		defer Env.Close()
 
-		controller.Macro(Env, args[0], int64(coverId))
+		controller.Macro(Env, args[0], int64(macroCoverId), macroOutfile)
 	},
 }

@@ -17,7 +17,7 @@ func TestPartialAspect(t *testing.T) {
 	if cover == nil {
 		t.Fatal("Failed to create cover")
 	}
-	macro := Macro(env, "testdata/jumping_bunny.jpg", cover.Id)
+	macro := Macro(env, "testdata/jumping_bunny.jpg", cover.Id, "")
 	if macro == nil {
 		t.Fatal("Failed to create macro")
 	}

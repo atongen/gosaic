@@ -22,7 +22,7 @@ func TestMosaicDraw(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	Index(env, []string{"testdata", "../service/testdata"})
-	cover, macro := MacroAspect(env, "testdata/jumping_bunny.jpg", 1000, 1000, 2, 3, 10)
+	cover, macro := MacroAspect(env, "testdata/jumping_bunny.jpg", 1000, 1000, 2, 3, 10, "")
 	if cover == nil || macro == nil {
 		t.Fatal("Failed to create cover or macro")
 	}

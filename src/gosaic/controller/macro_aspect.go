@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func MacroAspect(env environment.Environment, path string, coverWidth, coverHeight, partialWidth, partialHeight, num int) (*model.Cover, *model.Macro) {
+func MacroAspect(env environment.Environment, path string, coverWidth, coverHeight, partialWidth, partialHeight, num int, outfile string) (*model.Cover, *model.Macro) {
 	ts := time.Now().Format(time.RubyDate)
 	name := fmt.Sprintf("%s-%s", path, ts)
 
@@ -50,7 +50,15 @@ func MacroAspect(env environment.Environment, path string, coverWidth, coverHeig
 	}
 
 	cover := CoverAspect(env, name, myCoverWidth, myCoverHeight, partialWidth, partialHeight, num)
-	macro := Macro(env, path, cover.Id)
+	if cover == nil {
+		env.Println("Failed to create cover")
+		return nil, nil
+	}
+	macro := Macro(env, path, cover.Id, outfile)
+	if macro == nil {
+		env.Println("Failed to create macro")
+		return cover, nil
+	}
 
 	return cover, macro
 }

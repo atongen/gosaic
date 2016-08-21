@@ -9,10 +9,11 @@ import (
 )
 
 var (
-	macroAspectWidth  int
-	macroAspectHeight int
-	macroAspect       string
-	macroAspectSize   int
+	macroAspectWidth   int
+	macroAspectHeight  int
+	macroAspect        string
+	macroAspectSize    int
+	macroAspectOutfile string
 )
 
 func init() {
@@ -20,6 +21,7 @@ func init() {
 	addLocalIntFlag(&macroAspectHeight, "height", "", 0, "Pixel height of cover, 0 maintains aspect from width", MacroAspectCmd)
 	addLocalFlag(&macroAspect, "aspect", "a", "1x1", "Aspect of cover partials (CxR)", MacroAspectCmd)
 	addLocalIntFlag(&macroAspectSize, "size", "s", 0, "Number of partials in smallest dimension", MacroAspectCmd)
+	addLocalFlag(&macroAspectOutfile, "out", "", "", "File to write resized macro image", MacroAspectCmd)
 	RootCmd.AddCommand(MacroAspectCmd)
 }
 
@@ -87,6 +89,6 @@ var MacroAspectCmd = &cobra.Command{
 		}
 		defer Env.Close()
 
-		controller.MacroAspect(Env, args[0], macroAspectWidth, macroAspectHeight, aw, ah, macroAspectSize)
+		controller.MacroAspect(Env, args[0], macroAspectWidth, macroAspectHeight, aw, ah, macroAspectSize, macroAspectOutfile)
 	},
 }

@@ -13,7 +13,7 @@ import (
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
-func Macro(env environment.Environment, path string, coverId int64) *model.Macro {
+func Macro(env environment.Environment, path string, coverId int64, outfile string) *model.Macro {
 	aspectService, err := env.AspectService()
 	if err != nil {
 		env.Printf("Error getting aspect service: %s\n", err.Error())
@@ -80,6 +80,15 @@ func Macro(env environment.Environment, path string, coverId int64) *model.Macro
 
 	var imgCov image.Image
 	imgCov = imaging.Fill(*img, int(cover.Width), int(cover.Height), imaging.Center, imaging.Lanczos)
+
+	if outfile != "" {
+		env.Printf("Saving resized macro image to %s\n", outfile)
+		err = imaging.Save(imgCov, outfile)
+		if err != nil {
+			env.Printf("Error saving file: %s\n", err.Error())
+			return nil
+		}
+	}
 
 	macro, _ := macroService.GetOneBy("cover_id = ? AND md5sum = ?", cover.Id, md5sum)
 
