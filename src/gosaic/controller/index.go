@@ -21,12 +21,14 @@ type addIndex struct {
 func Index(env environment.Environment, paths []string) {
 	gidxService, err := env.GidxService()
 	if err != nil {
-		env.Fatalf("Error getting index service: %s\n", err.Error())
+		env.Printf("Error getting index service: %s\n", err.Error())
+		return
 	}
 
 	aspectService, err := env.AspectService()
 	if err != nil {
-		env.Fatalf("Error getting aspect service: %s\n", err.Error())
+		env.Printf("Error getting aspect service: %s\n", err.Error())
+		return
 	}
 
 	found := getJpgPaths(env.Log(), paths)

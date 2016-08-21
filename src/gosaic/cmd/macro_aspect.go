@@ -44,10 +44,6 @@ var MacroAspectCmd = &cobra.Command{
 			Env.Fatalln("height must be greater than zero")
 		}
 
-		if macroAspectWidth == 0 && macroAspectHeight == 0 {
-			Env.Fatalln("either width or height may be zero, but not both")
-		}
-
 		if macroAspect == "" {
 			Env.Fatalln("aspect is required")
 		}

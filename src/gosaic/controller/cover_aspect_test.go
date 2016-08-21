@@ -12,7 +12,10 @@ func TestCoverAspect(t *testing.T) {
 	}
 	defer env.Close()
 
-	CoverAspect(env, "test", 1, 1, 1, 1, 1)
+	cover := CoverAspect(env, "test", 1, 1, 1, 1, 1)
+	if cover == nil {
+		t.Fatal("Failed to create cover")
+	}
 
 	result := out.String()
 

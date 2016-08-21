@@ -10,54 +10,64 @@ import (
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
-func MosaicBuild(env environment.Environment, name string, macroId int64, maxRepeats int) *model.Mosaic {
+func MosaicBuild(env environment.Environment, name, mosaicType string, macroId int64, maxRepeats int) *model.Mosaic {
 	gidxService, err := env.GidxService()
 	if err != nil {
-		env.Fatalf("Error getting index service: %s\n", err.Error())
+		env.Printf("Error getting index service: %s\n", err.Error())
+		return nil
 	}
 
 	macroService, err := env.MacroService()
 	if err != nil {
-		env.Fatalf("Error getting macro service: %s\n", err.Error())
+		env.Printf("Error getting macro service: %s\n", err.Error())
+		return nil
 	}
 
 	macroPartialService, err := env.MacroPartialService()
 	if err != nil {
-		env.Fatalf("Error getting macro partial service: %s\n", err.Error())
+		env.Printf("Error getting macro partial service: %s\n", err.Error())
+		return nil
 	}
 
 	mosaicService, err := env.MosaicService()
 	if err != nil {
-		env.Fatalf("Error getting mosaic service: %s\n", err.Error())
+		env.Printf("Error getting mosaic service: %s\n", err.Error())
+		return nil
 	}
 
 	mosaicPartialService, err := env.MosaicPartialService()
 	if err != nil {
-		env.Fatalf("Error getting mosaic partial service: %s\n", err.Error())
+		env.Printf("Error getting mosaic partial service: %s\n", err.Error())
+		return nil
 	}
 
 	partialComparisonService, err := env.PartialComparisonService()
 	if err != nil {
-		env.Fatalf("Error getting partial comparison service: %s\n", err.Error())
+		env.Printf("Error getting partial comparison service: %s\n", err.Error())
+		return nil
 	}
 
 	macro, err := macroService.Get(macroId)
 	if err != nil {
-		env.Fatalf("Error getting macro: %s\n", err.Error())
+		env.Printf("Error getting macro: %s\n", err.Error())
+		return nil
 	}
 
 	if macro == nil {
-		env.Fatalf("Macro %d not found\n", macroId)
+		env.Printf("Macro %d not found\n", macroId)
+		return nil
 	}
 
 	numMacroPartials, err := macroPartialService.Count(macro)
 	if err != nil {
-		env.Fatalf("Error counting macro partials: %s\n", err.Error())
+		env.Printf("Error counting macro partials: %s\n", err.Error())
+		return nil
 	}
 
 	numGidxs, err := gidxService.Count()
 	if err != nil {
-		env.Fatalf("Error counting index images: %s\n", err.Error())
+		env.Printf("Error counting index images: %s\n", err.Error())
+		return nil
 	}
 
 	// maxRepeats == 0 is unrestricted
@@ -71,13 +81,15 @@ func MosaicBuild(env environment.Environment, name string, macroId int64, maxRep
 		}
 	} else if maxRepeats > 0 {
 		if numGidxs*int64(maxRepeats) < numMacroPartials {
-			env.Fatalf("Not enough index images (%d) to fill mosaic (%d) with max repeats set to %d", numGidxs, numMacroPartials, maxRepeats)
+			env.Printf("Not enough index images (%d) to fill mosaic (%d) with max repeats set to %d", numGidxs, numMacroPartials, maxRepeats)
+			return nil
 		}
 	}
 
 	mosaic, err := mosaicService.GetOneBy("macro_id = ? AND name = ?", macroId, name)
 	if err != nil {
-		env.Fatalf("Error checking for existing mosaic: %s\n", err.Error())
+		env.Printf("Error checking for existing mosaic: %s\n", err.Error())
+		return nil
 	}
 
 	if mosaic == nil {
@@ -87,25 +99,37 @@ func MosaicBuild(env environment.Environment, name string, macroId int64, maxRep
 		}
 		err = mosaicService.Insert(mosaic)
 		if err != nil {
-			env.Fatalf("Error creating mosaic: %s\n", err.Error())
+			env.Printf("Error creating mosaic: %s\n", err.Error())
+			return nil
 		}
 	}
 
 	env.Printf("Creating mosaic with %d total partials\n", numMacroPartials)
-	createMosaicPartials(env.Log(), mosaicPartialService, partialComparisonService, mosaic, maxRepeats)
+	switch mosaicType {
+	default:
+		env.Printf("Invalid mosaic type: %s\n", mosaicType)
+		return nil
+	case "random":
+		err = createMosaicPartialsRandom(env.Log(), mosaicPartialService, partialComparisonService, mosaic, maxRepeats)
+	case "best":
+		err = createMosaicPartialsBest(env.Log(), mosaicPartialService, partialComparisonService, mosaic, maxRepeats)
+	}
+	if err != nil {
+		env.Printf("Error creating mosaic partials: %s\n", err.Error())
+		return nil
+	}
 
 	return mosaic
 }
 
-func createMosaicPartials(l *log.Logger, mosaicPartialService service.MosaicPartialService, partialComparisonService service.PartialComparisonService, mosaic *model.Mosaic, maxRepeats int) {
+func createMosaicPartialsRandom(l *log.Logger, mosaicPartialService service.MosaicPartialService, partialComparisonService service.PartialComparisonService, mosaic *model.Mosaic, maxRepeats int) error {
 	numMissing, err := mosaicPartialService.CountMissing(mosaic)
 	if err != nil {
-		l.Fatalf("Error counting missing mosaic partials: %s\n", err.Error())
+		return err
 	}
 
 	if numMissing == 0 {
-		// we are done
-		return
+		return nil
 	}
 
 	l.Printf("Building %d mosaic partials...\n", numMissing)
@@ -124,11 +148,11 @@ func createMosaicPartials(l *log.Logger, mosaicPartialService service.MosaicPart
 			gidxPartialId, err = partialComparisonService.GetClosestMax(macroPartial, mosaic, maxRepeats)
 		}
 		if err != nil {
-			l.Fatalf("Error finding closest index image: %s\n", err.Error())
+			return err
 		}
 
 		if gidxPartialId == int64(0) {
-			l.Fatal("Unable to find index to fill mosaic")
+			return err
 		}
 
 		mosaicPartial := model.MosaicPartial{
@@ -138,10 +162,52 @@ func createMosaicPartials(l *log.Logger, mosaicPartialService service.MosaicPart
 		}
 		err = mosaicPartialService.Insert(&mosaicPartial)
 		if err != nil {
-			l.Fatalf("Error inserting mosaic partial: %s\n", err.Error())
+			return err
 		}
 		bar.Increment()
 	}
 
 	bar.Finish()
+	return nil
+}
+
+func createMosaicPartialsBest(l *log.Logger, mosaicPartialService service.MosaicPartialService, partialComparisonService service.PartialComparisonService, mosaic *model.Mosaic, maxRepeats int) error {
+	numMissing, err := mosaicPartialService.CountMissing(mosaic)
+	if err != nil {
+		return err
+	}
+
+	if numMissing == 0 {
+		return nil
+	}
+
+	l.Printf("Building %d mosaic partials...\n", numMissing)
+	bar := pb.StartNew(int(numMissing))
+
+	for {
+		var partialComparison *model.PartialComparison
+		if maxRepeats == 0 {
+			partialComparison = partialComparisonService.GetBestAvailable(mosaic)
+		} else {
+			partialComparison = partialComparisonService.GetBestAvailableMax(mosaic, maxRepeats)
+		}
+
+		if partialComparison == nil {
+			break
+		}
+
+		mosaicPartial := model.MosaicPartial{
+			MosaicId:       mosaic.Id,
+			MacroPartialId: partialComparison.MacroPartialId,
+			GidxPartialId:  partialComparison.GidxPartialId,
+		}
+		err = mosaicPartialService.Insert(&mosaicPartial)
+		if err != nil {
+			return err
+		}
+		bar.Increment()
+	}
+
+	bar.Finish()
+	return nil
 }

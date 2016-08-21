@@ -16,54 +16,65 @@ import (
 func Macro(env environment.Environment, path string, coverId int64) *model.Macro {
 	aspectService, err := env.AspectService()
 	if err != nil {
-		env.Fatalf("Error getting aspect service: %s\n", err.Error())
+		env.Printf("Error getting aspect service: %s\n", err.Error())
+		return nil
 	}
 
 	coverService, err := env.CoverService()
 	if err != nil {
-		env.Fatalf("Error creating cover service: %s\n", err.Error())
+		env.Printf("Error creating cover service: %s\n", err.Error())
+		return nil
 	}
 
 	macroService, err := env.MacroService()
 	if err != nil {
-		env.Fatalf("Error creating macro service: %s\n", err.Error())
+		env.Printf("Error creating macro service: %s\n", err.Error())
+		return nil
 	}
 
 	macroPartialService, err := env.MacroPartialService()
 	if err != nil {
-		env.Fatalf("Error creating macro partial service: %s\n", err.Error())
+		env.Printf("Error creating macro partial service: %s\n", err.Error())
+		return nil
 	}
 
 	cover, err := coverService.Get(coverId)
 	if err != nil {
-		env.Fatalf("Error getting cover: %s\n", err.Error())
+		env.Printf("Error getting cover: %s\n", err.Error())
+		return nil
 	} else if cover == nil {
-		env.Fatalf("Cover id %d not found\n", coverId)
+		env.Printf("Cover id %d not found\n", coverId)
+		return nil
 	}
 
 	aspect, err := aspectService.Get(cover.AspectId)
 	if err != nil {
-		env.Fatalf("Error getting cover aspect: %s\n", err.Error())
+		env.Printf("Error getting cover aspect: %s\n", err.Error())
+		return nil
 	}
 
 	md5sum, err := util.Md5sum(path)
 	if err != nil {
-		env.Fatalf("Error getting macro md5sum: %s\n", err.Error())
+		env.Printf("Error getting macro md5sum: %s\n", err.Error())
+		return nil
 	}
 
 	img, err := util.OpenImage(path)
 	if err != nil {
-		env.Fatalf("Failed to open image: %s\n", err.Error())
+		env.Printf("Failed to open image: %s\n", err.Error())
+		return nil
 	}
 
 	orientation, err := util.GetOrientation(path)
 	if err != nil {
-		env.Fatalf("Failed to get image orientation: %s\n", err.Error())
+		env.Printf("Failed to get image orientation: %s\n", err.Error())
+		return nil
 	}
 
 	err = util.FixOrientation(img, orientation)
 	if err != nil {
-		env.Fatalf("Failed to fix image orientation: %s\n", err.Error())
+		env.Printf("Failed to fix image orientation: %s\n", err.Error())
+		return nil
 	}
 	bounds := (*img).Bounds()
 
@@ -84,13 +95,15 @@ func Macro(env environment.Environment, path string, coverId int64) *model.Macro
 		}
 		err = macroService.Insert(macro)
 		if err != nil {
-			env.Fatalf("Error creating macro: %s\n", err.Error())
+			env.Printf("Error creating macro: %s\n", err.Error())
+			return nil
 		}
 	}
 
 	err = buildMacroPartials(env.Log(), macroPartialService, &imgCov, macro, env.Workers())
 	if err != nil {
-		env.Fatalf("Error building macro partials: %s\n", err.Error())
+		env.Printf("Error building macro partials: %s\n", err.Error())
+		return nil
 	}
 
 	env.Printf("Created macro for path %s with cover %s\n", path, cover.Name)

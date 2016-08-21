@@ -9,12 +9,14 @@ func Status(env environment.Environment) {
 
 	gidxService, err := env.GidxService()
 	if err != nil {
-		env.Fatalln(err.Error())
+		env.Println(err.Error())
+		return
 	}
 
 	count, err := gidxService.Count()
 	if err != nil {
-		env.Fatalln("Unable to count index")
+		env.Println("Unable to count index")
+		return
 	}
 
 	env.Println(count, "images in the index.")

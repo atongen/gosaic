@@ -16,64 +16,77 @@ import (
 func MosaicDraw(env environment.Environment, mosaicId int64, outfile string) {
 	macroService, err := env.MacroService()
 	if err != nil {
-		env.Fatalf("Error getting macro service: %s\n", err.Error())
+		env.Printf("Error getting macro service: %s\n", err.Error())
+		return
 	}
 
 	coverService, err := env.CoverService()
 	if err != nil {
-		env.Fatalf("Error getting cover service: %s\n", err.Error())
+		env.Printf("Error getting cover service: %s\n", err.Error())
+		return
 	}
 
 	mosaicService, err := env.MosaicService()
 	if err != nil {
-		env.Fatalf("Error getting mosaic service: %s\n", err.Error())
+		env.Printf("Error getting mosaic service: %s\n", err.Error())
+		return
 	}
 
 	mosaicPartialService, err := env.MosaicPartialService()
 	if err != nil {
-		env.Fatalf("Error getting mosaic partial service: %s\n", err.Error())
+		env.Printf("Error getting mosaic partial service: %s\n", err.Error())
+		return
 	}
 
 	mosaic, err := mosaicService.Get(mosaicId)
 	if err != nil {
-		env.Fatalf("Error getting mosaic id %d: %s\n", mosaicId, err.Error())
+		env.Printf("Error getting mosaic id %d: %s\n", mosaicId, err.Error())
+		return
 	}
 
 	if mosaic == nil {
-		env.Fatalf("Mosaic id %d does not exist", mosaicId)
+		env.Printf("Mosaic id %d does not exist", mosaicId)
+		return
 	}
 
 	macro, err := macroService.Get(mosaic.MacroId)
 	if err != nil {
-		env.Fatalf("Error getting macro: %s\n", err.Error())
+		env.Printf("Error getting macro: %s\n", err.Error())
+		return
 	}
 
 	if macro == nil {
-		env.Fatalf("Macro id %d does not exist", mosaic.MacroId)
+		env.Printf("Macro id %d does not exist", mosaic.MacroId)
+		return
 	}
 
 	cover, err := coverService.Get(macro.CoverId)
 	if err != nil {
-		env.Fatalf("Error getting cover: %s\n", err.Error())
+		env.Printf("Error getting cover: %s\n", err.Error())
+		return
 	}
 
 	if cover == nil {
-		env.Fatalf("cover id %d does not exist", macro.CoverId)
+		env.Printf("cover id %d does not exist", macro.CoverId)
+		return
 	}
 
-	drawMosaic(env.Log(), mosaic, cover, mosaicPartialService, outfile)
+	err = drawMosaic(env.Log(), mosaic, cover, mosaicPartialService, outfile)
+	if err != nil {
+		env.Printf("Error drawing mosaic: %s\n", err.Error())
+	}
 	env.Printf("Wrote mosaic %s to %s\n", mosaic.Name, outfile)
 }
 
-func drawMosaic(l *log.Logger, mosaic *model.Mosaic, cover *model.Cover, mosaicPartialService service.MosaicPartialService, outfile string) {
+func drawMosaic(l *log.Logger, mosaic *model.Mosaic, cover *model.Cover, mosaicPartialService service.MosaicPartialService, outfile string) error {
 	numPartials, err := mosaicPartialService.Count(mosaic)
 	if err != nil {
-		l.Fatalf("Error counting mosaic partials: %s\n", err.Error())
+		return err
 	}
 
 	if numPartials == 0 {
 		l.Println("This mosaic has 0 partials")
-		return
+		return nil
 	}
 
 	dst := imaging.New(int(cover.Width), int(cover.Height), color.NRGBA{0, 0, 0, 0})
@@ -87,7 +100,7 @@ func drawMosaic(l *log.Logger, mosaic *model.Mosaic, cover *model.Cover, mosaicP
 	for {
 		mosaicPartialViews, err := mosaicPartialService.FindAllPartialViews(mosaic, "mosaic_partials.id asc", batchSize, numCreated)
 		if err != nil {
-			l.Fatalf("Error finding mosaic partials: %s\n", err.Error())
+			return err
 		}
 
 		num := len(mosaicPartialViews)
@@ -98,7 +111,7 @@ func drawMosaic(l *log.Logger, mosaic *model.Mosaic, cover *model.Cover, mosaicP
 		for _, view := range mosaicPartialViews {
 			img, err := util.GetImageCoverPartial(view.Gidx, view.CoverPartial)
 			if err != nil {
-				l.Fatalf("Error getting mosaic partial image: %s\n", err.Error())
+				return err
 			}
 			dst = imaging.Paste(dst, *img, view.CoverPartial.Pt())
 			bar.Increment()
@@ -111,6 +124,8 @@ func drawMosaic(l *log.Logger, mosaic *model.Mosaic, cover *model.Cover, mosaicP
 
 	err = imaging.Save(dst, outfile)
 	if err != nil {
-		l.Fatalf("Error writing mosaic to %s: %s\n", outfile, err.Error())
+		return err
 	}
+
+	return nil
 }

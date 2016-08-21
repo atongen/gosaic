@@ -14,7 +14,13 @@ func TestPartialAspect(t *testing.T) {
 
 	Index(env, []string{"testdata", "../service/testdata"})
 	cover := CoverAspect(env, "macroTest", 594, 554, 2, 3, 10)
+	if cover == nil {
+		t.Fatal("Failed to create cover")
+	}
 	macro := Macro(env, "testdata/jumping_bunny.jpg", cover.Id)
+	if macro == nil {
+		t.Fatal("Failed to create macro")
+	}
 	PartialAspect(env, macro.Id)
 
 	result := out.String()

@@ -19,7 +19,13 @@ func TestMacro(t *testing.T) {
 
 	// build a test cover
 	cover := CoverAspect(env, "macroTest", 594, 554, 2, 3, 10)
+	if cover == nil {
+		t.Fatal("Failed to create cover")
+	}
 	macro := Macro(env, "testdata/jumping_bunny.jpg", cover.Id)
+	if macro == nil {
+		t.Fatal("Failed to create macro")
+	}
 
 	result := out.String()
 	expect := []string{

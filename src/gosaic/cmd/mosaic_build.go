@@ -9,11 +9,13 @@ import (
 var (
 	maxRepeats         int
 	mosaicBuildMacroId int
+	mosaicBuildType    string
 )
 
 func init() {
 	addLocalIntFlag(&mosaicBuildMacroId, "macro_id", "", 0, "Id of macro to use to build mosaic", MosaicBuildCmd)
 	addLocalIntFlag(&maxRepeats, "max_repeats", "", 0, "Number of times an index image can be repeated in the mosaic, 0 indicates unlimited", MosaicBuildCmd)
+	addLocalFlag(&mosaicBuildType, "type", "", "best", "Mosaic build type, either 'best' or 'random'", MosaicBuildCmd)
 	RootCmd.AddCommand(MosaicBuildCmd)
 }
 
@@ -34,12 +36,16 @@ var MosaicBuildCmd = &cobra.Command{
 			Env.Fatalln("Macro id is required")
 		}
 
+		if mosaicBuildType != "best" && mosaicBuildType != "random" {
+			Env.Fatalln("type must be either 'best' or 'random'")
+		}
+
 		err := Env.Init()
 		if err != nil {
 			Env.Fatalf("Unable to initialize environment: %s\n", err.Error())
 		}
 		defer Env.Close()
 
-		controller.MosaicBuild(Env, args[0], int64(mosaicBuildMacroId), maxRepeats)
+		controller.MosaicBuild(Env, args[0], mosaicBuildType, int64(mosaicBuildMacroId), maxRepeats)
 	},
 }

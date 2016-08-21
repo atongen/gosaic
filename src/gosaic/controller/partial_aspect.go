@@ -12,46 +12,55 @@ import (
 func PartialAspect(env environment.Environment, macroId int64) {
 	aspectService, err := env.AspectService()
 	if err != nil {
-		env.Fatalf("Error getting aspect service: %s\n", err.Error())
+		env.Printf("Error getting aspect service: %s\n", err.Error())
+		return
 	}
 
 	macroService, err := env.MacroService()
 	if err != nil {
-		env.Fatalf("Error getting macro service: %s\n", err.Error())
+		env.Printf("Error getting macro service: %s\n", err.Error())
+		return
 	}
 
 	macroPartialService, err := env.MacroPartialService()
 	if err != nil {
-		env.Fatalf("Error getting macro partial service: %s\n", err.Error())
+		env.Printf("Error getting macro partial service: %s\n", err.Error())
+		return
 	}
 
 	gidxPartialService, err := env.GidxPartialService()
 	if err != nil {
-		env.Fatalf("Error getting gidx partial service: %s\n", err.Error())
+		env.Printf("Error getting gidx partial service: %s\n", err.Error())
+		return
 	}
 
 	macro, err := macroService.Get(macroId)
 	if err != nil {
-		env.Fatalf("Error getting macro %d: %s\n", macroId, err.Error())
+		env.Printf("Error getting macro %d: %s\n", macroId, err.Error())
+		return
 	}
 
 	aspectIds, err := macroPartialService.AspectIds(macro.Id)
 	if err != nil {
-		env.Fatalf("Error getting aspect ids: %s\n", err.Error())
+		env.Printf("Error getting aspect ids: %s\n", err.Error())
+		return
 	}
 
 	if len(aspectIds) == 0 {
-		env.Fatalln("No aspects found for this macro's partials")
+		env.Println("No aspects found for this macro's partials")
+		return
 	}
 
 	aspects, err := aspectService.FindIn(aspectIds)
 	if err != nil {
-		env.Fatalf("Error getting aspects: %s\n", err.Error())
+		env.Printf("Error getting aspects: %s\n", err.Error())
+		return
 	}
 
 	err = createMissingGidxIndexes(env.Log(), gidxPartialService, aspects)
 	if err != nil {
-		env.Fatalf("Error creating gidx partial aspects: %s\n", err.Error())
+		env.Printf("Error creating gidx partial aspects: %s\n", err.Error())
+		return
 	}
 }
 

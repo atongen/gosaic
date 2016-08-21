@@ -22,11 +22,17 @@ func TestMosaicDraw(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	Index(env, []string{"testdata", "../service/testdata"})
-	_, macro := MacroAspect(env, "testdata/jumping_bunny.jpg", 1000, 1000, 2, 3, 10)
+	cover, macro := MacroAspect(env, "testdata/jumping_bunny.jpg", 1000, 1000, 2, 3, 10)
+	if cover == nil || macro == nil {
+		t.Fatal("Failed to create cover or macro")
+	}
 	PartialAspect(env, macro.Id)
 	Compare(env, macro.Id)
-	MosaicBuild(env, "Jumping Bunny", macro.Id, 0)
-	MosaicDraw(env, int64(1), filepath.Join(dir, "jumping_bunny_mosaic.jpg"))
+	mosaic := MosaicBuild(env, "Jumping Bunny", "best", macro.Id, 0)
+	if mosaic == nil {
+		t.Fatal("Failed to build mosaic")
+	}
+	MosaicDraw(env, mosaic.Id, filepath.Join(dir, "jumping_bunny_mosaic.jpg"))
 
 	result := out.String()
 	expect := []string{

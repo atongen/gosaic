@@ -15,29 +15,38 @@ func MacroAspect(env environment.Environment, path string, coverWidth, coverHeig
 
 	var myCoverWidth, myCoverHeight int
 
-	if coverWidth == 0 && coverHeight == 0 {
-		env.Fatalf("either width or height can be zero, but not both")
-	} else if coverWidth == 0 || coverHeight == 0 {
+	if coverWidth < 0 || coverHeight < 0 {
+		env.Println("Cover width and height must not be less than zero")
+		return nil, nil
+	}
+
+	if coverWidth > 0 && coverHeight > 0 {
+		myCoverWidth = coverWidth
+		myCoverHeight = coverHeight
+	} else {
 		aspectService, err := env.AspectService()
 		if err != nil {
-			env.Fatalf("Error getting aspect service: %s\n", err.Error())
+			env.Printf("Error getting aspect service: %s\n", err.Error())
+			return nil, nil
 		}
 
 		aspect, err := macroAspectGetImageAspect(path, aspectService)
 		if err != nil {
-			env.Fatalf("Error getting aspect: %s\n", err.Error())
+			env.Printf("Error getting aspect: %s\n", err.Error())
+			return nil, nil
 		}
 
 		if coverWidth == 0 {
 			myCoverWidth = aspect.RoundWidth(coverHeight)
-			myCoverHeight = coverHeight
-		} else if coverHeight == 0 {
+		} else {
 			myCoverWidth = coverWidth
-			myCoverHeight = aspect.RoundHeight(coverWidth)
 		}
-	} else {
-		myCoverWidth = coverWidth
-		myCoverHeight = coverHeight
+
+		if coverHeight == 0 {
+			myCoverHeight = aspect.RoundHeight(coverWidth)
+		} else {
+			myCoverHeight = coverHeight
+		}
 	}
 
 	cover := CoverAspect(env, name, myCoverWidth, myCoverHeight, partialWidth, partialHeight, num)

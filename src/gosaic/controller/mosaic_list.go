@@ -32,7 +32,8 @@ func MosaicList(env environment.Environment) {
 		fmt.Println(mosaic)
 		num, err := mosaicPartialService.Count(mosaic)
 		if err != nil {
-			env.Fatalf("Error counting mosaic partials: %s\n", err.Error())
+			env.Printf("Error counting mosaic partials: %s\n", err.Error())
+			return
 		}
 		fmt.Printf("\tNum partials: %d\n", num)
 	}

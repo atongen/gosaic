@@ -13,32 +13,38 @@ import (
 func Compare(env environment.Environment, macroId int64) {
 	macroService, err := env.MacroService()
 	if err != nil {
-		env.Fatalf("Error getting macro service: %s\n", err.Error())
+		env.Printf("Error getting macro service: %s\n", err.Error())
+		return
 	}
 
 	partialComparisonService, err := env.PartialComparisonService()
 	if err != nil {
-		env.Fatalf("Error getting partial comparison service: %s\n", err.Error())
+		env.Printf("Error getting partial comparison service: %s\n", err.Error())
+		return
 	}
 
 	macro, err := macroService.Get(macroId)
 	if err != nil {
-		env.Fatalf("Error getting macro: %s\n", err.Error())
+		env.Printf("Error getting macro: %s\n", err.Error())
+		return
 	}
 
-	createMissingComparisons(env.Log(), partialComparisonService, macro)
+	err = createMissingComparisons(env.Log(), partialComparisonService, macro)
+	if err != nil {
+		env.Printf("Error creating comparisons: %s\n", err.Error())
+	}
 }
 
-func createMissingComparisons(l *log.Logger, partialComparisonService service.PartialComparisonService, macro *model.Macro) {
+func createMissingComparisons(l *log.Logger, partialComparisonService service.PartialComparisonService, macro *model.Macro) error {
 	batchSize := 500
 	numTotal, err := partialComparisonService.CountMissing(macro)
 	if err != nil {
-		l.Fatalf("Error counting missing partial comparisons %s\n", err.Error())
+		return err
 	}
 
 	if numTotal == 0 {
 		l.Printf("No missing comparisons for macro %d\n", macro.Id)
-		return
+		return nil
 	}
 
 	l.Printf("Creating %d partial image comparisons...\n", numTotal)
@@ -47,7 +53,7 @@ func createMissingComparisons(l *log.Logger, partialComparisonService service.Pa
 	for {
 		views, err := partialComparisonService.FindMissing(macro, batchSize)
 		if err != nil {
-			l.Fatalf("Error finding missing comparisons: %s\n", err.Error())
+			return err
 		}
 
 		if len(views) == 0 {
@@ -59,13 +65,14 @@ func createMissingComparisons(l *log.Logger, partialComparisonService service.Pa
 		if len(partialComparisons) > 0 {
 			numCreated, err := partialComparisonService.BulkInsert(partialComparisons)
 			if err != nil {
-				l.Fatalf("Error inserting partial comparisons: %s\n", err.Error())
+				return err
 			}
 
 			bar.Add(int(numCreated))
 		}
 	}
 	bar.Finish()
+	return nil
 }
 
 func buildPartialComparisons(l *log.Logger, macroGidxViews []*model.MacroGidxView) []*model.PartialComparison {

@@ -29,6 +29,8 @@ type PartialComparisonService interface {
 	CreateFromView(*model.MacroGidxView) (*model.PartialComparison, error)
 	GetClosest(*model.MacroPartial) (int64, error)
 	GetClosestMax(*model.MacroPartial, *model.Mosaic, int) (int64, error)
+	GetBestAvailable(*model.Mosaic) *model.PartialComparison
+	GetBestAvailableMax(*model.Mosaic, int) *model.PartialComparison
 }
 
 type partialComparisonServiceImpl struct {
@@ -392,4 +394,75 @@ func (s *partialComparisonServiceImpl) GetClosestMax(macroPartial *model.MacroPa
 	}
 
 	return gidxPartialId, nil
+}
+
+func (s *partialComparisonServiceImpl) GetBestAvailable(mosaic *model.Mosaic) *model.PartialComparison {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	sql := `
+		select pc.id,
+		pc.macro_partial_id,
+		pc.gidx_partial_id,
+		pc.dist
+		from partial_comparisons pc
+		inner join macro_partials map
+			on pc.macro_partial_id = map.id
+		where map.macro_id = ?
+		and not exists (
+			select 1
+			from mosaic_partials mos
+			where mos.mosaic_id = ?
+			and mos.macro_partial_id = map.id
+		)
+		order by pc.dist asc
+		limit 1
+	`
+
+	var partialComparison model.PartialComparison
+	// returns error on no results
+	err := s.dbMap.SelectOne(&partialComparison, sql, mosaic.MacroId, mosaic.Id)
+	if err != nil {
+		return nil
+	}
+
+	return &partialComparison
+}
+
+func (s *partialComparisonServiceImpl) GetBestAvailableMax(mosaic *model.Mosaic, maxRepeats int) *model.PartialComparison {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	sql := fmt.Sprintf(`
+		select pc.id,
+		pc.macro_partial_id,
+		pc.gidx_partial_id,
+		pc.dist
+		from partial_comparisons pc
+		inner join macro_partials map
+			on pc.macro_partial_id = map.id
+		where map.macro_id = ?
+		and not exists (
+			select 1
+			from mosaic_partials mos
+			inner join gidx_partials gps
+				on mos.gidx_partial_id = gps.id
+			where mos.mosaic_id = ?
+			and mos.gidx_partial_id = pc.gidx_partial_id
+			and mos.macro_partial_id = map.id
+			group by gps.gidx_id
+			having count(*) >= %d
+		)
+		order by pc.dist asc
+		limit 1
+	`, maxRepeats)
+
+	var partialComparison model.PartialComparison
+	// returns error on no results
+	err := s.dbMap.SelectOne(&partialComparison, sql, mosaic.MacroId, mosaic.Id, mosaic.Id)
+	if err != nil {
+		return nil
+	}
+
+	return &partialComparison
 }

@@ -611,7 +611,7 @@ func TestPartialComparisonServiceGetClosest(t *testing.T) {
 	}
 
 	if gidxPartialId != int64(2) {
-		t.Fatalf("Expected closest partial comparison to have gidx id 2, but go %s\n", gidxPartialId)
+		t.Fatalf("Expected closest partial comparison to have gidx id 2, but got %s\n", gidxPartialId)
 	}
 }
 
@@ -685,5 +685,115 @@ func TestPartialComparisonServiceGetClosestMax(t *testing.T) {
 
 	if gidxPartialId != int64(2) {
 		t.Fatalf("Expected closest partial comparison to have gidx id 2, but got %d\n", gidxPartialId)
+	}
+}
+
+func TestPartialComparisonServiceGetBestAvailable(t *testing.T) {
+	partialComparisonService, err := setupPartialComparisonServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer partialComparisonService.Close()
+
+	pc1 := model.PartialComparison{
+		MacroPartialId: macroPartial.Id,
+		GidxPartialId:  int64(1),
+		Dist:           0.2,
+	}
+	err = partialComparisonService.Insert(&pc1)
+	if err != nil {
+		t.Fatalf("Error inserting partial comparison: %s\n", err.Error())
+	}
+
+	pc2 := model.PartialComparison{
+		MacroPartialId: macroPartial.Id,
+		GidxPartialId:  int64(2),
+		Dist:           0.1,
+	}
+	err = partialComparisonService.Insert(&pc2)
+	if err != nil {
+		t.Fatalf("Error inserting partial comparison: %s\n", err.Error())
+	}
+
+	partialComparison := partialComparisonService.GetBestAvailable(&mosaic)
+	if partialComparison == nil {
+		t.Fatal("Partial comparison not found")
+	}
+
+	if partialComparison.GidxPartialId != int64(2) {
+		t.Fatalf("Expected best partial comparison to have gidx id 2, but got %s\n", partialComparison.GidxPartialId)
+	}
+}
+
+func TestPartialComparisonServiceGetBestAvailableMax(t *testing.T) {
+	partialComparisonService, err := setupPartialComparisonServiceTest()
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+	defer partialComparisonService.Close()
+
+	dbMap, err := getCachedTestDbMap()
+	if err != nil {
+		t.Fatalf("Error getting db map: %s\n", err.Error())
+	}
+
+	mosaicService, err := getTestMosaicService(dbMap)
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+
+	mosaicPartialService, err := getTestMosaicPartialService(dbMap)
+	if err != nil {
+		t.Fatalf("Unable to setup database: %s\n", err.Error())
+	}
+
+	mosaic = model.Mosaic{
+		Name:    "BestAvailableMaxTest",
+		MacroId: macro.Id,
+	}
+	err = mosaicService.Insert(&mosaic)
+	if err != nil {
+		t.Fatalf("Error inserting mosaic: %s\n", err.Error())
+	}
+
+	pc1 := model.PartialComparison{
+		MacroPartialId: macroPartial.Id,
+		GidxPartialId:  int64(1),
+		Dist:           0.1,
+	}
+	err = partialComparisonService.Insert(&pc1)
+	if err != nil {
+		t.Fatalf("Error inserting partial comparison: %s\n", err.Error())
+	}
+
+	pc2 := model.PartialComparison{
+		MacroPartialId: macroPartial.Id,
+		GidxPartialId:  int64(2),
+		Dist:           0.2,
+	}
+	err = partialComparisonService.Insert(&pc2)
+	if err != nil {
+		t.Fatalf("Error inserting partial comparison: %s\n", err.Error())
+	}
+
+	// create mosaic partial with gidx 1, which has the closer distance,
+	// GetClosestMax should then skip gidx 1 due to the maxRepeats argument
+	mp1 := model.MosaicPartial{
+		MosaicId:       mosaic.Id,
+		MacroPartialId: macroPartial.Id,
+		GidxPartialId:  int64(1),
+	}
+	err = mosaicPartialService.Insert(&mp1)
+	if err != nil {
+		t.Fatalf("Error inserting mosaic partial: %s\n", err.Error())
+	}
+
+	partialComparison := partialComparisonService.GetBestAvailableMax(&mosaic, 1)
+	if partialComparison == nil {
+		t.Fatal("Partial comparison not found")
+	}
+
+	if partialComparison.GidxPartialId != int64(2) {
+		t.Fatalf("Expected best partial comparison to have gidx id 2, but got %d\n", partialComparison.GidxPartialId)
 	}
 }

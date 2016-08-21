@@ -13,37 +13,44 @@ import (
 func CoverAspect(env environment.Environment, name string, coverWidth, coverHeight, partialWidth, partialHeight, num int) *model.Cover {
 	coverService, err := env.CoverService()
 	if err != nil {
-		env.Fatalf("Error creating cover service: %s\n", err.Error())
+		env.Printf("Error creating cover service: %s\n", err.Error())
+		return nil
 	}
 
 	coverPartialService, err := env.CoverPartialService()
 	if err != nil {
-		env.Fatalf("Error creating cover partial service: %s\n", err.Error())
+		env.Printf("Error creating cover partial service: %s\n", err.Error())
+		return nil
 	}
 
 	aspectService, err := env.AspectService()
 	if err != nil {
-		env.Fatalf("Error getting aspect service: %s\n", err.Error())
+		env.Printf("Error getting aspect service: %s\n", err.Error())
+		return nil
 	}
 
 	coverAspect, err := aspectService.FindOrCreate(coverWidth, coverHeight)
 	if err != nil {
-		env.Fatalf("Error getting cover aspect: %s\n", err.Error())
+		env.Printf("Error getting cover aspect: %s\n", err.Error())
+		return nil
 	}
 
 	coverPartialAspect, err := aspectService.FindOrCreate(partialWidth, partialHeight)
 	if err != nil {
-		env.Fatalf("Error getting cover partial aspect: %s\n", err.Error())
+		env.Printf("Error getting cover partial aspect: %s\n", err.Error())
+		return nil
 	}
 
 	cover, err := createCoverAspect(coverService, coverAspect, name, coverWidth, coverHeight)
 	if err != nil {
-		env.Fatalf("Error creating aspect cover: %s\n", err.Error())
+		env.Printf("Error creating aspect cover: %s\n", err.Error())
+		return nil
 	}
 
 	err = addCoverAspectPartials(env.Log(), coverPartialService, cover, coverPartialAspect, num)
 	if err != nil {
-		env.Fatalf("Error adding aspect cover partials: %s\n", err.Error())
+		env.Printf("Error adding aspect cover partials: %s\n", err.Error())
+		return nil
 	}
 
 	env.Printf("Created cover %s\n", cover.Name)
