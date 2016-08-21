@@ -29,8 +29,8 @@ type PartialComparisonService interface {
 	CreateFromView(*model.MacroGidxView) (*model.PartialComparison, error)
 	GetClosest(*model.MacroPartial) (int64, error)
 	GetClosestMax(*model.MacroPartial, *model.Mosaic, int) (int64, error)
-	GetBestAvailable(*model.Mosaic) *model.PartialComparison
-	GetBestAvailableMax(*model.Mosaic, int) *model.PartialComparison
+	GetBestAvailable(*model.Mosaic) (*model.PartialComparison, error)
+	GetBestAvailableMax(*model.Mosaic, int) (*model.PartialComparison, error)
 }
 
 type partialComparisonServiceImpl struct {
@@ -396,7 +396,7 @@ func (s *partialComparisonServiceImpl) GetClosestMax(macroPartial *model.MacroPa
 	return gidxPartialId, nil
 }
 
-func (s *partialComparisonServiceImpl) GetBestAvailable(mosaic *model.Mosaic) *model.PartialComparison {
+func (s *partialComparisonServiceImpl) GetBestAvailable(mosaic *model.Mosaic) (*model.PartialComparison, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
@@ -423,34 +423,41 @@ func (s *partialComparisonServiceImpl) GetBestAvailable(mosaic *model.Mosaic) *m
 	// returns error on no results
 	err := s.dbMap.SelectOne(&partialComparison, sql, mosaic.MacroId, mosaic.Id)
 	if err != nil {
-		return nil
+		if err.Error() == "sql: no rows in result set" {
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
 
-	return &partialComparison
+	return &partialComparison, nil
 }
 
-func (s *partialComparisonServiceImpl) GetBestAvailableMax(mosaic *model.Mosaic, maxRepeats int) *model.PartialComparison {
+func (s *partialComparisonServiceImpl) GetBestAvailableMax(mosaic *model.Mosaic, maxRepeats int) (*model.PartialComparison, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
 	sql := fmt.Sprintf(`
-		select pc.id,
-		pc.macro_partial_id,
-		pc.gidx_partial_id,
-		pc.dist
+		select pc.*
 		from partial_comparisons pc
-		inner join macro_partials map
-			on pc.macro_partial_id = map.id
-		where map.macro_id = ?
+		join macro_partials map
+		join mosaics mo
+		where mo.id = ?
+		and pc.macro_partial_id = map.id
+		and map.macro_id = mo.macro_id
 		and not exists (
 			select 1
-			from mosaic_partials mos
-			inner join gidx_partials gps
-				on mos.gidx_partial_id = gps.id
-			where mos.mosaic_id = ?
-			and mos.gidx_partial_id = pc.gidx_partial_id
-			and mos.macro_partial_id = map.id
-			group by gps.gidx_id
+			from mosaic_partials mop
+			where mop.mosaic_id = mo.id
+			and mop.macro_partial_id = map.id
+		) and not exists (
+			select 1
+			from mosaic_partials mop
+			inner join gidx_partials gp
+				on mop.gidx_partial_id = gp.id
+			where mop.gidx_partial_id = pc.gidx_partial_id
+			and mop.mosaic_id = mo.id
+			group by gp.gidx_id
 			having count(*) >= %d
 		)
 		order by pc.dist asc
@@ -459,10 +466,14 @@ func (s *partialComparisonServiceImpl) GetBestAvailableMax(mosaic *model.Mosaic,
 
 	var partialComparison model.PartialComparison
 	// returns error on no results
-	err := s.dbMap.SelectOne(&partialComparison, sql, mosaic.MacroId, mosaic.Id, mosaic.Id)
+	err := s.dbMap.SelectOne(&partialComparison, sql, mosaic.Id)
 	if err != nil {
-		return nil
+		if err.Error() == "sql: no rows in result set" {
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
 
-	return &partialComparison
+	return &partialComparison, nil
 }

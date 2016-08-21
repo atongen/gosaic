@@ -187,12 +187,14 @@ func createMosaicPartialsBest(l *log.Logger, mosaicPartialService service.Mosaic
 	for {
 		var partialComparison *model.PartialComparison
 		if maxRepeats == 0 {
-			partialComparison = partialComparisonService.GetBestAvailable(mosaic)
+			partialComparison, err = partialComparisonService.GetBestAvailable(mosaic)
 		} else {
-			partialComparison = partialComparisonService.GetBestAvailableMax(mosaic, maxRepeats)
+			partialComparison, err = partialComparisonService.GetBestAvailableMax(mosaic, maxRepeats)
 		}
 
-		if partialComparison == nil {
+		if err != nil {
+			return err
+		} else if partialComparison == nil {
 			break
 		}
 

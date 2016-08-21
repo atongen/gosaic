@@ -82,7 +82,7 @@ func Macro(env environment.Environment, path string, coverId int64, outfile stri
 	imgCov = imaging.Fill(*img, int(cover.Width), int(cover.Height), imaging.Center, imaging.Lanczos)
 
 	if outfile != "" {
-		env.Printf("Saving resized macro image to %s\n", outfile)
+		env.Printf("Wrote resized macro image to %s\n", outfile)
 		err = imaging.Save(imgCov, outfile)
 		if err != nil {
 			env.Printf("Error saving file: %s\n", err.Error())
