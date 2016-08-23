@@ -29,10 +29,7 @@ func TestMacro(t *testing.T) {
 
 	result := out.String()
 	expect := []string{
-		"Building 160 cover partials...",
-		"Created cover macroTest",
-		"Building 160 macro partials",
-		"Created macro for path testdata/jumping_bunny.jpg with cover macroTest",
+		"Building 160 macro partials...",
 	}
 
 	for _, e := range expect {

@@ -1,12 +1,16 @@
 package controller
 
 import (
+	"errors"
 	"gosaic/environment"
 	"gosaic/model"
 	"gosaic/service"
 	"gosaic/util"
 	"image"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/disintegration/imaging"
 
@@ -79,10 +83,9 @@ func Macro(env environment.Environment, path string, coverId int64, outfile stri
 	bounds := (*img).Bounds()
 
 	var imgCov image.Image
-	imgCov = imaging.Fill(*img, int(cover.Width), int(cover.Height), imaging.Center, imaging.Lanczos)
+	imgCov = imaging.Fill(*img, cover.Width, cover.Height, imaging.Center, imaging.Lanczos)
 
 	if outfile != "" {
-		env.Printf("Wrote resized macro image to %s\n", outfile)
 		err = imaging.Save(imgCov, outfile)
 		if err != nil {
 			env.Printf("Error saving file: %s\n", err.Error())
@@ -90,7 +93,11 @@ func Macro(env environment.Environment, path string, coverId int64, outfile stri
 		}
 	}
 
-	macro, _ := macroService.GetOneBy("cover_id = ? AND md5sum = ?", cover.Id, md5sum)
+	macro, err := macroService.GetOneBy("cover_id = ? AND md5sum = ?", cover.Id, md5sum)
+	if err != nil {
+		env.Printf("Error finding macro: %s\n", err.Error())
+		return nil
+	}
 
 	if macro == nil {
 		macro = &model.Macro{
@@ -98,8 +105,8 @@ func Macro(env environment.Environment, path string, coverId int64, outfile stri
 			CoverId:     cover.Id,
 			Path:        path,
 			Md5sum:      md5sum,
-			Width:       uint(bounds.Max.X),
-			Height:      uint(bounds.Max.Y),
+			Width:       bounds.Max.X,
+			Height:      bounds.Max.Y,
 			Orientation: orientation,
 		}
 		err = macroService.Insert(macro)
@@ -111,11 +118,9 @@ func Macro(env environment.Environment, path string, coverId int64, outfile stri
 
 	err = buildMacroPartials(env.Log(), macroPartialService, &imgCov, macro, env.Workers())
 	if err != nil {
-		env.Printf("Error building macro partials: %s\n", err.Error())
+		env.Printf("Error creating macro: %s\n", err.Error())
 		return nil
 	}
-
-	env.Printf("Created macro for path %s with cover %d\n", path, cover.Id)
 
 	return macro
 }
@@ -123,7 +128,7 @@ func Macro(env environment.Environment, path string, coverId int64, outfile stri
 func buildMacroPartials(l *log.Logger, macroPartialService service.MacroPartialService, img *image.Image, macro *model.Macro, workers int) error {
 	countMissing, err := macroPartialService.CountMissing(macro)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	if countMissing == 0 {
@@ -143,7 +148,19 @@ func buildMacroPartials(l *log.Logger, macroPartialService service.MacroPartialS
 		}
 	}(l, errs)
 
+	cancel := false
+	c := make(chan os.Signal, 2)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		cancel = true
+	}()
+
 	for {
+		if cancel {
+			return errors.New("Cancelled")
+		}
+
 		var coverPartials []*model.CoverPartial
 
 		coverPartials, err = macroPartialService.FindMissing(macro, "cover_partials.id ASC", batchSize, 0)

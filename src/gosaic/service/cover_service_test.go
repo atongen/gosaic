@@ -45,6 +45,7 @@ func TestCoverServiceInsert(t *testing.T) {
 		Type:     "test",
 		Width:    600,
 		Height:   400,
+		Num:      1,
 	}
 
 	err = coverService.Insert(&c1)
@@ -84,6 +85,7 @@ func TestCoverServiceUpdate(t *testing.T) {
 		AspectId: aspect.Id,
 		Width:    600,
 		Height:   400,
+		Num:      1,
 	}
 
 	err = coverService.Insert(&c1)
@@ -119,6 +121,7 @@ func TestCoverServiceDelete(t *testing.T) {
 		AspectId: aspect.Id,
 		Width:    600,
 		Height:   400,
+		Num:      1,
 	}
 
 	err = coverService.Insert(&c1)
@@ -151,6 +154,7 @@ func TestCoverServiceGetOneBy(t *testing.T) {
 		AspectId: aspect.Id,
 		Width:    600,
 		Height:   400,
+		Num:      1,
 	}
 
 	err = coverService.Insert(&c1)
@@ -182,9 +186,9 @@ func TestCoverServiceFindAll(t *testing.T) {
 	defer coverService.Close()
 
 	covers := []model.Cover{
-		model.Cover{Type: "test", AspectId: aspect.Id, Width: 600, Height: 400},
-		model.Cover{Type: "test", AspectId: aspect.Id, Width: 600, Height: 400},
-		model.Cover{Type: "test", AspectId: aspect.Id, Width: 600, Height: 400},
+		model.Cover{Type: "test", AspectId: aspect.Id, Width: 600, Height: 400, Num: 1},
+		model.Cover{Type: "test", AspectId: aspect.Id, Width: 600, Height: 400, Num: 1},
+		model.Cover{Type: "test", AspectId: aspect.Id, Width: 600, Height: 400, Num: 1},
 	}
 
 	for _, cover := range covers {

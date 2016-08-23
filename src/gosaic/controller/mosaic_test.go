@@ -40,18 +40,11 @@ func TestMosaic(t *testing.T) {
 	expect := []string{
 		"Indexing 4 images...",
 		"Building 70 cover partials...",
-		"Created cover testdata/jumping_bunny.jpg-",
-		"Wrote resized macro image to ",
-		"/jumping_bunny_macro.jpg",
 		"Building 70 macro partials...",
-		"Created macro for path testdata/jumping_bunny.jpg with cover testdata/jumping_bunny.jpg-",
-		"Creating 4 aspect partials for indexed images...",
-		"Creating 280 partial image comparisons...",
-		"Creating mosaic with 70 total partials",
+		"Building 4 indexed image partials...",
+		"Building 280 partial image comparisons...",
 		"Building 70 mosaic partials...",
-		"Drawing 70 mosaic partials",
-		"Wrote mosaic Jumping Bunny to ",
-		"/jumping_bunny_mosaic.jpg",
+		"Drawing 70 mosaic partials...",
 	}
 
 	for _, e := range expect {

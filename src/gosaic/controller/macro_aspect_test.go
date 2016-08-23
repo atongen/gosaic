@@ -21,9 +21,7 @@ func TestMacroAspect(t *testing.T) {
 
 	expect := []string{
 		"Building 150 cover partials...",
-		"Created cover testdata/jumping_bunny.jpg-",
-		"Building 150 macro partials",
-		"Created macro for path testdata/jumping_bunny.jpg with cover testdata/jumping_bunny.jpg-",
+		"Building 150 macro partials...",
 	}
 
 	for _, e := range expect {

@@ -20,7 +20,6 @@ func TestCoverAspect(t *testing.T) {
 	result := out.String()
 
 	expect := []string{
-		"Created cover test",
 		"Building 1 cover partials...",
 	}
 

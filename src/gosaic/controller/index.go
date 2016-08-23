@@ -1,14 +1,17 @@
 package controller
 
 import (
+	"errors"
 	"gosaic/environment"
 	"gosaic/model"
 	"gosaic/service"
 	"gosaic/util"
 	"log"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	"gopkg.in/cheggaaa/pb.v1"
 )
@@ -18,26 +21,31 @@ type addIndex struct {
 	md5sum string
 }
 
-func Index(env environment.Environment, paths []string) {
+func Index(env environment.Environment, paths []string) error {
 	found := getJpgPaths(env.Log(), paths)
 	if len(found) == 0 {
-		env.Println("No images found in paths")
-		return
+		return nil
 	}
 
 	gidxService, err := env.GidxService()
 	if err != nil {
 		env.Printf("Error getting index service: %s\n", err.Error())
-		return
+		return err
 	}
 
 	aspectService, err := env.AspectService()
 	if err != nil {
 		env.Printf("Error getting aspect service: %s\n", err.Error())
-		return
+		return err
 	}
 
-	processIndexPaths(env.Log(), env.Workers(), found, gidxService, aspectService)
+	err = processIndexPaths(env.Log(), env.Workers(), found, gidxService, aspectService)
+	if err != nil {
+		env.Printf("Error indexing images: %s\n", err.Error())
+		return err
+	}
+
+	return nil
 }
 
 func getJpgPaths(l *log.Logger, paths []string) []string {
@@ -73,10 +81,10 @@ func getJpgPaths(l *log.Logger, paths []string) []string {
 	return found
 }
 
-func processIndexPaths(l *log.Logger, workers int, paths []string, gidxService service.GidxService, aspectService service.AspectService) {
+func processIndexPaths(l *log.Logger, workers int, paths []string, gidxService service.GidxService, aspectService service.AspectService) error {
 	num := len(paths)
 	if num == 0 {
-		return
+		return nil
 	}
 
 	l.Printf("Indexing %d images...\n", num)
@@ -103,7 +111,18 @@ func processIndexPaths(l *log.Logger, workers int, paths []string, gidxService s
 		}
 	}(l, bar, add, sem, done, gidxService, aspectService)
 
+	cancel := false
+	c := make(chan os.Signal, 2)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		cancel = true
+	}()
+
 	for _, p := range paths {
+		if cancel {
+			break
+		}
 		sem <- true
 		go func(myLog *log.Logger, myPath string) {
 			md5sum, err := util.Md5sum(myPath)
@@ -124,7 +143,12 @@ func processIndexPaths(l *log.Logger, workers int, paths []string, gidxService s
 	close(sem)
 	close(done)
 
+	if cancel {
+		return errors.New("Cancelled")
+	}
+
 	bar.Finish()
+	return nil
 }
 
 func storeIndexPath(l *log.Logger, newIndex addIndex, gidxService service.GidxService, aspectService service.AspectService) error {
@@ -177,8 +201,8 @@ func storeIndexPath(l *log.Logger, newIndex addIndex, gidxService service.GidxSe
 		AspectId:    aspect.Id,
 		Path:        newIndex.path,
 		Md5sum:      newIndex.md5sum,
-		Width:       uint(width),
-		Height:      uint(height),
+		Width:       width,
+		Height:      height,
 		Orientation: orientation,
 	}
 	err = gidxService.Insert(&gidx)

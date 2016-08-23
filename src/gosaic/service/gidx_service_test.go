@@ -13,8 +13,8 @@ var (
 		Id:          int64(1),
 		Path:        "/tmp/file.jpg",
 		Md5sum:      "159c9c5ad02d9a15b7f41189960054cd",
-		Width:       uint(120),
-		Height:      uint(120),
+		Width:       120,
+		Height:      120,
 		Orientation: 1,
 	}
 )

@@ -46,8 +46,8 @@ func CoverAspect(env environment.Environment, coverWidth, coverHeight, partialWi
 	}
 
 	var cover *model.Cover
-	cover, err = coverService.GetOneBy("aspect_id = ? and type = ? and width = ? and height = ?",
-		coverAspect.Id, "aspect", coverWidth, coverHeight)
+	cover, err = coverService.GetOneBy("aspect_id = ? and type = ? and width = ? and height = ? and num = ?",
+		coverAspect.Id, "aspect", coverWidth, coverHeight, num)
 	if err != nil {
 		env.Printf("Error finding cover: %s\n", err.Error())
 		return nil
@@ -60,8 +60,9 @@ func CoverAspect(env environment.Environment, coverWidth, coverHeight, partialWi
 	cover = &model.Cover{
 		AspectId: coverAspect.Id,
 		Type:     "aspect",
-		Width:    uint(coverWidth),
-		Height:   uint(coverHeight),
+		Width:    coverWidth,
+		Height:   coverHeight,
+		Num:      num,
 	}
 	err = coverService.Insert(cover)
 	if err != nil {
@@ -116,10 +117,10 @@ func getCoverAspectDims(coverWidth, coverHeight, partialAspectWidth, partialAspe
 }
 
 func addCoverAspectPartials(l *log.Logger, coverPartialService service.CoverPartialService, cover *model.Cover, coverPartialAspect *model.Aspect, num int) error {
-	width, height, columns, rows := getCoverAspectDims(int(cover.Width), int(cover.Height), coverPartialAspect.Columns, coverPartialAspect.Rows, num)
+	width, height, columns, rows := getCoverAspectDims(cover.Width, cover.Height, coverPartialAspect.Columns, coverPartialAspect.Rows, num)
 
-	xOffset := int(math.Floor(float64(int(cover.Width)-width*columns) / float64(2.0)))
-	yOffset := int(math.Floor(float64(int(cover.Height)-height*rows) / float64(2.0)))
+	xOffset := int(math.Floor(float64(cover.Width-width*columns) / float64(2.0)))
+	yOffset := int(math.Floor(float64(cover.Height-height*rows) / float64(2.0)))
 
 	count := columns * rows
 	l.Printf("Building %d cover partials...\n", count)
@@ -149,10 +150,10 @@ func addCoverAspectPartials(l *log.Logger, coverPartialService service.CoverPart
 			var coverPartial model.CoverPartial = model.CoverPartial{
 				CoverId:  cover.Id,
 				AspectId: coverPartialAspect.Id,
-				X1:       int64(x1),
-				Y1:       int64(y1),
-				X2:       int64(x2),
-				Y2:       int64(y2),
+				X1:       x1,
+				Y1:       y1,
+				X2:       x2,
+				Y2:       y2,
 			}
 			coverPartials[j] = &coverPartial
 		}

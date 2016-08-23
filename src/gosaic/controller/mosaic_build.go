@@ -1,11 +1,15 @@
 package controller
 
 import (
+	"errors"
 	"gosaic/environment"
 	"gosaic/model"
 	"gosaic/service"
 	"log"
 	"math"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"gopkg.in/cheggaaa/pb.v1"
 )
@@ -104,7 +108,6 @@ func MosaicBuild(env environment.Environment, name, mosaicType string, macroId i
 		}
 	}
 
-	env.Printf("Creating mosaic with %d total partials\n", numMacroPartials)
 	switch mosaicType {
 	default:
 		env.Printf("Invalid mosaic type: %s\n", mosaicType)
@@ -135,7 +138,19 @@ func createMosaicPartialsRandom(l *log.Logger, mosaicPartialService service.Mosa
 	l.Printf("Building %d mosaic partials...\n", numMissing)
 	bar := pb.StartNew(int(numMissing))
 
+	cancel := false
+	c := make(chan os.Signal, 2)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		cancel = true
+	}()
+
 	for {
+		if cancel {
+			return errors.New("Cancelled")
+		}
+
 		macroPartial := mosaicPartialService.GetRandomMissing(mosaic)
 		if macroPartial == nil {
 			break
@@ -184,7 +199,19 @@ func createMosaicPartialsBest(l *log.Logger, mosaicPartialService service.Mosaic
 	l.Printf("Building %d mosaic partials...\n", numMissing)
 	bar := pb.StartNew(int(numMissing))
 
+	cancel := false
+	c := make(chan os.Signal, 2)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		cancel = true
+	}()
+
 	for {
+		if cancel {
+			return errors.New("Cancelled")
+		}
+
 		var partialComparison *model.PartialComparison
 		if maxRepeats == 0 {
 			partialComparison, err = partialComparisonService.GetBestAvailable(mosaic)

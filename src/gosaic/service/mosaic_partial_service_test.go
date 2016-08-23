@@ -66,8 +66,8 @@ func setupMosaicPartialServiceTest() (MosaicPartialService, error) {
 		AspectId:    aspect.Id,
 		Path:        "testdata/shaq_bill.jpg",
 		Md5sum:      "394c43174e42e043e7b9049e1bb10a39",
-		Width:       uint(478),
-		Height:      uint(340),
+		Width:       478,
+		Height:      340,
 		Orientation: 1,
 	}
 	err = gidxService.Insert(&gidx)
@@ -79,8 +79,8 @@ func setupMosaicPartialServiceTest() (MosaicPartialService, error) {
 		AspectId:    aspect.Id,
 		Path:        "testdata/eagle.jpg",
 		Md5sum:      "5a19b84638fc471d8ec4167ea4e659fb",
-		Width:       uint(512),
-		Height:      uint(364),
+		Width:       512,
+		Height:      364,
 		Orientation: 1,
 	}
 	err = gidxService.Insert(&gidx2)
@@ -88,7 +88,7 @@ func setupMosaicPartialServiceTest() (MosaicPartialService, error) {
 		return nil, err
 	}
 
-	cover = model.Cover{AspectId: aspect.Id, Type: "aspect", Width: 1, Height: 1}
+	cover = model.Cover{AspectId: aspect.Id, Type: "aspect", Width: 1, Height: 1, Num: 1}
 	err = coverService.Insert(&cover)
 	if err != nil {
 		return nil, err
@@ -110,10 +110,10 @@ func setupMosaicPartialServiceTest() (MosaicPartialService, error) {
 		cp := model.CoverPartial{
 			CoverId:  cover.Id,
 			AspectId: aspect.Id,
-			X1:       int64(i),
-			Y1:       int64(i),
-			X2:       int64(i + 1),
-			Y2:       int64(i + 1),
+			X1:       i,
+			Y1:       i,
+			X2:       i + 1,
+			Y2:       i + 1,
 		}
 		err = coverPartialService.Insert(&cp)
 		if err != nil {
@@ -131,8 +131,8 @@ func setupMosaicPartialServiceTest() (MosaicPartialService, error) {
 		AspectId:    aspect.Id,
 		Path:        "testdata/matterhorn.jpg",
 		Md5sum:      "fcaadee574094a3ae04c6badbbb9ee5e",
-		Width:       uint(696),
-		Height:      uint(1024),
+		Width:       696,
+		Height:      1024,
 		Orientation: 1,
 	}
 	err = macroService.Insert(&macro)

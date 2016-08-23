@@ -12,25 +12,24 @@ func TestPartialAspect(t *testing.T) {
 	}
 	defer env.Close()
 
-	Index(env, []string{"testdata", "../service/testdata"})
-	cover := CoverAspect(env, 594, 554, 2, 3, 10)
-	if cover == nil {
-		t.Fatal("Failed to create cover")
+	err = Index(env, []string{"testdata", "../service/testdata"})
+	if err != nil {
+		t.Fatalf("Error indexing images: %s\n", err.Error())
 	}
-	macro := Macro(env, "testdata/jumping_bunny.jpg", cover.Id, "")
-	if macro == nil {
-		t.Fatal("Failed to create macro")
+
+	cover, macro := MacroAspect(env, "testdata/jumping_bunny.jpg", 594, 554, 2, 3, 10, "")
+	if cover == nil || macro == nil {
+		t.Fatal("Failed to create cover or macro")
 	}
-	PartialAspect(env, macro.Id)
+
+	err = PartialAspect(env, macro.Id)
+	if err != nil {
+		t.Fatalf("Error building partial aspects: %s\n", err.Error())
+	}
 
 	result := out.String()
 	expect := []string{
-		"Indexing 4 images...",
-		"Building 160 cover partials...",
-		"Created cover macroTest",
-		"Building 160 macro partials",
-		"Created macro for path testdata/jumping_bunny.jpg with cover macroTest",
-		"Creating 4 aspect partials for indexed images",
+		"Building 4 indexed image partials...",
 	}
 
 	for _, e := range expect {

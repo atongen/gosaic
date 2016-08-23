@@ -17,20 +17,28 @@ func Mosaic(env environment.Environment,
 
 	cover, macro := MacroAspect(env, path, coverWidth, coverHeight, partialWidth, partialHeight, num, macroOutfile)
 	if cover == nil || macro == nil {
-		env.Printf("Failed to create cover or macro")
 		return nil
 	}
 
-	PartialAspect(env, macro.Id)
-	Compare(env, macro.Id)
+	err := PartialAspect(env, macro.Id)
+	if err != nil {
+		return nil
+	}
+
+	err = Compare(env, macro.Id)
+	if err != nil {
+		return nil
+	}
 
 	mosaic := MosaicBuild(env, name, mosaicType, macro.Id, maxRepeats)
 	if mosaic == nil {
-		env.Println("Failed to build mosaic")
 		return nil
 	}
 
-	MosaicDraw(env, mosaic.Id, mosaicOutfile)
+	err = MosaicDraw(env, mosaic.Id, mosaicOutfile)
+	if err != nil {
+		return nil
+	}
 
 	return mosaic
 }

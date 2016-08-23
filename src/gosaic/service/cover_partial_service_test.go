@@ -35,7 +35,7 @@ func setupCoverPartialServiceTest() (CoverPartialService, error) {
 		return nil, err
 	}
 
-	cover = model.Cover{AspectId: aspect.Id, Type: "aspect", Width: 1, Height: 1}
+	cover = model.Cover{AspectId: aspect.Id, Type: "aspect", Width: 1, Height: 1, Num: 1}
 	err = coverService.Insert(&cover)
 	if err != nil {
 		return nil, err
@@ -99,10 +99,10 @@ func TestCoverPartialServiceBulkInsert(t *testing.T) {
 		coverPartials[i] = &model.CoverPartial{
 			CoverId:  cover.Id,
 			AspectId: aspect.Id,
-			X1:       int64(i),
-			Y1:       int64(i),
-			X2:       int64(i + 1),
-			Y2:       int64(i + 1),
+			X1:       i,
+			Y1:       i,
+			X2:       i + 1,
+			Y2:       i + 1,
 		}
 	}
 

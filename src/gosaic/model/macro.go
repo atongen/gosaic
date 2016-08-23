@@ -6,8 +6,8 @@ type Macro struct {
 	CoverId     int64  `db:"cover_id"`
 	Path        string `db:"path"`
 	Md5sum      string `db:"md5sum"`
-	Width       uint   `db:"width"`
-	Height      uint   `db:"height"`
+	Width       int    `db:"width"`
+	Height      int    `db:"height"`
 	Orientation int    `db:"orientation"`
 }
 
@@ -21,11 +21,11 @@ func (g *Macro) GetMd5sum() string {
 	return g.Md5sum
 }
 
-func (g *Macro) GetWidth() uint {
+func (g *Macro) GetWidth() int {
 	return g.Width
 }
 
-func (g *Macro) GetHeight() uint {
+func (g *Macro) GetHeight() int {
 	return g.Height
 }
 
@@ -41,11 +41,11 @@ func (g *Macro) SetMd5sum(md5sum string) {
 	g.Md5sum = md5sum
 }
 
-func (g *Macro) SetWidth(width uint) {
+func (g *Macro) SetWidth(width int) {
 	g.Width = width
 }
 
-func (g *Macro) SetHeight(height uint) {
+func (g *Macro) SetHeight(height int) {
 	g.Height = height
 }
 

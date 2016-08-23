@@ -12,19 +12,30 @@ func TestCompare(t *testing.T) {
 	}
 	defer env.Close()
 
-	Index(env, []string{"testdata", "../service/testdata"})
+	err = Index(env, []string{"testdata", "../service/testdata"})
+	if err != nil {
+		t.Fatalf("Error indexing images: %s\n", err.Error())
+	}
+
 	cover, macro := MacroAspect(env, "testdata/jumping_bunny.jpg", 1000, 1000, 2, 3, 10, "")
 	if cover == nil || macro == nil {
 		t.Fatal("Failed to create cover or macro")
 	}
-	PartialAspect(env, macro.Id)
-	Compare(env, macro.Id)
+
+	err = PartialAspect(env, macro.Id)
+	if err != nil {
+		t.Fatalf("Error building partial aspects: %s\n", err.Error())
+	}
+
+	err = Compare(env, macro.Id)
+	if err != nil {
+		t.Fatalf("Comparing images: %s\n", err.Error())
+	}
 
 	result := out.String()
 
 	expect := []string{
-		"Creating 4 aspect partials for indexed images",
-		"Creating 600 partial image comparisons...",
+		"Building 600 partial image comparisons...",
 	}
 
 	for _, e := range expect {

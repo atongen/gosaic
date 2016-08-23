@@ -12,13 +12,21 @@ func TestIndex(t *testing.T) {
 	}
 	defer env.Close()
 
-	Index(env, []string{"testdata"})
+	err = Index(env, []string{"testdata"})
+	if err != nil {
+		t.Fatalf("Error indexing images: %s\n", err.Error())
+	}
 
 	result := out.String()
 
-	if !strings.Contains(result, "Indexing 1 images...") ||
-		strings.Contains(result, "Error indexing images") {
-		t.Errorf("Indexing failed: %s", result)
+	expect := []string{
+		"Indexing 1 images...",
+	}
+
+	for _, e := range expect {
+		if !strings.Contains(result, e) {
+			t.Fatalf("Expected result to contain '%s', but it did not", e)
+		}
 	}
 
 	for _, ne := range []string{"fail", "error"} {

@@ -3,12 +3,12 @@ package model
 type Image interface {
 	GetPath() string
 	GetMd5sum() string
-	GetWidth() uint
-	GetHeight() uint
+	GetWidth() int
+	GetHeight() int
 	GetOrientation() int
 	SetPath(string)
 	SetMd5sum(string)
-	SetWidth(uint)
-	SetHeight(uint)
+	SetWidth(int)
+	SetHeight(int)
 	SetOrientation(int)
 }

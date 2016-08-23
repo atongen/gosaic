@@ -93,12 +93,13 @@ func (s *macroServiceImpl) GetOneBy(conditions string, params ...interface{}) (*
 	var macro model.Macro
 
 	err := s.dbMap.SelectOne(&macro, fmt.Sprintf("select * from macros where %s limit 1", conditions), params...)
-	// returns error if none are found
-	// or if more than one is found
 	if err != nil {
-		return nil, nil
+		if err.Error() == "sql: no rows in result set" {
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
-
 	return &macro, nil
 }
 

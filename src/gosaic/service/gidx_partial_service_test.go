@@ -39,8 +39,8 @@ func setupGidxPartialServiceTest() (GidxPartialService, error) {
 		AspectId:    aspect.Id,
 		Path:        "testdata/matterhorn.jpg",
 		Md5sum:      "fcaadee574094a3ae04c6badbbb9ee5e",
-		Width:       uint(696),
-		Height:      uint(1024),
+		Width:       696,
+		Height:      1024,
 		Orientation: 1,
 	}
 	err = gidxService.Insert(&gidx)

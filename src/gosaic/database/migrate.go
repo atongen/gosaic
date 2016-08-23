@@ -180,6 +180,7 @@ func createCoverTable(db *sql.DB) error {
 			type text not null,
       width integer not null,
 			height integer not null,
+			num integer not null,
 			FOREIGN KEY(aspect_id) REFERENCES aspects(id) ON DELETE RESTRICT
     );
   `

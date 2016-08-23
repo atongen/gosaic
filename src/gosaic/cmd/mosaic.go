@@ -22,11 +22,11 @@ var (
 
 func init() {
 	addLocalFlag(&mosaicName, "name", "", "", "Name of mosaic", MosaicCmd)
-	addLocalFlag(&mosaicType, "type", "", "best", "Type of mosaic to build, either 'best' or 'random'", MosaicCmd)
+	addLocalFlag(&mosaicType, "type", "", "random", "Type of mosaic to build, either 'best' or 'random'", MosaicCmd)
 	addLocalIntFlag(&mosaicCoverWidth, "width", "", 0, "Pixel width of mosaic, 0 maintains aspect from image height", MosaicCmd)
 	addLocalIntFlag(&mosaicCoverHeight, "height", "", 0, "Pixel height of mosaic, 0 maintains aspect from width", MosaicCmd)
 	addLocalFlag(&mosaicPartialAspect, "aspect", "a", "1x1", "Aspect of mosaic partials (CxR)", MosaicCmd)
-	addLocalIntFlag(&mosaicSize, "size", "s", 0, "Number of mosaic partials in smallest dimension", MosaicCmd)
+	addLocalIntFlag(&mosaicSize, "size", "s", 10, "Number of mosaic partials in smallest dimension", MosaicCmd)
 	addLocalIntFlag(&mosaicMaxRepeats, "max_repeats", "", -1, "Number of times an index image can be repeated, 0 is unlimited, -1 is the minimun number", MosaicCmd)
 	addLocalFlag(&mosaicOutfile, "out", "", "", "File to write final mosaic image", MosaicCmd)
 	addLocalFlag(&mosaicMacroOutfile, "macro_out", "", "", "File to write resized macro image", MosaicCmd)

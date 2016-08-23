@@ -45,7 +45,7 @@ func setupMacroPartialServiceTest() (MacroPartialService, error) {
 		return nil, err
 	}
 
-	cover = model.Cover{AspectId: aspect.Id, Type: "aspect", Width: 1, Height: 1}
+	cover = model.Cover{AspectId: aspect.Id, Type: "aspect", Width: 1, Height: 1, Num: 1}
 	err = coverService.Insert(&cover)
 	if err != nil {
 		return nil, err
@@ -69,8 +69,8 @@ func setupMacroPartialServiceTest() (MacroPartialService, error) {
 		AspectId:    aspect.Id,
 		Path:        "testdata/matterhorn.jpg",
 		Md5sum:      "fcaadee574094a3ae04c6badbbb9ee5e",
-		Width:       uint(696),
-		Height:      uint(1024),
+		Width:       696,
+		Height:      1024,
 		Orientation: 1,
 	}
 	err = macroService.Insert(&macro)
