@@ -1,18 +1,13 @@
 package controller
 
 import (
-	"fmt"
 	"gosaic/environment"
 	"gosaic/model"
 	"gosaic/service"
 	"gosaic/util"
-	"time"
 )
 
 func MacroAspect(env environment.Environment, path string, coverWidth, coverHeight, partialWidth, partialHeight, num int, outfile string) (*model.Cover, *model.Macro) {
-	ts := time.Now().Format(time.RubyDate)
-	name := fmt.Sprintf("%s-%s", path, ts)
-
 	var myCoverWidth, myCoverHeight int
 
 	if coverWidth < 0 || coverHeight < 0 {
@@ -49,7 +44,7 @@ func MacroAspect(env environment.Environment, path string, coverWidth, coverHeig
 		}
 	}
 
-	cover := CoverAspect(env, name, myCoverWidth, myCoverHeight, partialWidth, partialHeight, num)
+	cover := CoverAspect(env, myCoverWidth, myCoverHeight, partialWidth, partialHeight, num)
 	if cover == nil {
 		env.Println("Failed to create cover")
 		return nil, nil

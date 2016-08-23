@@ -1,16 +1,20 @@
 package controller
 
 import (
+	"errors"
 	"gosaic/environment"
 	"gosaic/model"
 	"gosaic/service"
 	"log"
 	"math"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
-func CoverAspect(env environment.Environment, name string, coverWidth, coverHeight, partialWidth, partialHeight, num int) *model.Cover {
+func CoverAspect(env environment.Environment, coverWidth, coverHeight, partialWidth, partialHeight, num int) *model.Cover {
 	coverService, err := env.CoverService()
 	if err != nil {
 		env.Printf("Error creating cover service: %s\n", err.Error())
@@ -41,38 +45,41 @@ func CoverAspect(env environment.Environment, name string, coverWidth, coverHeig
 		return nil
 	}
 
-	cover, err := createCoverAspect(coverService, coverAspect, name, coverWidth, coverHeight)
+	var cover *model.Cover
+	cover, err = coverService.GetOneBy("aspect_id = ? and type = ? and width = ? and height = ?",
+		coverAspect.Id, "aspect", coverWidth, coverHeight)
 	if err != nil {
-		env.Printf("Error creating aspect cover: %s\n", err.Error())
+		env.Printf("Error finding cover: %s\n", err.Error())
+		return nil
+	}
+	// Existing cover is found, use it
+	if cover != nil {
+		return cover
+	}
+
+	cover = &model.Cover{
+		AspectId: coverAspect.Id,
+		Type:     "aspect",
+		Width:    uint(coverWidth),
+		Height:   uint(coverHeight),
+	}
+	err = coverService.Insert(cover)
+	if err != nil {
+		env.Printf("Error creating cover: %s\n", err.Error())
 		return nil
 	}
 
 	err = addCoverAspectPartials(env.Log(), coverPartialService, cover, coverPartialAspect, num)
 	if err != nil {
-		env.Printf("Error adding aspect cover partials: %s\n", err.Error())
+		env.Printf("Error adding cover partials: %s\n", err.Error())
+		// attempt to delete cover
+		// this will fail if there is already a macro referencing it
+		// which is fine
+		coverService.Delete(cover)
 		return nil
 	}
 
-	env.Printf("Created cover %s\n", cover.Name)
-
 	return cover
-}
-
-func createCoverAspect(coverService service.CoverService, aspect *model.Aspect, name string, width, height int) (*model.Cover, error) {
-	var cover model.Cover = model.Cover{
-		Type:     "aspect",
-		AspectId: aspect.Id,
-		Name:     name,
-		Width:    uint(width),
-		Height:   uint(height),
-	}
-
-	err := coverService.Insert(&cover)
-	if err != nil {
-		return nil, err
-	}
-
-	return &cover, nil
 }
 
 // getCoverAspectDims takes a cover width and height,
@@ -119,9 +126,21 @@ func addCoverAspectPartials(l *log.Logger, coverPartialService service.CoverPart
 
 	bar := pb.StartNew(count)
 
+	cancel := false
+	c := make(chan os.Signal, 2)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		cancel = true
+	}()
+
 	for i := 0; i < columns; i++ {
 		var coverPartials []*model.CoverPartial = make([]*model.CoverPartial, rows)
 		for j := 0; j < rows; j++ {
+			if cancel {
+				return errors.New("Cancelled")
+			}
+
 			x1 := i*width + xOffset
 			y1 := j*height + yOffset
 			x2 := (i+1)*width + xOffset - 1

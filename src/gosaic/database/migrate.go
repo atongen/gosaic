@@ -178,7 +178,6 @@ func createCoverTable(db *sql.DB) error {
       id integer not null primary key,
       aspect_id integer not null,
 			type text not null,
-      name text not null,
       width integer not null,
 			height integer not null,
 			FOREIGN KEY(aspect_id) REFERENCES aspects(id) ON DELETE RESTRICT
@@ -189,7 +188,7 @@ func createCoverTable(db *sql.DB) error {
 		return err
 	}
 
-	sql = "create unique index idx_covers_name on covers (name);"
+	sql = "create index idx_covers on covers (aspect_id,type,width,height);"
 	_, err = db.Exec(sql)
 	return err
 }

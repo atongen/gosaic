@@ -19,6 +19,12 @@ type addIndex struct {
 }
 
 func Index(env environment.Environment, paths []string) {
+	found := getJpgPaths(env.Log(), paths)
+	if len(found) == 0 {
+		env.Println("No images found in paths")
+		return
+	}
+
 	gidxService, err := env.GidxService()
 	if err != nil {
 		env.Printf("Error getting index service: %s\n", err.Error())
@@ -31,7 +37,6 @@ func Index(env environment.Environment, paths []string) {
 		return
 	}
 
-	found := getJpgPaths(env.Log(), paths)
 	processIndexPaths(env.Log(), env.Workers(), found, gidxService, aspectService)
 }
 

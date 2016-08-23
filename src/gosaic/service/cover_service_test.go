@@ -41,7 +41,6 @@ func TestCoverServiceInsert(t *testing.T) {
 	defer coverService.Close()
 
 	c1 := model.Cover{
-		Name:     "test1",
 		AspectId: aspect.Id,
 		Type:     "test",
 		Width:    600,
@@ -65,7 +64,6 @@ func TestCoverServiceInsert(t *testing.T) {
 	}
 
 	if c1.Id != c2.Id ||
-		c1.Name != c2.Name ||
 		c1.AspectId != c2.AspectId ||
 		c1.Type != c2.Type ||
 		c1.Width != c2.Width ||
@@ -82,7 +80,6 @@ func TestCoverServiceUpdate(t *testing.T) {
 	defer coverService.Close()
 
 	c1 := model.Cover{
-		Name:     "test1",
 		Type:     "test",
 		AspectId: aspect.Id,
 		Width:    600,
@@ -118,7 +115,6 @@ func TestCoverServiceDelete(t *testing.T) {
 	defer coverService.Close()
 
 	c1 := model.Cover{
-		Name:     "test1",
 		Type:     "test",
 		AspectId: aspect.Id,
 		Width:    600,
@@ -151,7 +147,6 @@ func TestCoverServiceGetOneBy(t *testing.T) {
 	defer coverService.Close()
 
 	c1 := model.Cover{
-		Name:     "test1",
 		Type:     "test",
 		AspectId: aspect.Id,
 		Width:    600,
@@ -163,7 +158,7 @@ func TestCoverServiceGetOneBy(t *testing.T) {
 		t.Fatalf("Error inserting cover: %s\n", err.Error())
 	}
 
-	c2, err := coverService.GetOneBy("name", "test1")
+	c2, err := coverService.GetOneBy("id", c1.Id)
 	if err != nil {
 		t.Fatalf("Error getting inserted cover: %s\n", err.Error())
 	} else if c2 == nil {
@@ -171,7 +166,6 @@ func TestCoverServiceGetOneBy(t *testing.T) {
 	}
 
 	if c1.Id != c2.Id ||
-		c1.Name != c2.Name ||
 		c1.Type != c2.Type ||
 		c1.AspectId != c2.AspectId ||
 		c1.Width != c2.Width ||
@@ -188,9 +182,9 @@ func TestCoverServiceFindAll(t *testing.T) {
 	defer coverService.Close()
 
 	covers := []model.Cover{
-		model.Cover{Name: "test1", Type: "test", AspectId: aspect.Id, Width: 600, Height: 400},
-		model.Cover{Name: "test2", Type: "test", AspectId: aspect.Id, Width: 600, Height: 400},
-		model.Cover{Name: "test3", Type: "test", AspectId: aspect.Id, Width: 600, Height: 400},
+		model.Cover{Type: "test", AspectId: aspect.Id, Width: 600, Height: 400},
+		model.Cover{Type: "test", AspectId: aspect.Id, Width: 600, Height: 400},
+		model.Cover{Type: "test", AspectId: aspect.Id, Width: 600, Height: 400},
 	}
 
 	for _, cover := range covers {
@@ -200,7 +194,7 @@ func TestCoverServiceFindAll(t *testing.T) {
 		}
 	}
 
-	covers2, err := coverService.FindAll("covers.name ASC")
+	covers2, err := coverService.FindAll("covers.id asc")
 	if err != nil {
 		t.Fatalf("Error finding covers: %s\n", err.Error())
 	}

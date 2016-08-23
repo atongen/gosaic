@@ -13,7 +13,7 @@ func TestPartialAspect(t *testing.T) {
 	defer env.Close()
 
 	Index(env, []string{"testdata", "../service/testdata"})
-	cover := CoverAspect(env, "macroTest", 594, 554, 2, 3, 10)
+	cover := CoverAspect(env, 594, 554, 2, 3, 10)
 	if cover == nil {
 		t.Fatal("Failed to create cover")
 	}

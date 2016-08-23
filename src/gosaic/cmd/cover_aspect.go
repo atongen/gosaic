@@ -24,18 +24,10 @@ func init() {
 }
 
 var CoverAspectCmd = &cobra.Command{
-	Use:   "cover_aspect NAME",
+	Use:   "cover_aspect",
 	Short: "Create a aspect cover",
 	Long:  "Create a aspect cover",
 	Run: func(c *cobra.Command, args []string) {
-		if len(args) != 1 {
-			Env.Fatalln("name is required")
-		}
-
-		if args[0] == "" {
-			Env.Fatalln("name is required")
-		}
-
 		if coverAspectWidth == 0 {
 			Env.Fatalln("width is required")
 		} else if coverAspectWidth < 0 {
@@ -91,6 +83,6 @@ var CoverAspectCmd = &cobra.Command{
 		}
 		defer Env.Close()
 
-		controller.CoverAspect(Env, args[0], coverAspectWidth, coverAspectHeight, aw, ah, coverAspectSize)
+		controller.CoverAspect(Env, coverAspectWidth, coverAspectHeight, aw, ah, coverAspectSize)
 	},
 }

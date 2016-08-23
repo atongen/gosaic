@@ -15,7 +15,7 @@ type CoverService interface {
 	Insert(*model.Cover) error
 	Update(*model.Cover) error
 	Delete(*model.Cover) error
-	GetOneBy(string, interface{}) (*model.Cover, error)
+	GetOneBy(string, ...interface{}) (*model.Cover, error)
 	FindAll(string) ([]*model.Cover, error)
 }
 
@@ -85,12 +85,21 @@ func (s *coverServiceImpl) Delete(c *model.Cover) error {
 	return err
 }
 
-func (s *coverServiceImpl) GetOneBy(column string, value interface{}) (*model.Cover, error) {
+func (s *coverServiceImpl) GetOneBy(conditions string, params ...interface{}) (*model.Cover, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
+	sql := fmt.Sprintf("select * from covers where %s limit 1", conditions)
+
 	var cover model.Cover
-	err := s.dbMap.SelectOne(&cover, fmt.Sprintf("select * from covers where %s = ? limit 1", column), value)
+	err := s.dbMap.SelectOne(&cover, sql, params...)
+	if err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			return nil, nil
+		} else {
+			return nil, err
+		}
+	}
 	return &cover, err
 }
 

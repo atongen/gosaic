@@ -115,7 +115,7 @@ func Macro(env environment.Environment, path string, coverId int64, outfile stri
 		return nil
 	}
 
-	env.Printf("Created macro for path %s with cover %s\n", path, cover.Name)
+	env.Printf("Created macro for path %s with cover %d\n", path, cover.Id)
 
 	return macro
 }

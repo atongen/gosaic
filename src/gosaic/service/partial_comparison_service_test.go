@@ -86,7 +86,7 @@ func setupPartialComparisonServiceTest() (PartialComparisonService, error) {
 		return nil, err
 	}
 
-	cover = model.Cover{Name: "test1", AspectId: aspect.Id, Width: 1, Height: 1}
+	cover = model.Cover{AspectId: aspect.Id, Type: "aspect", Width: 1, Height: 1}
 	err = coverService.Insert(&cover)
 	if err != nil {
 		return nil, err
