@@ -8,36 +8,20 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func setupCoverServiceTest() (CoverService, error) {
-	dbMap, err := getTestDbMap()
-	if err != nil {
-		return nil, err
-	}
-
-	aspectService, err := getTestAspectService(dbMap)
-	if err != nil {
-		return nil, err
-	}
-
-	coverService, err := getTestCoverService(dbMap)
-	if err != nil {
-		return nil, err
-	}
+func setupCoverServiceTest() {
+	setTestDbMap()
+	aspectService := getTestAspectService()
 
 	aspect = *model.NewAspect(1, 1)
-	err = aspectService.Insert(&aspect)
+	err := aspectService.Insert(&aspect)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-
-	return coverService, nil
 }
 
 func TestCoverServiceInsert(t *testing.T) {
-	coverService, err := setupCoverServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupCoverServiceTest()
+	coverService := getTestCoverService()
 	defer coverService.Close()
 
 	c1 := model.Cover{
@@ -48,7 +32,7 @@ func TestCoverServiceInsert(t *testing.T) {
 		Num:      1,
 	}
 
-	err = coverService.Insert(&c1)
+	err := coverService.Insert(&c1)
 	if err != nil {
 		t.Fatalf("Error inserting cover: %s\n", err.Error())
 	}
@@ -74,10 +58,8 @@ func TestCoverServiceInsert(t *testing.T) {
 }
 
 func TestCoverServiceUpdate(t *testing.T) {
-	coverService, err := setupCoverServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupCoverServiceTest()
+	coverService := getTestCoverService()
 	defer coverService.Close()
 
 	c1 := model.Cover{
@@ -88,7 +70,7 @@ func TestCoverServiceUpdate(t *testing.T) {
 		Num:      1,
 	}
 
-	err = coverService.Insert(&c1)
+	err := coverService.Insert(&c1)
 	if err != nil {
 		t.Fatalf("Error inserting cover: %s\n", err.Error())
 	}
@@ -110,10 +92,8 @@ func TestCoverServiceUpdate(t *testing.T) {
 }
 
 func TestCoverServiceDelete(t *testing.T) {
-	coverService, err := setupCoverServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupCoverServiceTest()
+	coverService := getTestCoverService()
 	defer coverService.Close()
 
 	c1 := model.Cover{
@@ -124,7 +104,7 @@ func TestCoverServiceDelete(t *testing.T) {
 		Num:      1,
 	}
 
-	err = coverService.Insert(&c1)
+	err := coverService.Insert(&c1)
 	if err != nil {
 		t.Fatalf("Error inserting cover: %s\n", err.Error())
 	}
@@ -143,10 +123,8 @@ func TestCoverServiceDelete(t *testing.T) {
 }
 
 func TestCoverServiceGetOneBy(t *testing.T) {
-	coverService, err := setupCoverServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupCoverServiceTest()
+	coverService := getTestCoverService()
 	defer coverService.Close()
 
 	c1 := model.Cover{
@@ -157,7 +135,7 @@ func TestCoverServiceGetOneBy(t *testing.T) {
 		Num:      1,
 	}
 
-	err = coverService.Insert(&c1)
+	err := coverService.Insert(&c1)
 	if err != nil {
 		t.Fatalf("Error inserting cover: %s\n", err.Error())
 	}
@@ -179,10 +157,8 @@ func TestCoverServiceGetOneBy(t *testing.T) {
 }
 
 func TestCoverServiceFindAll(t *testing.T) {
-	coverService, err := setupCoverServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupCoverServiceTest()
+	coverService := getTestCoverService()
 	defer coverService.Close()
 
 	covers := []model.Cover{
@@ -192,7 +168,7 @@ func TestCoverServiceFindAll(t *testing.T) {
 	}
 
 	for _, cover := range covers {
-		err = coverService.Insert(&cover)
+		err := coverService.Insert(&cover)
 		if err != nil {
 			t.Fatalf("Error inserting cover: %s\n", err.Error())
 		}

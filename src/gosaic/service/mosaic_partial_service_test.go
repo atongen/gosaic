@@ -5,61 +5,21 @@ import (
 	"testing"
 )
 
-func setupMosaicPartialServiceTest() (MosaicPartialService, error) {
-	dbMap, err := getTestDbMap()
-	if err != nil {
-		return nil, err
-	}
-
-	gidxService, err := getTestGidxService(dbMap)
-	if err != nil {
-		return nil, err
-	}
-
-	gidxPartialService, err := getTestGidxPartialService(dbMap)
-	if err != nil {
-		return nil, err
-	}
-
-	coverService, err := getTestCoverService(dbMap)
-	if err != nil {
-		return nil, err
-	}
-
-	coverPartialService, err := getTestCoverPartialService(dbMap)
-	if err != nil {
-		return nil, err
-	}
-
-	aspectService, err := getTestAspectService(dbMap)
-	if err != nil {
-		return nil, err
-	}
-
-	macroService, err := getTestMacroService(dbMap)
-	if err != nil {
-		return nil, err
-	}
-
-	macroPartialService, err := getTestMacroPartialService(dbMap)
-	if err != nil {
-		return nil, err
-	}
-
-	mosaicService, err := getTestMosaicService(dbMap)
-	if err != nil {
-		return nil, err
-	}
-
-	mosaicPartialService, err := getTestMosaicPartialService(dbMap)
-	if err != nil {
-		return nil, err
-	}
+func setupMosaicPartialServiceTest() {
+	setTestDbMap()
+	gidxService := getTestGidxService()
+	gidxPartialService := getTestGidxPartialService()
+	coverService := getTestCoverService()
+	coverPartialService := getTestCoverPartialService()
+	aspectService := getTestAspectService()
+	macroService := getTestMacroService()
+	macroPartialService := getTestMacroPartialService()
+	mosaicService := getTestMosaicService()
 
 	aspect = model.Aspect{Columns: 87, Rows: 128}
-	err = aspectService.Insert(&aspect)
+	err := aspectService.Insert(&aspect)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	gidx = model.Gidx{
@@ -72,7 +32,7 @@ func setupMosaicPartialServiceTest() (MosaicPartialService, error) {
 	}
 	err = gidxService.Insert(&gidx)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	gidx2 := model.Gidx{
@@ -85,24 +45,24 @@ func setupMosaicPartialServiceTest() (MosaicPartialService, error) {
 	}
 	err = gidxService.Insert(&gidx2)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	cover = model.Cover{AspectId: aspect.Id, Type: "aspect", Width: 1, Height: 1, Num: 1}
 	err = coverService.Insert(&cover)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	gp, err := gidxPartialService.FindOrCreate(&gidx, &aspect)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 	gidxPartial = *gp
 
 	_, err = gidxPartialService.FindOrCreate(&gidx2, &aspect)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	coverPartials := make([]model.CoverPartial, 6)
@@ -117,7 +77,7 @@ func setupMosaicPartialServiceTest() (MosaicPartialService, error) {
 		}
 		err = coverPartialService.Insert(&cp)
 		if err != nil {
-			return nil, err
+			panic(err)
 		}
 		if i == 6 {
 			coverPartial = cp
@@ -137,13 +97,13 @@ func setupMosaicPartialServiceTest() (MosaicPartialService, error) {
 	}
 	err = macroService.Insert(&macro)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	for i := 0; i < 5; i++ {
 		mp, err := macroPartialService.FindOrCreate(&macro, &coverPartials[i])
 		if err != nil {
-			return nil, err
+			panic(err)
 		}
 		if i == 0 {
 			macroPartial = *mp
@@ -156,17 +116,13 @@ func setupMosaicPartialServiceTest() (MosaicPartialService, error) {
 	}
 	err = mosaicService.Insert(&mosaic)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-
-	return mosaicPartialService, nil
 }
 
 func TestMosaicPartialServiceInsert(t *testing.T) {
-	mosaicPartialService, err := setupMosaicPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMosaicPartialServiceTest()
+	mosaicPartialService := getTestMosaicPartialService()
 	defer mosaicPartialService.Close()
 
 	c1 := model.MosaicPartial{
@@ -175,7 +131,7 @@ func TestMosaicPartialServiceInsert(t *testing.T) {
 		GidxPartialId:  gidxPartial.Id,
 	}
 
-	err = mosaicPartialService.Insert(&c1)
+	err := mosaicPartialService.Insert(&c1)
 	if err != nil {
 		t.Fatalf("Error inserting mosaic partial: %s\n", err.Error())
 	}
@@ -199,10 +155,8 @@ func TestMosaicPartialServiceInsert(t *testing.T) {
 }
 
 func TestMosaicPartialServiceCount(t *testing.T) {
-	mosaicPartialService, err := setupMosaicPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMosaicPartialServiceTest()
+	mosaicPartialService := getTestMosaicPartialService()
 	defer mosaicPartialService.Close()
 
 	num, err := mosaicPartialService.Count(&mosaic)
@@ -236,10 +190,8 @@ func TestMosaicPartialServiceCount(t *testing.T) {
 }
 
 func TestMosaicPartialServiceCountMissing(t *testing.T) {
-	mosaicPartialService, err := setupMosaicPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMosaicPartialServiceTest()
+	mosaicPartialService := getTestMosaicPartialService()
 	defer mosaicPartialService.Close()
 
 	num, err := mosaicPartialService.CountMissing(&mosaic)
@@ -273,10 +225,8 @@ func TestMosaicPartialServiceCountMissing(t *testing.T) {
 }
 
 func TestMosaicPartialServiceGetMissing(t *testing.T) {
-	mosaicPartialService, err := setupMosaicPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMosaicPartialServiceTest()
+	mosaicPartialService := getTestMosaicPartialService()
 	defer mosaicPartialService.Close()
 
 	mp1 := mosaicPartialService.GetMissing(&mosaic)
@@ -294,7 +244,7 @@ func TestMosaicPartialServiceGetMissing(t *testing.T) {
 		GidxPartialId:  gidxPartial.Id,
 	}
 
-	err = mosaicPartialService.Insert(&c1)
+	err := mosaicPartialService.Insert(&c1)
 	if err != nil {
 		t.Fatalf("Error inserting mosaic partial: %s\n", err.Error())
 	}
@@ -310,10 +260,8 @@ func TestMosaicPartialServiceGetMissing(t *testing.T) {
 }
 
 func TestMosaicPartialServiceGetRandomMissing(t *testing.T) {
-	mosaicPartialService, err := setupMosaicPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMosaicPartialServiceTest()
+	mosaicPartialService := getTestMosaicPartialService()
 	defer mosaicPartialService.Close()
 
 	mp1 := mosaicPartialService.GetRandomMissing(&mosaic)
@@ -327,7 +275,7 @@ func TestMosaicPartialServiceGetRandomMissing(t *testing.T) {
 		GidxPartialId:  gidxPartial.Id,
 	}
 
-	err = mosaicPartialService.Insert(&c1)
+	err := mosaicPartialService.Insert(&c1)
 	if err != nil {
 		t.Fatalf("Error inserting mosaic partial: %s\n", err.Error())
 	}
@@ -345,10 +293,8 @@ func TestMosaicPartialServiceGetRandomMissing(t *testing.T) {
 }
 
 func TestMosaicPartialServiceFindAllPartialViews(t *testing.T) {
-	mosaicPartialService, err := setupMosaicPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMosaicPartialServiceTest()
+	mosaicPartialService := getTestMosaicPartialService()
 	defer mosaicPartialService.Close()
 
 	c1 := model.MosaicPartial{
@@ -357,7 +303,7 @@ func TestMosaicPartialServiceFindAllPartialViews(t *testing.T) {
 		GidxPartialId:  gidxPartial.Id,
 	}
 
-	err = mosaicPartialService.Insert(&c1)
+	err := mosaicPartialService.Insert(&c1)
 	if err != nil {
 		t.Fatalf("Error inserting mosaic partial: %s\n", err.Error())
 	}

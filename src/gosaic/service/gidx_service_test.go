@@ -8,126 +8,95 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var (
-	testGidx1 = &model.Gidx{
-		Id:          int64(1),
+func setupGidxServiceTest() {
+	setTestDbMap()
+	aspectService := getTestAspectService()
+	gidxService := getTestGidxService()
+
+	aspect = model.Aspect{Columns: 1, Rows: 1}
+	err := aspectService.Insert(&aspect)
+	if err != nil {
+		panic(err)
+	}
+
+	gidx = model.Gidx{
+		AspectId:    aspect.Id,
 		Path:        "/tmp/file.jpg",
 		Md5sum:      "159c9c5ad02d9a15b7f41189960054cd",
 		Width:       120,
 		Height:      120,
 		Orientation: 1,
 	}
-)
 
-func setupGidxServiceTest() (GidxService, error) {
-	dbMap, err := getTestDbMap()
-	if err != nil {
-		return nil, err
-	}
-
-	aspectService, err := getTestAspectService(dbMap)
-	if err != nil {
-		return nil, err
-	}
-	aspect = model.Aspect{Columns: 1, Rows: 1}
-	err = aspectService.Insert(&aspect)
-	if err != nil {
-		return nil, err
-	}
-
-	gidxService, err := getTestGidxService(dbMap)
-	if err != nil {
-		return nil, err
-	}
-	testGidx1.AspectId = aspect.Id
-
-	gidx := model.Gidx{
-		AspectId:    testGidx1.AspectId,
-		Path:        testGidx1.Path,
-		Md5sum:      testGidx1.Md5sum,
-		Width:       testGidx1.Width,
-		Height:      testGidx1.Height,
-		Orientation: testGidx1.Orientation,
-	}
 	err = gidxService.Insert(&gidx)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	testGidx1.Id = gidx.Id
-	return gidxService, nil
 }
 
 func TestGidxServiceGet(t *testing.T) {
-	gidxService, err := setupGidxServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupGidxServiceTest()
+	gidxService := getTestGidxService()
 	defer gidxService.Close()
 
-	gidx, err := gidxService.Get(testGidx1.Id)
+	gidx2, err := gidxService.Get(gidx.Id)
 	if err != nil {
 		t.Error("Error finding gidx by id", err)
 	}
 
-	if gidx.Id != testGidx1.Id ||
-		gidx.AspectId != testGidx1.AspectId ||
-		gidx.Md5sum != testGidx1.Md5sum ||
-		gidx.Path != testGidx1.Path ||
-		gidx.Width != testGidx1.Width ||
-		gidx.Height != testGidx1.Height ||
-		gidx.Orientation != testGidx1.Orientation {
+	if gidx.Id != gidx2.Id ||
+		gidx.AspectId != gidx2.AspectId ||
+		gidx.Md5sum != gidx2.Md5sum ||
+		gidx.Path != gidx2.Path ||
+		gidx.Width != gidx2.Width ||
+		gidx.Height != gidx2.Height ||
+		gidx.Orientation != gidx2.Orientation {
 		t.Error("Found gidx does not match data")
 	}
 }
 
 func TestGidxServiceGetMissing(t *testing.T) {
-	gidxService, err := setupGidxServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupGidxServiceTest()
+	gidxService := getTestGidxService()
 	defer gidxService.Close()
 
-	gidx, err := gidxService.Get(1234)
+	gidx2, err := gidxService.Get(1234)
 	if err != nil {
 		t.Error("Error finding gidx by id", err)
 	}
 
-	if gidx != nil {
+	if gidx2 != nil {
 		t.Error("Found non-existent gidx")
 	}
 }
 
 func TestGidxServiceGetOneBy(t *testing.T) {
-	gidxService, err := setupGidxServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupGidxServiceTest()
+	gidxService := getTestGidxService()
 	defer gidxService.Close()
 
-	gidx, err := gidxService.GetOneBy("md5sum", testGidx1.Md5sum)
+	gidx2, err := gidxService.GetOneBy("md5sum", gidx.Md5sum)
 	if err != nil {
 		t.Error("Error getting gidx for existance by md5sum", err)
 	}
 
-	if gidx.Id != testGidx1.Id ||
-		gidx.AspectId != testGidx1.AspectId ||
-		gidx.Md5sum != testGidx1.Md5sum ||
-		gidx.Path != testGidx1.Path ||
-		gidx.Width != testGidx1.Width ||
-		gidx.Height != testGidx1.Height ||
-		gidx.Orientation != testGidx1.Orientation {
+	if gidx.Id != gidx2.Id ||
+		gidx.AspectId != gidx2.AspectId ||
+		gidx.Md5sum != gidx2.Md5sum ||
+		gidx.Path != gidx2.Path ||
+		gidx.Width != gidx2.Width ||
+		gidx.Height != gidx2.Height ||
+		gidx.Orientation != gidx2.Orientation {
 		t.Error("Found gidx does not match data")
 	}
 }
 
 func TestGidxServiceExistBy(t *testing.T) {
-	gidxService, err := setupGidxServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupGidxServiceTest()
+	gidxService := getTestGidxService()
 	defer gidxService.Close()
 
-	val, err := gidxService.ExistsBy("md5sum", testGidx1.Md5sum)
+	val, err := gidxService.ExistsBy("md5sum", gidx.Md5sum)
 	if err != nil {
 		t.Error("Error checking gidx for existance by md5sum", err)
 	}
@@ -138,22 +107,20 @@ func TestGidxServiceExistBy(t *testing.T) {
 }
 
 func TestGidxServiceUpdate(t *testing.T) {
-	gidxService, err := setupGidxServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupGidxServiceTest()
+	gidxService := getTestGidxService()
 	defer gidxService.Close()
 
 	newPath := "/home/user/tmp/other.jpg"
 	updateGidx := model.Gidx{
-		AspectId:    testGidx1.AspectId,
+		Id:          gidx.Id,
+		AspectId:    gidx.AspectId,
 		Path:        newPath,
-		Md5sum:      testGidx1.Md5sum,
-		Width:       testGidx1.Width,
-		Height:      testGidx1.Height,
-		Orientation: testGidx1.Orientation,
+		Md5sum:      gidx.Md5sum,
+		Width:       gidx.Width,
+		Height:      gidx.Height,
+		Orientation: gidx.Orientation,
 	}
-	updateGidx.Id = testGidx1.Id
 
 	num, err := gidxService.Update(&updateGidx)
 	if err != nil {
@@ -164,24 +131,22 @@ func TestGidxServiceUpdate(t *testing.T) {
 		t.Error("Nothing was updated")
 	}
 
-	gidx, err := gidxService.Get(testGidx1.Id)
+	gidx2, err := gidxService.Get(updateGidx.Id)
 	if err != nil {
 		t.Error("Error finding update gidx", err)
 	}
 
-	if gidx.Path != newPath {
+	if gidx2.Path != newPath {
 		t.Error("Gidx was not updated")
 	}
 }
 
 func TestGidxServiceDelete(t *testing.T) {
-	gidxService, err := setupGidxServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupGidxServiceTest()
+	gidxService := getTestGidxService()
 	defer gidxService.Close()
 
-	num, err := gidxService.Delete(&model.Gidx{Id: testGidx1.Id})
+	num, err := gidxService.Delete(&model.Gidx{Id: gidx.Id})
 	if err != nil {
 		t.Error("Error deleting gidx", err)
 	}
@@ -190,7 +155,7 @@ func TestGidxServiceDelete(t *testing.T) {
 		t.Error("Nothing was deleted")
 	}
 
-	val, err := gidxService.ExistsBy("id", testGidx1.Id)
+	val, err := gidxService.ExistsBy("id", gidx.Id)
 	if err != nil {
 		t.Error("Error confirming gidx deleted", err)
 	}
@@ -201,35 +166,31 @@ func TestGidxServiceDelete(t *testing.T) {
 }
 
 func TestGidxServiceCount(t *testing.T) {
-	gidxService, err := setupGidxServiceTest()
-	if err != nil {
-		t.Error("Unable to setup database", err)
-	}
+	setupGidxServiceTest()
+	gidxService := getTestGidxService()
 	defer gidxService.Close()
 
 	num, err := gidxService.Count()
 	if err != nil {
-		t.Error("Error updating gidx", err)
+		t.Errorf("Error updating gidx", err)
 	}
 
-	if num == 0 {
-		t.Error("Nothing was counted")
+	if num != 1 {
+		t.Errorf("Expected 1 gidx, but got %d\n", num)
 	}
 }
 
 func TestGidxServiceCountBy(t *testing.T) {
-	gidxService, err := setupGidxServiceTest()
-	if err != nil {
-		t.Error("Unable to setup database", err)
-	}
+	setupGidxServiceTest()
+	gidxService := getTestGidxService()
 	defer gidxService.Close()
 
-	num, err := gidxService.CountBy("md5sum", testGidx1.Md5sum)
+	num, err := gidxService.CountBy("md5sum", gidx.Md5sum)
 	if err != nil {
-		t.Error("Error updating gidx", err)
+		t.Error("Error counting by gidx", err)
 	}
 
 	if num != 1 {
-		t.Error("Nothing was counted")
+		t.Errorf("Expected 1 gidx, but got %d\n", num)
 	}
 }

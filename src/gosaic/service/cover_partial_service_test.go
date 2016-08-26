@@ -8,47 +8,27 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func setupCoverPartialServiceTest() (CoverPartialService, error) {
-	dbMap, err := getTestDbMap()
-	if err != nil {
-		return nil, err
-	}
-
-	coverService, err := getTestCoverService(dbMap)
-	if err != nil {
-		return nil, err
-	}
-
-	aspectService, err := getTestAspectService(dbMap)
-	if err != nil {
-		return nil, err
-	}
-
-	coverPartialService, err := getTestCoverPartialService(dbMap)
-	if err != nil {
-		return nil, err
-	}
+func setupCoverPartialServiceTest() {
+	setTestDbMap()
+	coverService := getTestCoverService()
+	aspectService := getTestAspectService()
 
 	aspect = model.Aspect{Columns: 1, Rows: 1}
-	err = aspectService.Insert(&aspect)
+	err := aspectService.Insert(&aspect)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	cover = model.Cover{AspectId: aspect.Id, Type: "aspect", Width: 1, Height: 1, Num: 1}
 	err = coverService.Insert(&cover)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-
-	return coverPartialService, nil
 }
 
 func TestCoverPartialServiceInsert(t *testing.T) {
-	coverPartialService, err := setupCoverPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup services: %s\n", err.Error())
-	}
+	setupCoverPartialServiceTest()
+	coverPartialService := getTestCoverPartialService()
 	defer coverPartialService.Close()
 
 	p1 := model.CoverPartial{
@@ -60,7 +40,7 @@ func TestCoverPartialServiceInsert(t *testing.T) {
 		Y2:       2,
 	}
 
-	err = coverPartialService.Insert(&p1)
+	err := coverPartialService.Insert(&p1)
 	if err != nil {
 		t.Fatalf("Error inserting cover partial: %s\n", err.Error())
 	}
@@ -88,10 +68,8 @@ func TestCoverPartialServiceInsert(t *testing.T) {
 }
 
 func TestCoverPartialServiceBulkInsert(t *testing.T) {
-	coverPartialService, err := setupCoverPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup services: %s\n", err.Error())
-	}
+	setupCoverPartialServiceTest()
+	coverPartialService := getTestCoverPartialService()
 	defer coverPartialService.Close()
 
 	coverPartials := make([]*model.CoverPartial, 5)
@@ -126,10 +104,8 @@ func TestCoverPartialServiceBulkInsert(t *testing.T) {
 }
 
 func TestCoverPartialServiceUpdate(t *testing.T) {
-	coverPartialService, err := setupCoverPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup services: %s\n", err.Error())
-	}
+	setupCoverPartialServiceTest()
+	coverPartialService := getTestCoverPartialService()
 	defer coverPartialService.Close()
 
 	p1 := model.CoverPartial{
@@ -141,7 +117,7 @@ func TestCoverPartialServiceUpdate(t *testing.T) {
 		Y2:       2,
 	}
 
-	err = coverPartialService.Insert(&p1)
+	err := coverPartialService.Insert(&p1)
 	if err != nil {
 		t.Fatalf("Error inserting cover partial: %s\n", err.Error())
 	}
@@ -163,10 +139,8 @@ func TestCoverPartialServiceUpdate(t *testing.T) {
 }
 
 func TestCoverPartialServiceDelete(t *testing.T) {
-	coverPartialService, err := setupCoverPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup services: %s\n", err.Error())
-	}
+	setupCoverPartialServiceTest()
+	coverPartialService := getTestCoverPartialService()
 	defer coverPartialService.Close()
 
 	p1 := model.CoverPartial{
@@ -178,7 +152,7 @@ func TestCoverPartialServiceDelete(t *testing.T) {
 		Y2:       2,
 	}
 
-	err = coverPartialService.Insert(&p1)
+	err := coverPartialService.Insert(&p1)
 	if err != nil {
 		t.Fatalf("Error inserting cover partial: %s\n", err.Error())
 	}
@@ -197,10 +171,8 @@ func TestCoverPartialServiceDelete(t *testing.T) {
 }
 
 func TestCoverPartialServiceFindAll(t *testing.T) {
-	coverPartialService, err := setupCoverPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup services: %s\n", err.Error())
-	}
+	setupCoverPartialServiceTest()
+	coverPartialService := getTestCoverPartialService()
 	defer coverPartialService.Close()
 
 	cps := []model.CoverPartial{
@@ -210,7 +182,7 @@ func TestCoverPartialServiceFindAll(t *testing.T) {
 	}
 
 	for _, cp := range cps {
-		err = coverPartialService.Insert(&cp)
+		err := coverPartialService.Insert(&cp)
 		if err != nil {
 			t.Fatalf("Error inserting cover partial: %s\n", err.Error())
 		}

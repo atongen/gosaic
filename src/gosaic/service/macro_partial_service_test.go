@@ -8,47 +8,23 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func setupMacroPartialServiceTest() (MacroPartialService, error) {
-	dbMap, err := getTestDbMap()
-	if err != nil {
-		return nil, err
-	}
-
-	aspectService, err := getTestAspectService(dbMap)
-	if err != nil {
-		return nil, err
-	}
-
-	coverService, err := getTestCoverService(dbMap)
-	if err != nil {
-		return nil, err
-	}
-
-	coverPartialService, err := getTestCoverPartialService(dbMap)
-	if err != nil {
-		return nil, err
-	}
-
-	macroService, err := getTestMacroService(dbMap)
-	if err != nil {
-		return nil, err
-	}
-
-	macroPartialService, err := getTestMacroPartialService(dbMap)
-	if err != nil {
-		return nil, err
-	}
+func setupMacroPartialServiceTest() {
+	setTestDbMap()
+	aspectService := getTestAspectService()
+	coverService := getTestCoverService()
+	coverPartialService := getTestCoverPartialService()
+	macroService := getTestMacroService()
 
 	aspect = model.Aspect{Columns: 87, Rows: 128}
-	err = aspectService.Insert(&aspect)
+	err := aspectService.Insert(&aspect)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	cover = model.Cover{AspectId: aspect.Id, Type: "aspect", Width: 1, Height: 1, Num: 1}
 	err = coverService.Insert(&cover)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	coverPartial = model.CoverPartial{
@@ -61,7 +37,7 @@ func setupMacroPartialServiceTest() (MacroPartialService, error) {
 	}
 	err = coverPartialService.Insert(&coverPartial)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	macro = model.Macro{
@@ -75,17 +51,13 @@ func setupMacroPartialServiceTest() (MacroPartialService, error) {
 	}
 	err = macroService.Insert(&macro)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-
-	return macroPartialService, nil
 }
 
 func TestMacroPartialServiceInsert(t *testing.T) {
-	macroPartialService, err := setupMacroPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMacroPartialServiceTest()
+	macroPartialService := getTestMacroPartialService()
 	defer macroPartialService.Close()
 
 	mp := model.MacroPartial{
@@ -102,7 +74,7 @@ func TestMacroPartialServiceInsert(t *testing.T) {
 		},
 	}
 
-	err = macroPartialService.Insert(&mp)
+	err := macroPartialService.Insert(&mp)
 	if err != nil {
 		t.Fatalf("Error inserting macro partial: %s\n", err.Error())
 	}
@@ -139,10 +111,8 @@ func TestMacroPartialServiceInsert(t *testing.T) {
 }
 
 func TestMacroPartialServiceUpdate(t *testing.T) {
-	macroPartialService, err := setupMacroPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMacroPartialServiceTest()
+	macroPartialService := getTestMacroPartialService()
 	defer macroPartialService.Close()
 
 	mp := model.MacroPartial{
@@ -159,7 +129,7 @@ func TestMacroPartialServiceUpdate(t *testing.T) {
 		},
 	}
 
-	err = macroPartialService.Insert(&mp)
+	err := macroPartialService.Insert(&mp)
 	if err != nil {
 		t.Fatalf("Error inserting macro partial: %s\n", err.Error())
 	}
@@ -183,10 +153,8 @@ func TestMacroPartialServiceUpdate(t *testing.T) {
 }
 
 func TestMacroPartialServiceDelete(t *testing.T) {
-	macroPartialService, err := setupMacroPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMacroPartialServiceTest()
+	macroPartialService := getTestMacroPartialService()
 	defer macroPartialService.Close()
 
 	mp := model.MacroPartial{
@@ -203,7 +171,7 @@ func TestMacroPartialServiceDelete(t *testing.T) {
 		},
 	}
 
-	err = macroPartialService.Insert(&mp)
+	err := macroPartialService.Insert(&mp)
 	if err != nil {
 		t.Fatalf("Error inserting macro partial: %s\n", err.Error())
 	}
@@ -222,10 +190,8 @@ func TestMacroPartialServiceDelete(t *testing.T) {
 }
 
 func TestMacroPartialServiceGetOneBy(t *testing.T) {
-	macroPartialService, err := setupMacroPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMacroPartialServiceTest()
+	macroPartialService := getTestMacroPartialService()
 	defer macroPartialService.Close()
 
 	mp := model.MacroPartial{
@@ -242,7 +208,7 @@ func TestMacroPartialServiceGetOneBy(t *testing.T) {
 		},
 	}
 
-	err = macroPartialService.Insert(&mp)
+	err := macroPartialService.Insert(&mp)
 	if err != nil {
 		t.Fatalf("Error inserting macro partial: %s\n", err.Error())
 	}
@@ -273,10 +239,8 @@ func TestMacroPartialServiceGetOneBy(t *testing.T) {
 }
 
 func TestMacroPartialServiceExistsBy(t *testing.T) {
-	macroPartialService, err := setupMacroPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMacroPartialServiceTest()
+	macroPartialService := getTestMacroPartialService()
 	defer macroPartialService.Close()
 
 	mp := model.MacroPartial{
@@ -293,7 +257,7 @@ func TestMacroPartialServiceExistsBy(t *testing.T) {
 		},
 	}
 
-	err = macroPartialService.Insert(&mp)
+	err := macroPartialService.Insert(&mp)
 	if err != nil {
 		t.Fatalf("Error inserting macro partial: %s\n", err.Error())
 	}
@@ -309,10 +273,8 @@ func TestMacroPartialServiceExistsBy(t *testing.T) {
 }
 
 func TestMacroPartialServiceCount(t *testing.T) {
-	macroPartialService, err := setupMacroPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMacroPartialServiceTest()
+	macroPartialService := getTestMacroPartialService()
 	defer macroPartialService.Close()
 
 	mp := model.MacroPartial{
@@ -329,7 +291,7 @@ func TestMacroPartialServiceCount(t *testing.T) {
 		},
 	}
 
-	err = macroPartialService.Insert(&mp)
+	err := macroPartialService.Insert(&mp)
 	if err != nil {
 		t.Fatalf("Error inserting macro partial: %s\n", err.Error())
 	}
@@ -345,10 +307,8 @@ func TestMacroPartialServiceCount(t *testing.T) {
 }
 
 func TestMacroPartialServiceFindAll(t *testing.T) {
-	macroPartialService, err := setupMacroPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMacroPartialServiceTest()
+	macroPartialService := getTestMacroPartialService()
 	defer macroPartialService.Close()
 
 	mp := model.MacroPartial{
@@ -365,7 +325,7 @@ func TestMacroPartialServiceFindAll(t *testing.T) {
 		},
 	}
 
-	err = macroPartialService.Insert(&mp)
+	err := macroPartialService.Insert(&mp)
 	if err != nil {
 		t.Fatalf("Error inserting macro partial: %s\n", err.Error())
 	}
@@ -404,10 +364,8 @@ func TestMacroPartialServiceFindAll(t *testing.T) {
 }
 
 func TestMacroPartialServiceFindOrCreate(t *testing.T) {
-	macroPartialService, err := setupMacroPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMacroPartialServiceTest()
+	macroPartialService := getTestMacroPartialService()
 	defer macroPartialService.Close()
 
 	macroPartial, err := macroPartialService.FindOrCreate(&macro, &coverPartial)
@@ -444,10 +402,8 @@ func TestMacroPartialServiceFindOrCreate(t *testing.T) {
 }
 
 func TestMacroPartialServiceCountMissing(t *testing.T) {
-	macroPartialService, err := setupMacroPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMacroPartialServiceTest()
+	macroPartialService := getTestMacroPartialService()
 	defer macroPartialService.Close()
 
 	num, err := macroPartialService.CountMissing(&macro)
@@ -475,10 +431,8 @@ func TestMacroPartialServiceCountMissing(t *testing.T) {
 }
 
 func TestMacroPartialServiceFindMissing(t *testing.T) {
-	macroPartialService, err := setupMacroPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMacroPartialServiceTest()
+	macroPartialService := getTestMacroPartialService()
 	defer macroPartialService.Close()
 
 	coverPartials, err := macroPartialService.FindMissing(&macro, "id asc", 1000, 0)
@@ -517,13 +471,11 @@ func TestMacroPartialServiceFindMissing(t *testing.T) {
 }
 
 func TestMacroPartialServiceAspectIds(t *testing.T) {
-	macroPartialService, err := setupMacroPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMacroPartialServiceTest()
+	macroPartialService := getTestMacroPartialService()
 	defer macroPartialService.Close()
 
-	_, err = macroPartialService.FindOrCreate(&macro, &coverPartial)
+	_, err := macroPartialService.FindOrCreate(&macro, &coverPartial)
 	if err != nil {
 		t.Fatalf("Failed to FindOrCreate macroPartial: %s\n", err.Error())
 	}

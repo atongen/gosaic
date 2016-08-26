@@ -9,11 +9,11 @@
   - seamless
   - rotate images
 * exiftool wrapper
-* clean up service tests
-  - use factory: https://github.com/bluele/factory-go
-  - gen random data: https://github.com/Pallinder/go-randomdata
-  - get test service w/o dbMap arg
-    - be able to use and reset cached sql.DB
+X clean up service tests
+  X use factory: https://github.com/bluele/factory-go
+  X gen random data: https://github.com/Pallinder/go-randomdata
+  X get test service w/o dbMap arg
+    X be able to use and reset cached sql.DB
 * remove all sub-commands except index & mosaic
 * makefile
 * cross compile

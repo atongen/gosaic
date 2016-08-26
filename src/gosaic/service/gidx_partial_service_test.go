@@ -8,31 +8,15 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func setupGidxPartialServiceTest() (GidxPartialService, error) {
-	dbMap, err := getTestDbMap()
-	if err != nil {
-		return nil, err
-	}
-
-	aspectService, err := getTestAspectService(dbMap)
-	if err != nil {
-		return nil, err
-	}
-
-	gidxService, err := getTestGidxService(dbMap)
-	if err != nil {
-		return nil, err
-	}
-
-	gidxPartialService, err := getTestGidxPartialService(dbMap)
-	if err != nil {
-		return nil, err
-	}
+func setupGidxPartialServiceTest() {
+	setTestDbMap()
+	aspectService := getTestAspectService()
+	gidxService := getTestGidxService()
 
 	aspect = model.Aspect{Columns: 87, Rows: 128}
-	err = aspectService.Insert(&aspect)
+	err := aspectService.Insert(&aspect)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	gidx = model.Gidx{
@@ -45,17 +29,13 @@ func setupGidxPartialServiceTest() (GidxPartialService, error) {
 	}
 	err = gidxService.Insert(&gidx)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-
-	return gidxPartialService, nil
 }
 
 func TestGidxPartialServiceInsert(t *testing.T) {
-	gidxPartialService, err := setupGidxPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupGidxPartialServiceTest()
+	gidxPartialService := getTestGidxPartialService()
 	defer gidxPartialService.Close()
 
 	mp := model.GidxPartial{
@@ -71,7 +51,7 @@ func TestGidxPartialServiceInsert(t *testing.T) {
 		},
 	}
 
-	err = gidxPartialService.Insert(&mp)
+	err := gidxPartialService.Insert(&mp)
 	if err != nil {
 		t.Fatalf("Error inserting gidx partial: %s\n", err.Error())
 	}
@@ -108,10 +88,8 @@ func TestGidxPartialServiceInsert(t *testing.T) {
 }
 
 func TestGidxPartialServiceUpdate(t *testing.T) {
-	gidxPartialService, err := setupGidxPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupGidxPartialServiceTest()
+	gidxPartialService := getTestGidxPartialService()
 	defer gidxPartialService.Close()
 
 	mp := model.GidxPartial{
@@ -127,7 +105,7 @@ func TestGidxPartialServiceUpdate(t *testing.T) {
 		},
 	}
 
-	err = gidxPartialService.Insert(&mp)
+	err := gidxPartialService.Insert(&mp)
 	if err != nil {
 		t.Fatalf("Error inserting gidx partial: %s\n", err.Error())
 	}
@@ -151,10 +129,8 @@ func TestGidxPartialServiceUpdate(t *testing.T) {
 }
 
 func TestGidxPartialServiceDelete(t *testing.T) {
-	gidxPartialService, err := setupGidxPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupGidxPartialServiceTest()
+	gidxPartialService := getTestGidxPartialService()
 	defer gidxPartialService.Close()
 
 	mp := model.GidxPartial{
@@ -170,7 +146,7 @@ func TestGidxPartialServiceDelete(t *testing.T) {
 		},
 	}
 
-	err = gidxPartialService.Insert(&mp)
+	err := gidxPartialService.Insert(&mp)
 	if err != nil {
 		t.Fatalf("Error inserting gidx partial: %s\n", err.Error())
 	}
@@ -189,10 +165,8 @@ func TestGidxPartialServiceDelete(t *testing.T) {
 }
 
 func TestGidxPartialServiceGetOneBy(t *testing.T) {
-	gidxPartialService, err := setupGidxPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupGidxPartialServiceTest()
+	gidxPartialService := getTestGidxPartialService()
 	defer gidxPartialService.Close()
 
 	mp := model.GidxPartial{
@@ -208,7 +182,7 @@ func TestGidxPartialServiceGetOneBy(t *testing.T) {
 		},
 	}
 
-	err = gidxPartialService.Insert(&mp)
+	err := gidxPartialService.Insert(&mp)
 	if err != nil {
 		t.Fatalf("Error inserting gidx partial: %s\n", err.Error())
 	}
@@ -226,10 +200,8 @@ func TestGidxPartialServiceGetOneBy(t *testing.T) {
 }
 
 func TestGidxPartialServiceExistsBy(t *testing.T) {
-	gidxPartialService, err := setupGidxPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupGidxPartialServiceTest()
+	gidxPartialService := getTestGidxPartialService()
 	defer gidxPartialService.Close()
 
 	mp := model.GidxPartial{
@@ -245,7 +217,7 @@ func TestGidxPartialServiceExistsBy(t *testing.T) {
 		},
 	}
 
-	err = gidxPartialService.Insert(&mp)
+	err := gidxPartialService.Insert(&mp)
 	if err != nil {
 		t.Fatalf("Error inserting gidx partial: %s\n", err.Error())
 	}
@@ -261,10 +233,8 @@ func TestGidxPartialServiceExistsBy(t *testing.T) {
 }
 
 func TestGidxPartialServiceCount(t *testing.T) {
-	gidxPartialService, err := setupGidxPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupGidxPartialServiceTest()
+	gidxPartialService := getTestGidxPartialService()
 	defer gidxPartialService.Close()
 
 	mp := model.GidxPartial{
@@ -280,7 +250,7 @@ func TestGidxPartialServiceCount(t *testing.T) {
 		},
 	}
 
-	err = gidxPartialService.Insert(&mp)
+	err := gidxPartialService.Insert(&mp)
 	if err != nil {
 		t.Fatalf("Error inserting gidx partial: %s\n", err.Error())
 	}
@@ -296,10 +266,8 @@ func TestGidxPartialServiceCount(t *testing.T) {
 }
 
 func TestGidxPartialServiceFindOrCreate(t *testing.T) {
-	gidxPartialService, err := setupGidxPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupGidxPartialServiceTest()
+	gidxPartialService := getTestGidxPartialService()
 	defer gidxPartialService.Close()
 
 	gidxPartial, err := gidxPartialService.FindOrCreate(&gidx, &aspect)
@@ -332,10 +300,8 @@ func TestGidxPartialServiceFindOrCreate(t *testing.T) {
 }
 
 func TestGidxPartialServiceFindMissing(t *testing.T) {
-	gidxPartialService, err := setupGidxPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupGidxPartialServiceTest()
+	gidxPartialService := getTestGidxPartialService()
 	defer gidxPartialService.Close()
 
 	gidxs, err := gidxPartialService.FindMissing(&aspect, "gidx.id", 100, 0)
@@ -367,10 +333,8 @@ func TestGidxPartialServiceFindMissing(t *testing.T) {
 }
 
 func TestGidxPartialServiceCountMissing(t *testing.T) {
-	gidxPartialService, err := setupGidxPartialServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupGidxPartialServiceTest()
+	gidxPartialService := getTestGidxPartialService()
 	defer gidxPartialService.Close()
 
 	num, err := gidxPartialService.CountMissing([]*model.Aspect{&aspect})

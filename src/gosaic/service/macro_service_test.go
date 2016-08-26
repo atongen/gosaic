@@ -8,47 +8,27 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func setupMacroServiceTest() (MacroService, error) {
-	dbMap, err := getTestDbMap()
-	if err != nil {
-		return nil, err
-	}
-
-	coverService, err := getTestCoverService(dbMap)
-	if err != nil {
-		return nil, err
-	}
-
-	aspectService, err := getTestAspectService(dbMap)
-	if err != nil {
-		return nil, err
-	}
-
-	macroService, err := getTestMacroService(dbMap)
-	if err != nil {
-		return nil, err
-	}
+func setupMacroServiceTest() {
+	setTestDbMap()
+	coverService := getTestCoverService()
+	aspectService := getTestAspectService()
 
 	aspect = model.Aspect{Columns: 1, Rows: 1}
-	err = aspectService.Insert(&aspect)
+	err := aspectService.Insert(&aspect)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	cover = model.Cover{AspectId: aspect.Id, Type: "aspect", Width: 1, Height: 1}
+	cover = model.Cover{AspectId: aspect.Id, Type: "aspect", Width: 1, Height: 1, Num: 1}
 	err = coverService.Insert(&cover)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-
-	return macroService, nil
 }
 
 func TestMacroServiceInsert(t *testing.T) {
-	macroService, err := setupMacroServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMacroServiceTest()
+	macroService := getTestMacroService()
 	defer macroService.Close()
 
 	c1 := model.Macro{
@@ -61,7 +41,7 @@ func TestMacroServiceInsert(t *testing.T) {
 		Orientation: 1,
 	}
 
-	err = macroService.Insert(&c1)
+	err := macroService.Insert(&c1)
 	if err != nil {
 		t.Fatalf("Error inserting macro: %s\n", err.Error())
 	}
@@ -90,10 +70,8 @@ func TestMacroServiceInsert(t *testing.T) {
 }
 
 func TestMacroServiceUpdate(t *testing.T) {
-	macroService, err := setupMacroServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMacroServiceTest()
+	macroService := getTestMacroService()
 	defer macroService.Close()
 
 	c1 := model.Macro{
@@ -106,7 +84,7 @@ func TestMacroServiceUpdate(t *testing.T) {
 		Orientation: 1,
 	}
 
-	err = macroService.Insert(&c1)
+	err := macroService.Insert(&c1)
 	if err != nil {
 		t.Fatalf("Error inserting macro: %s\n", err.Error())
 	}
@@ -128,10 +106,8 @@ func TestMacroServiceUpdate(t *testing.T) {
 }
 
 func TestMacroServiceDelete(t *testing.T) {
-	macroService, err := setupMacroServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMacroServiceTest()
+	macroService := getTestMacroService()
 	defer macroService.Close()
 
 	c1 := model.Macro{
@@ -144,7 +120,7 @@ func TestMacroServiceDelete(t *testing.T) {
 		Orientation: 1,
 	}
 
-	err = macroService.Insert(&c1)
+	err := macroService.Insert(&c1)
 	if err != nil {
 		t.Fatalf("Error inserting macro: %s\n", err.Error())
 	}
@@ -163,10 +139,8 @@ func TestMacroServiceDelete(t *testing.T) {
 }
 
 func TestMacroServiceGetOneBy(t *testing.T) {
-	macroService, err := setupMacroServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMacroServiceTest()
+	macroService := getTestMacroService()
 	defer macroService.Close()
 
 	c1 := model.Macro{
@@ -179,7 +153,7 @@ func TestMacroServiceGetOneBy(t *testing.T) {
 		Orientation: 1,
 	}
 
-	err = macroService.Insert(&c1)
+	err := macroService.Insert(&c1)
 	if err != nil {
 		t.Fatalf("Error inserting macro: %s\n", err.Error())
 	}
@@ -204,10 +178,8 @@ func TestMacroServiceGetOneBy(t *testing.T) {
 }
 
 func TestMacroServiceGetOneByNone(t *testing.T) {
-	macroService, err := setupMacroServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMacroServiceTest()
+	macroService := getTestMacroService()
 	defer macroService.Close()
 
 	c, err := macroService.GetOneBy("cover_id = ? AND md5sum = ?", int64(123), "not a valid md5")
@@ -221,10 +193,8 @@ func TestMacroServiceGetOneByNone(t *testing.T) {
 }
 
 func TestMacroServiceExistsBy(t *testing.T) {
-	macroService, err := setupMacroServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMacroServiceTest()
+	macroService := getTestMacroService()
 	defer macroService.Close()
 
 	c1 := model.Macro{
@@ -237,7 +207,7 @@ func TestMacroServiceExistsBy(t *testing.T) {
 		Orientation: 1,
 	}
 
-	err = macroService.Insert(&c1)
+	err := macroService.Insert(&c1)
 	if err != nil {
 		t.Fatalf("Error inserting macro: %s\n", err.Error())
 	}
@@ -251,10 +221,8 @@ func TestMacroServiceExistsBy(t *testing.T) {
 }
 
 func TestMacroServiceFindAll(t *testing.T) {
-	macroService, err := setupMacroServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMacroServiceTest()
+	macroService := getTestMacroService()
 	defer macroService.Close()
 
 	macros := []model.Macro{
@@ -288,7 +256,7 @@ func TestMacroServiceFindAll(t *testing.T) {
 	}
 
 	for _, macro := range macros {
-		err = macroService.Insert(&macro)
+		err := macroService.Insert(&macro)
 		if err != nil {
 			t.Fatalf("Error inserting macro: %s\n", err.Error())
 		}

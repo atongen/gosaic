@@ -13,10 +13,21 @@ var (
 	m           sync.Mutex
 	cachedDbMap *gorp.DbMap
 
+	cachedAspectService            AspectService
+	cachedGidxService              GidxService
+	cachedGidxPartialService       GidxPartialService
+	cachedCoverService             CoverService
+	cachedCoverPartialService      CoverPartialService
+	cachedMacroService             MacroService
+	cachedMacroPartialService      MacroPartialService
+	cachedMosaicService            MosaicService
+	cachedMosaicPartialService     MosaicPartialService
+	cachedPartialComparisonService PartialComparisonService
+
 	// TODO: replace w/ factory
+	aspect        model.Aspect
 	gidx          model.Gidx
 	gidxPartial   model.GidxPartial
-	aspect        model.Aspect
 	cover         model.Cover
 	coverPartial  model.CoverPartial
 	macro         model.Macro
@@ -29,26 +40,174 @@ func setTestDbMap() {
 	m.Lock()
 	defer m.Unlock()
 
-	_, err := buildTestDb()
+	err := _buildTestDbMap()
 	if err != nil {
 		panic(err)
 	}
 }
 
-func getTestDbMap() {
+func getTestAspectService() AspectService {
 	m.Lock()
 	defer m.Unlock()
 
-	if cachedDbMap == nil {
-		_, err := buildTestDbMap()
+	if cachedAspectService == nil {
+		cachedAspectService = NewAspectService(_getTestDbMap())
+		err := cachedAspectService.Register()
 		if err != nil {
 			panic(err)
 		}
 	}
+
+	return cachedAspectService
 }
 
-func buildTestDbMap() error {
-	cachedDbMap = nil
+func getTestGidxService() GidxService {
+	m.Lock()
+	defer m.Unlock()
+
+	if cachedGidxService == nil {
+		cachedGidxService = NewGidxService(_getTestDbMap())
+		err := cachedGidxService.Register()
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return cachedGidxService
+}
+
+func getTestGidxPartialService() GidxPartialService {
+	m.Lock()
+	defer m.Unlock()
+
+	if cachedGidxPartialService == nil {
+		cachedGidxPartialService = NewGidxPartialService(_getTestDbMap())
+		err := cachedGidxPartialService.Register()
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return cachedGidxPartialService
+}
+
+func getTestCoverService() CoverService {
+	m.Lock()
+	defer m.Unlock()
+
+	if cachedCoverService == nil {
+		cachedCoverService = NewCoverService(_getTestDbMap())
+		err := cachedCoverService.Register()
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return cachedCoverService
+}
+
+func getTestCoverPartialService() CoverPartialService {
+	m.Lock()
+	defer m.Unlock()
+
+	if cachedCoverPartialService == nil {
+		cachedCoverPartialService = NewCoverPartialService(_getTestDbMap())
+		err := cachedCoverPartialService.Register()
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return cachedCoverPartialService
+}
+
+func getTestMacroService() MacroService {
+	m.Lock()
+	defer m.Unlock()
+
+	if cachedMacroService == nil {
+		cachedMacroService = NewMacroService(_getTestDbMap())
+		err := cachedMacroService.Register()
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return cachedMacroService
+}
+
+func getTestMacroPartialService() MacroPartialService {
+	m.Lock()
+	defer m.Unlock()
+
+	if cachedMacroPartialService == nil {
+		cachedMacroPartialService = NewMacroPartialService(_getTestDbMap())
+		err := cachedMacroPartialService.Register()
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return cachedMacroPartialService
+}
+
+func getTestPartialComparisonService() PartialComparisonService {
+	m.Lock()
+	defer m.Unlock()
+
+	if cachedPartialComparisonService == nil {
+		cachedPartialComparisonService = NewPartialComparisonService(_getTestDbMap())
+		err := cachedPartialComparisonService.Register()
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return cachedPartialComparisonService
+}
+
+func getTestMosaicService() MosaicService {
+	m.Lock()
+	defer m.Unlock()
+
+	if cachedMosaicService == nil {
+		cachedMosaicService = NewMosaicService(_getTestDbMap())
+		err := cachedMosaicService.Register()
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return cachedMosaicService
+}
+
+func getTestMosaicPartialService() MosaicPartialService {
+	m.Lock()
+	defer m.Unlock()
+
+	if cachedMosaicPartialService == nil {
+		cachedMosaicPartialService = NewMosaicPartialService(_getTestDbMap())
+		err := cachedMosaicPartialService.Register()
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return cachedMosaicPartialService
+}
+
+func _getTestDbMap() *gorp.DbMap {
+	if cachedDbMap == nil {
+		err := _buildTestDbMap()
+		if err != nil {
+			panic(err)
+		}
+	}
+	return cachedDbMap
+}
+
+func _buildTestDbMap() error {
+	_resetTestDbMap()
 
 	db, err := sql.Open("sqlite3", ":memory:")
 	if err != nil {
@@ -75,102 +234,16 @@ func buildTestDbMap() error {
 	return nil
 }
 
-func getTestGidxService() GidxService {
-	gidxService := NewGidxService(getTestDbMap())
-	err := gidxService.Register()
-	if err != nil {
-		return panic(err)
-	}
-
-	return gidxService
-}
-
-func getTestAspectService() AspectService {
-	aspectService := NewAspectService(getTestDbMap())
-	err := aspectService.Register()
-	if err != nil {
-		panic(err)
-	}
-
-	return aspectService
-}
-
-func getTestGidxPartialService() GidxPartialService {
-	gidxPartialService := NewGidxPartialService(getTestDbMap())
-	err := gidxPartialService.Register()
-	if err != nil {
-		panic(err)
-	}
-
-	return gidxPartialService
-}
-
-func getTestCoverService() CoverService {
-	coverService := NewCoverService(getTestDbMap())
-	err := coverService.Register()
-	if err != nil {
-		panic(err)
-	}
-
-	return coverService
-}
-
-func getTestCoverPartialService() CoverPartialService {
-	coverPartialService := NewCoverPartialService(getTestDbMap())
-	err := coverPartialService.Register()
-	if err != nil {
-		panic(err)
-	}
-
-	return coverPartialService
-}
-
-func getTestMacroService() MacroService {
-	macroService := NewMacroService(getTestDbMap())
-	err := macroService.Register()
-	if err != nil {
-		panic(err)
-	}
-
-	return macroService
-}
-
-func getTestMacroPartialService() MacroPartialService {
-	macroPartialService := NewMacroPartialService(getTestDbMap())
-	err := macroPartialService.Register()
-	if err != nil {
-		panic(err)
-	}
-
-	return macroPartialService
-}
-
-func getTestPartialComparisonService() PartialComparisonService {
-	partialComparisonService := NewPartialComparisonService(getTestDbMap())
-	err := partialComparisonService.Register()
-	if err != nil {
-		panic(err)
-	}
-
-	return partialComparisonService
-}
-
-func getTestMosaicService() MosaicService {
-	mosaicService := NewMosaicService(getTestDbMap())
-	err := mosaicService.Register()
-	if err != nil {
-		panic(err)
-	}
-
-	return mosaicService
-}
-
-func getTestMosaicPartialService() MosaicPartialService {
-	mosaicPartialService := NewMosaicPartialService(getTestDbMap())
-	err := mosaicPartialService.Register()
-	if err != nil {
-		panic(err)
-	}
-
-	return mosaicPartialService
+func _resetTestDbMap() {
+	cachedDbMap = nil
+	cachedAspectService = nil
+	cachedGidxService = nil
+	cachedGidxPartialService = nil
+	cachedCoverService = nil
+	cachedCoverPartialService = nil
+	cachedMacroService = nil
+	cachedMacroPartialService = nil
+	cachedMosaicService = nil
+	cachedMosaicPartialService = nil
+	cachedPartialComparisonService = nil
 }

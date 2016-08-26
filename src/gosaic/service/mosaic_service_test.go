@@ -5,42 +5,22 @@ import (
 	"testing"
 )
 
-func setupMosaicServiceTest() (MosaicService, error) {
-	dbMap, err := getTestDbMap()
-	if err != nil {
-		return nil, err
-	}
-
-	coverService, err := getTestCoverService(dbMap)
-	if err != nil {
-		return nil, err
-	}
-
-	aspectService, err := getTestAspectService(dbMap)
-	if err != nil {
-		return nil, err
-	}
-
-	macroService, err := getTestMacroService(dbMap)
-	if err != nil {
-		return nil, err
-	}
-
-	mosaicService, err := getTestMosaicService(dbMap)
-	if err != nil {
-		return nil, err
-	}
+func setupMosaicServiceTest() {
+	setTestDbMap()
+	coverService := getTestCoverService()
+	aspectService := getTestAspectService()
+	macroService := getTestMacroService()
 
 	aspect = model.Aspect{Columns: 87, Rows: 128}
-	err = aspectService.Insert(&aspect)
+	err := aspectService.Insert(&aspect)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	cover = model.Cover{AspectId: aspect.Id, Type: "aspect", Width: 1, Height: 1, Num: 1}
 	err = coverService.Insert(&cover)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
 	macro = model.Macro{
@@ -54,17 +34,13 @@ func setupMosaicServiceTest() (MosaicService, error) {
 	}
 	err = macroService.Insert(&macro)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-
-	return mosaicService, nil
 }
 
 func TestMosaicServiceInsert(t *testing.T) {
-	mosaicService, err := setupMosaicServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMosaicServiceTest()
+	mosaicService := getTestMosaicService()
 	defer mosaicService.Close()
 
 	c1 := model.Mosaic{
@@ -72,7 +48,7 @@ func TestMosaicServiceInsert(t *testing.T) {
 		MacroId: macro.Id,
 	}
 
-	err = mosaicService.Insert(&c1)
+	err := mosaicService.Insert(&c1)
 	if err != nil {
 		t.Fatalf("Error inserting mosaic: %s\n", err.Error())
 	}
@@ -103,10 +79,8 @@ func TestMosaicServiceInsert(t *testing.T) {
 }
 
 func TestMosaicServiceGetOneBy(t *testing.T) {
-	mosaicService, err := setupMosaicServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMosaicServiceTest()
+	mosaicService := getTestMosaicService()
 	defer mosaicService.Close()
 
 	c1 := model.Mosaic{
@@ -114,7 +88,7 @@ func TestMosaicServiceGetOneBy(t *testing.T) {
 		Name:    "testme1",
 	}
 
-	err = mosaicService.Insert(&c1)
+	err := mosaicService.Insert(&c1)
 	if err != nil {
 		t.Fatalf("Error inserting mosaic: %s\n", err.Error())
 	}
@@ -135,10 +109,8 @@ func TestMosaicServiceGetOneBy(t *testing.T) {
 }
 
 func TestMosaicServiceGetOneByNot(t *testing.T) {
-	mosaicService, err := setupMosaicServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMosaicServiceTest()
+	mosaicService := getTestMosaicService()
 	defer mosaicService.Close()
 
 	c, err := mosaicService.GetOneBy("macro_id = ? and name = ?", int64(123), "not a valid name")
@@ -152,10 +124,8 @@ func TestMosaicServiceGetOneByNot(t *testing.T) {
 }
 
 func TestMosaicServiceFindAll(t *testing.T) {
-	mosaicService, err := setupMosaicServiceTest()
-	if err != nil {
-		t.Fatalf("Unable to setup database: %s\n", err.Error())
-	}
+	setupMosaicServiceTest()
+	mosaicService := getTestMosaicService()
 	defer mosaicService.Close()
 
 	c1 := model.Mosaic{
@@ -163,7 +133,7 @@ func TestMosaicServiceFindAll(t *testing.T) {
 		MacroId: macro.Id,
 	}
 
-	err = mosaicService.Insert(&c1)
+	err := mosaicService.Insert(&c1)
 	if err != nil {
 		t.Fatalf("Error inserting mosaic: %s\n", err.Error())
 	}
