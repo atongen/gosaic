@@ -120,7 +120,9 @@ func createGidxTable(db *sql.DB) error {
       width integer not null,
       height integer not null,
       orientation integer not null,
-			FOREIGN KEY(aspect_id) REFERENCES aspects(id) ON DELETE RESTRICT
+			FOREIGN KEY(aspect_id) REFERENCES aspects(id) ON DELETE RESTRICT,
+			CHECK(path <> ''),
+			CHECK(length(md5sum) = 32)
     );
   `
 	_, err := db.Exec(sql)
@@ -146,7 +148,7 @@ func createAspectTable(db *sql.DB) error {
 		return err
 	}
 
-	sql = "create unique index idx_aspects on aspects (rows,columns);"
+	sql = "create unique index idx_aspects on aspects (columns,rows);"
 	_, err = db.Exec(sql)
 	return err
 }
@@ -159,7 +161,8 @@ func createGidxPartialTable(db *sql.DB) error {
       aspect_id integer not null,
 			data blob not null,
 			FOREIGN KEY(gidx_id) REFERENCES gidx(id) ON DELETE CASCADE,
-			FOREIGN KEY(aspect_id) REFERENCES aspects(id) ON DELETE RESTRICT
+			FOREIGN KEY(aspect_id) REFERENCES aspects(id) ON DELETE RESTRICT,
+			CHECK(data <> '')
     );
   `
 	_, err := db.Exec(sql)
@@ -176,12 +179,12 @@ func createCoverTable(db *sql.DB) error {
 	sql := `
     create table covers (
       id integer not null primary key,
+			name text not null,
       aspect_id integer not null,
-			type text not null,
       width integer not null,
 			height integer not null,
-			num integer not null,
-			FOREIGN KEY(aspect_id) REFERENCES aspects(id) ON DELETE RESTRICT
+			FOREIGN KEY(aspect_id) REFERENCES aspects(id) ON DELETE RESTRICT,
+			CHECK(name <> '')
     );
   `
 	_, err := db.Exec(sql)
@@ -189,7 +192,7 @@ func createCoverTable(db *sql.DB) error {
 		return err
 	}
 
-	sql = "create index idx_covers on covers (aspect_id,type,width,height);"
+	sql = "create unique index idx_covers_key on covers (name);"
 	_, err = db.Exec(sql)
 	return err
 }
@@ -230,7 +233,9 @@ func createMacroTable(db *sql.DB) error {
       height integer not null,
       orientation integer not null,
 			FOREIGN KEY(aspect_id) REFERENCES aspects(id) ON DELETE RESTRICT,
-			FOREIGN KEY(cover_id) REFERENCES covers(id) ON DELETE RESTRICT
+			FOREIGN KEY(cover_id) REFERENCES covers(id) ON DELETE RESTRICT,
+			CHECK(path <> ''),
+			CHECK(length(md5sum) = 32)
     );
   `
 	_, err := db.Exec(sql)
@@ -253,7 +258,8 @@ func createMacroPartialTable(db *sql.DB) error {
 			data blob not null,
 			FOREIGN KEY(macro_id) REFERENCES macros(id) ON DELETE CASCADE,
 			FOREIGN KEY(cover_partial_id) REFERENCES cover_partials(id) ON DELETE CASCADE,
-			FOREIGN KEY(aspect_id) REFERENCES aspects(id) ON DELETE RESTRICT
+			FOREIGN KEY(aspect_id) REFERENCES aspects(id) ON DELETE RESTRICT,
+			CHECK(data <> '')
     );
   `
 	_, err := db.Exec(sql)
@@ -313,6 +319,7 @@ func createMosaicTable(db *sql.DB) error {
 			macro_id integer not null,
 			created_at timestamp default current_timestamp not null,
 			FOREIGN KEY(macro_id) REFERENCES macros (id) ON DELETE RESTRICT
+			CHECK(name <> '')
 		);
 	`
 	_, err := db.Exec(sql)

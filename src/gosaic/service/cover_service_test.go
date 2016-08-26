@@ -26,11 +26,10 @@ func TestCoverServiceInsert(t *testing.T) {
 
 	c1 := model.Cover{
 		AspectId: aspect.Id,
-		Type:     "test",
 		Width:    600,
 		Height:   400,
-		Num:      1,
 	}
+	c1.Name = model.CoverNameAspect(aspect.Id, 600, 400, 1)
 
 	err := coverService.Insert(&c1)
 	if err != nil {
@@ -49,8 +48,8 @@ func TestCoverServiceInsert(t *testing.T) {
 	}
 
 	if c1.Id != c2.Id ||
+		c1.Name != c2.Name ||
 		c1.AspectId != c2.AspectId ||
-		c1.Type != c2.Type ||
 		c1.Width != c2.Width ||
 		c1.Height != c2.Height {
 		t.Fatalf("Inserted cover (%+v) does not match: %+v\n", c2, c1)
@@ -63,12 +62,11 @@ func TestCoverServiceUpdate(t *testing.T) {
 	defer coverService.Close()
 
 	c1 := model.Cover{
-		Type:     "test",
 		AspectId: aspect.Id,
 		Width:    600,
 		Height:   400,
-		Num:      1,
 	}
+	c1.Name = model.CoverNameAspect(aspect.Id, 600, 400, 1)
 
 	err := coverService.Insert(&c1)
 	if err != nil {
@@ -97,12 +95,11 @@ func TestCoverServiceDelete(t *testing.T) {
 	defer coverService.Close()
 
 	c1 := model.Cover{
-		Type:     "test",
 		AspectId: aspect.Id,
 		Width:    600,
 		Height:   400,
-		Num:      1,
 	}
+	c1.Name = model.CoverNameAspect(aspect.Id, 600, 400, 1)
 
 	err := coverService.Insert(&c1)
 	if err != nil {
@@ -128,12 +125,11 @@ func TestCoverServiceGetOneBy(t *testing.T) {
 	defer coverService.Close()
 
 	c1 := model.Cover{
-		Type:     "test",
 		AspectId: aspect.Id,
 		Width:    600,
 		Height:   400,
-		Num:      1,
 	}
+	c1.Name = model.CoverNameAspect(aspect.Id, 600, 400, 1)
 
 	err := coverService.Insert(&c1)
 	if err != nil {
@@ -148,7 +144,7 @@ func TestCoverServiceGetOneBy(t *testing.T) {
 	}
 
 	if c1.Id != c2.Id ||
-		c1.Type != c2.Type ||
+		c1.Name != c2.Name ||
 		c1.AspectId != c2.AspectId ||
 		c1.Width != c2.Width ||
 		c1.Height != c2.Height {
@@ -162,9 +158,9 @@ func TestCoverServiceFindAll(t *testing.T) {
 	defer coverService.Close()
 
 	covers := []model.Cover{
-		model.Cover{Type: "test", AspectId: aspect.Id, Width: 600, Height: 400, Num: 1},
-		model.Cover{Type: "test", AspectId: aspect.Id, Width: 600, Height: 400, Num: 1},
-		model.Cover{Type: "test", AspectId: aspect.Id, Width: 600, Height: 400, Num: 1},
+		model.Cover{AspectId: aspect.Id, Width: 600, Height: 400, Name: "first"},
+		model.Cover{AspectId: aspect.Id, Width: 600, Height: 400, Name: "second"},
+		model.Cover{AspectId: aspect.Id, Width: 600, Height: 400, Name: "third"},
 	}
 
 	for _, cover := range covers {

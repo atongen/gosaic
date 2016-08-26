@@ -46,8 +46,8 @@ func CoverAspect(env environment.Environment, coverWidth, coverHeight, partialWi
 	}
 
 	var cover *model.Cover
-	cover, err = coverService.GetOneBy("aspect_id = ? and type = ? and width = ? and height = ? and num = ?",
-		coverAspect.Id, "aspect", coverWidth, coverHeight, num)
+	coverName := model.CoverNameAspect(coverAspect.Id, coverWidth, coverHeight, num)
+	cover, err = coverService.GetOneBy("name = ?", coverName)
 	if err != nil {
 		env.Printf("Error finding cover: %s\n", err.Error())
 		return nil
@@ -58,11 +58,10 @@ func CoverAspect(env environment.Environment, coverWidth, coverHeight, partialWi
 	}
 
 	cover = &model.Cover{
+		Name:     coverName,
 		AspectId: coverAspect.Id,
-		Type:     "aspect",
 		Width:    coverWidth,
 		Height:   coverHeight,
-		Num:      num,
 	}
 	err = coverService.Insert(cover)
 	if err != nil {
