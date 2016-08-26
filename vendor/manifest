@@ -8,18 +8,6 @@
 			"branch": "master"
 		},
 		{
-			"importpath": "github.com/Pallinder/go-randomdata",
-			"repository": "https://github.com/Pallinder/go-randomdata",
-			"revision": "104cc800bd6434e70cb0c3ad08c4541f4f2eb48b",
-			"branch": "master"
-		},
-		{
-			"importpath": "github.com/bluele/factory-go",
-			"repository": "https://github.com/bluele/factory-go",
-			"revision": "8a28e9752dbc744626695b749a3ab474b8b372fa",
-			"branch": "master"
-		},
-		{
 			"importpath": "github.com/cpuguy83/go-md2man/md2man",
 			"repository": "https://github.com/cpuguy83/go-md2man",
 			"revision": "2724a9c9051aa62e9cca11304e7dd518e9e41599",
