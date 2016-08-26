@@ -9,31 +9,20 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func setupAspectServiceTest() (AspectService, error) {
-	dbMap, err := getTestDbMap()
-	if err != nil {
-		return nil, err
-	}
-
-	aspectService, err := getTestAspectService(dbMap)
-	if err != nil {
-		return nil, err
-	}
+func setupAspectServiceTest() {
+	setTestDbMap()
+	aspectService := getTestAspectService()
 
 	aspect = model.Aspect{Columns: 1, Rows: 1}
-	err = aspectService.Insert(&aspect)
+	err := aspectService.Insert(&aspect)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-
-	return aspectService, nil
 }
 
 func TestAspectServiceGet(t *testing.T) {
-	aspectService, err := setupAspectServiceTest()
-	if err != nil {
-		t.Fatal("Unable to setup database.", err)
-	}
+	setupAspectServiceTest()
+	aspectService := getTestAspectService()
 	defer aspectService.Close()
 
 	aspect2, err := aspectService.Get(aspect.Id)
@@ -49,10 +38,8 @@ func TestAspectServiceGet(t *testing.T) {
 }
 
 func TestAspectServiceGetMissing(t *testing.T) {
-	aspectService, err := setupAspectServiceTest()
-	if err != nil {
-		t.Fatal("Unable to setup database.", err)
-	}
+	setupAspectServiceTest()
+	aspectService := getTestAspectService()
 	defer aspectService.Close()
 
 	aspect2, err := aspectService.Get(1234)
@@ -66,10 +53,8 @@ func TestAspectServiceGetMissing(t *testing.T) {
 }
 
 func TestAspectServiceFind(t *testing.T) {
-	aspectService, err := setupAspectServiceTest()
-	if err != nil {
-		t.Fatal("Unable to setup database.", err)
-	}
+	setupAspectServiceTest()
+	aspectService := getTestAspectService()
 	defer aspectService.Close()
 
 	a1, err := aspectService.Find(333, 333)
@@ -92,10 +77,8 @@ func TestAspectServiceFind(t *testing.T) {
 }
 
 func TestAspectServiceCreate(t *testing.T) {
-	aspectService, err := setupAspectServiceTest()
-	if err != nil {
-		t.Fatal("Unable to setup database.", err)
-	}
+	setupAspectServiceTest()
+	aspectService := getTestAspectService()
 	defer aspectService.Close()
 
 	a1, err := aspectService.Create(123, 234)
@@ -127,10 +110,8 @@ func TestAspectServiceCreate(t *testing.T) {
 }
 
 func TestAspectServiceFindOrCreate(t *testing.T) {
-	aspectService, err := setupAspectServiceTest()
-	if err != nil {
-		t.Fatal("Unable to setup database.", err)
-	}
+	setupAspectServiceTest()
+	aspectService := getTestAspectService()
 	defer aspectService.Close()
 
 	n1, err := aspectService.Count()
@@ -177,10 +158,8 @@ func TestAspectServiceFindOrCreate(t *testing.T) {
 }
 
 func TestAspectServiceFindIn(t *testing.T) {
-	aspectService, err := setupAspectServiceTest()
-	if err != nil {
-		t.Fatal("Unable to setup database.", err)
-	}
+	setupAspectServiceTest()
+	aspectService := getTestAspectService()
 	defer aspectService.Close()
 
 	a1, err := aspectService.FindOrCreate(20, 30)

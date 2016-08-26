@@ -13,6 +13,7 @@ var (
 	m           sync.Mutex
 	cachedDbMap *gorp.DbMap
 
+	// TODO: replace w/ factory
 	gidx          model.Gidx
 	gidxPartial   model.GidxPartial
 	aspect        model.Aspect
@@ -24,147 +25,152 @@ var (
 	mosaicPartial model.MosaicPartial
 )
 
-func getTestDbMap() (*gorp.DbMap, error) {
+func setTestDbMap() {
 	m.Lock()
 	defer m.Unlock()
 
-	return buildCachedTestDbMap()
+	_, err := buildTestDb()
+	if err != nil {
+		panic(err)
+	}
 }
 
-func getCachedTestDbMap() (*gorp.DbMap, error) {
+func getTestDbMap() {
 	m.Lock()
 	defer m.Unlock()
 
 	if cachedDbMap == nil {
-		return buildCachedTestDbMap()
+		_, err := buildTestDbMap()
+		if err != nil {
+			panic(err)
+		}
 	}
-	return cachedDbMap, nil
 }
 
-func buildCachedTestDbMap() (*gorp.DbMap, error) {
+func buildTestDbMap() error {
 	cachedDbMap = nil
 
 	db, err := sql.Open("sqlite3", ":memory:")
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	err = db.Ping()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	_, err = db.Exec("PRAGMA foreign_keys = ON;")
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	_, err = database.Migrate(db)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	cachedDbMap = &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
 
-	return cachedDbMap, nil
+	return nil
 }
 
-func getTestGidxService(dbMap *gorp.DbMap) (GidxService, error) {
-	gidxService := NewGidxService(dbMap)
+func getTestGidxService() GidxService {
+	gidxService := NewGidxService(getTestDbMap())
 	err := gidxService.Register()
 	if err != nil {
-		return nil, err
+		return panic(err)
 	}
 
-	return gidxService, nil
+	return gidxService
 }
 
-func getTestAspectService(dbMap *gorp.DbMap) (AspectService, error) {
-	aspectService := NewAspectService(dbMap)
+func getTestAspectService() AspectService {
+	aspectService := NewAspectService(getTestDbMap())
 	err := aspectService.Register()
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	return aspectService, nil
+	return aspectService
 }
 
-func getTestGidxPartialService(dbMap *gorp.DbMap) (GidxPartialService, error) {
-	gidxPartialService := NewGidxPartialService(dbMap)
+func getTestGidxPartialService() GidxPartialService {
+	gidxPartialService := NewGidxPartialService(getTestDbMap())
 	err := gidxPartialService.Register()
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	return gidxPartialService, nil
+	return gidxPartialService
 }
 
-func getTestCoverService(dbMap *gorp.DbMap) (CoverService, error) {
-	coverService := NewCoverService(dbMap)
+func getTestCoverService() CoverService {
+	coverService := NewCoverService(getTestDbMap())
 	err := coverService.Register()
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	return coverService, nil
+	return coverService
 }
 
-func getTestCoverPartialService(dbMap *gorp.DbMap) (CoverPartialService, error) {
-	coverPartialService := NewCoverPartialService(dbMap)
+func getTestCoverPartialService() CoverPartialService {
+	coverPartialService := NewCoverPartialService(getTestDbMap())
 	err := coverPartialService.Register()
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	return coverPartialService, nil
+	return coverPartialService
 }
 
-func getTestMacroService(dbMap *gorp.DbMap) (MacroService, error) {
-	macroService := NewMacroService(dbMap)
+func getTestMacroService() MacroService {
+	macroService := NewMacroService(getTestDbMap())
 	err := macroService.Register()
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	return macroService, nil
+	return macroService
 }
 
-func getTestMacroPartialService(dbMap *gorp.DbMap) (MacroPartialService, error) {
-	macroPartialService := NewMacroPartialService(dbMap)
+func getTestMacroPartialService() MacroPartialService {
+	macroPartialService := NewMacroPartialService(getTestDbMap())
 	err := macroPartialService.Register()
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	return macroPartialService, nil
+	return macroPartialService
 }
 
-func getTestPartialComparisonService(dbMap *gorp.DbMap) (PartialComparisonService, error) {
-	partialComparisonService := NewPartialComparisonService(dbMap)
+func getTestPartialComparisonService() PartialComparisonService {
+	partialComparisonService := NewPartialComparisonService(getTestDbMap())
 	err := partialComparisonService.Register()
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	return partialComparisonService, nil
+	return partialComparisonService
 }
 
-func getTestMosaicService(dbMap *gorp.DbMap) (MosaicService, error) {
-	mosaicService := NewMosaicService(dbMap)
+func getTestMosaicService() MosaicService {
+	mosaicService := NewMosaicService(getTestDbMap())
 	err := mosaicService.Register()
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	return mosaicService, nil
+	return mosaicService
 }
 
-func getTestMosaicPartialService(dbMap *gorp.DbMap) (MosaicPartialService, error) {
-	mosaicPartialService := NewMosaicPartialService(dbMap)
+func getTestMosaicPartialService() MosaicPartialService {
+	mosaicPartialService := NewMosaicPartialService(getTestDbMap())
 	err := mosaicPartialService.Register()
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	return mosaicPartialService, nil
+	return mosaicPartialService
 }
