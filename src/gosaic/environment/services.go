@@ -18,6 +18,7 @@ const (
 	PartialComparisonServiceName
 	MosaicServiceName
 	MosaicPartialServiceName
+	QuadDistServiceName
 )
 
 func (env *environment) getService(name ServiceName) (service.Service, error) {
@@ -52,6 +53,8 @@ func (env *environment) getService(name ServiceName) (service.Service, error) {
 		s = service.NewMosaicService(env.dbMap)
 	case MosaicPartialServiceName:
 		s = service.NewMosaicPartialService(env.dbMap)
+	case QuadDistServiceName:
+		s = service.NewQuadDistService(env.dbMap)
 	}
 	err := s.Register()
 	if err != nil {
@@ -199,4 +202,18 @@ func (env *environment) MosaicPartialService() (service.MosaicPartialService, er
 	}
 
 	return mosaicPartialService, nil
+}
+
+func (env *environment) QuadDistService() (service.QuadDistService, error) {
+	s, err := env.getService(QuadDistServiceName)
+	if err != nil {
+		return nil, err
+	}
+
+	quadDistService, ok := s.(service.QuadDistService)
+	if !ok {
+		return nil, fmt.Errorf("Invalid quad dist service")
+	}
+
+	return quadDistService, nil
 }

@@ -76,4 +76,9 @@ func TestServices(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error getting mosaicPartialService: %s\n", err.Error())
 	}
+
+	_, err = env.QuadDistService()
+	if err != nil {
+		t.Fatalf("Error getting quadDistService: %s\n", err.Error())
+	}
 }

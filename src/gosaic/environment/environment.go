@@ -39,6 +39,7 @@ type Environment interface {
 	PartialComparisonService() (service.PartialComparisonService, error)
 	MosaicService() (service.MosaicService, error)
 	MosaicPartialService() (service.MosaicPartialService, error)
+	QuadDistService() (service.QuadDistService, error)
 	DbPath() string
 	Workers() int
 	Log() *log.Logger

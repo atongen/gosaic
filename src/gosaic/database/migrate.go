@@ -18,6 +18,7 @@ var (
 		createPartialComparisonTable,
 		createMosaicTable,
 		createMosaicPartialTable,
+		createQuadDistTable,
 	}
 )
 
@@ -356,6 +357,31 @@ func createMosaicPartialTable(db *sql.DB) error {
 	}
 
 	sql = "create unique index idx_mosaic_macro_partials on mosaic_partials (mosaic_id,macro_partial_id);"
+	_, err = db.Exec(sql)
+	return err
+}
+
+func createQuadDistTable(db *sql.DB) error {
+	sql := `
+		create table quad_dists (
+			id integer not null primary key,
+			macro_partial_id integer not null,
+			dist real not null,
+			FOREIGN KEY(macro_partial_id) REFERENCES macro_partials(id) ON DELETE CASCADE
+		);
+	`
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	sql = "create unique index idx_quad_dists on quad_dists (macro_partial_id);"
+	_, err = db.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	sql = "create index idx_quad_dists_dist on quad_dists (macro_partial_id,dist);"
 	_, err = db.Exec(sql)
 	return err
 }
