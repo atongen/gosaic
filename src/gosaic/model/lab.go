@@ -14,7 +14,7 @@ type Lab struct {
 	Alpha float64 `json:"alpha"`
 }
 
-func (lab1 *Lab) dist(lab2 *Lab) float64 {
+func (lab1 *Lab) Dist(lab2 *Lab) float64 {
 	return math.Sqrt(sq(lab1.L-lab2.L) + sq(lab1.A-lab2.A) + sq(lab1.B-lab2.B))
 }
 

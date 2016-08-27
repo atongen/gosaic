@@ -1,6 +1,9 @@
 package model
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type Cover struct {
 	Id       int64  `db:"id"`
@@ -13,4 +16,9 @@ type Cover struct {
 func CoverNameAspect(aspectId int64, width, height, num int) string {
 	return fmt.Sprintf("type:aspect,aspectId:%d,width:%d,height:%d,num:%d",
 		aspectId, width, height, num)
+}
+
+func CoverNameQuad(aspectId int64, width, height, num int) string {
+	return fmt.Sprintf("type:quad,aspectId:%d,width:%d,height:%d,num:%d,ts:%d",
+		aspectId, width, height, num, time.Now().Unix())
 }

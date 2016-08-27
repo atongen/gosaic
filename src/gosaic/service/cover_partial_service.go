@@ -14,6 +14,7 @@ type CoverPartialService interface {
 	Get(int64) (*model.CoverPartial, error)
 	Insert(*model.CoverPartial) error
 	BulkInsert([]*model.CoverPartial) (int64, error)
+	Count(*model.Cover) (int64, error)
 	Update(*model.CoverPartial) error
 	Delete(*model.CoverPartial) error
 	FindAll(int64, string) ([]*model.CoverPartial, error)
@@ -94,6 +95,13 @@ func (s *coverPartialServiceImpl) BulkInsert(coverPartials []*model.CoverPartial
 	}
 
 	return rowsAffected, nil
+}
+
+func (s *coverPartialServiceImpl) Count(c *model.Cover) (int64, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	return s.dbMap.SelectInt("select count(*) from cover_partials where cover_id = ? limit 1", c.Id)
 }
 
 func (s *coverPartialServiceImpl) Update(c *model.CoverPartial) error {

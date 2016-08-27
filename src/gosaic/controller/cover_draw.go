@@ -8,7 +8,7 @@ import (
 	"github.com/fogleman/gg"
 )
 
-func CoverDraw(env environment.Environment, name, outPath string) {
+func CoverDraw(env environment.Environment, coverId int64, outPath string) {
 	coverService, err := env.CoverService()
 	if err != nil {
 		env.Printf("Error creating cover service: %s\n", err.Error())
@@ -21,12 +21,13 @@ func CoverDraw(env environment.Environment, name, outPath string) {
 		return
 	}
 
-	cover, err := coverService.GetOneBy("name", name)
+	cover, err := coverService.Get(coverId)
 	if err != nil {
 		env.Printf("Error getting cover: %s\n", err.Error())
 		return
 	} else if cover == nil {
-		env.Printf("Cover %s not found\n", name)
+		env.Println("Cover not found")
+		return
 	}
 
 	err = doCoverDraw(cover, outPath, coverPartialService)

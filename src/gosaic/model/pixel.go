@@ -45,7 +45,7 @@ func PixelDist(p1, p2 Pixel) (float64, error) {
 	for i := 0; i < len(p1.GetPixels()); i++ {
 		lab1 := p1.GetPixels()[i]
 		lab2 := p2.GetPixels()[i]
-		dist += lab1.dist(lab2)
+		dist += lab1.Dist(lab2)
 	}
 
 	return dist, nil

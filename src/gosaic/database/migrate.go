@@ -141,7 +141,9 @@ func createAspectTable(db *sql.DB) error {
     create table aspects (
       id integer not null primary key,
       columns integer not null,
-      rows integer not null
+      rows integer not null,
+			CHECK(columns > 0),
+			CHECK(rows > 0)
     );
   `
 	_, err := db.Exec(sql)
@@ -319,7 +321,7 @@ func createMosaicTable(db *sql.DB) error {
 			name text not null,
 			macro_id integer not null,
 			created_at timestamp default current_timestamp not null,
-			FOREIGN KEY(macro_id) REFERENCES macros (id) ON DELETE RESTRICT
+			FOREIGN KEY(macro_id) REFERENCES macros (id) ON DELETE CASCADE,
 			CHECK(name <> '')
 		);
 	`
@@ -340,8 +342,8 @@ func createMosaicPartialTable(db *sql.DB) error {
 			mosaic_id integer not null,
 			macro_partial_id integer not null,
 			gidx_partial_id integer not null,
-			FOREIGN KEY(mosaic_id) REFERENCES mosaics (id) ON DELETE RESTRICT,
-			FOREIGN KEY(macro_partial_id) REFERENCES macro_partials (id) ON DELETE RESTRICT,
+			FOREIGN KEY(mosaic_id) REFERENCES mosaics (id) ON DELETE CASCADE,
+			FOREIGN KEY(macro_partial_id) REFERENCES macro_partials (id) ON DELETE CASCADE,
 			FOREIGN KEY(gidx_partial_id) REFERENCES gidx_partials (id) ON DELETE CASCADE
 		);
 	`

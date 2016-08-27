@@ -133,16 +133,16 @@ func TestQuadDistServiceGetWorst(t *testing.T) {
 		t.Fatalf("Error inserting quad dist: %s\n", err.Error())
 	}
 
-	worst, err := quadDistService.GetWorst(&macro)
+	coverPartial, err := quadDistService.GetWorst(&macro)
 	if err != nil {
 		t.Fatalf("Error getting worst quad dist: %s\n", err.Error())
-	} else if worst == nil {
+	} else if coverPartial == nil {
 		t.Fatal("worst quad dist not found")
 	}
 
-	if worst.Id != pc2.Id ||
-		worst.MacroPartialId != pc2.MacroPartialId ||
-		worst.Dist != pc2.Dist {
-		t.Fatal("worst quad dist does not match")
+	// id 3 corresponds to 2nd macro partial
+	if coverPartial.Id != int64(3) {
+		t.Fatalf("Expected cover partial id 3 to be worst, got %d\n", coverPartial.Id)
 	}
+
 }

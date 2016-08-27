@@ -192,7 +192,7 @@ func processMacroPartials(macroPartialService service.MacroPartialService, img *
 
 	for _, coverPartial := range coverPartials {
 		sem <- true
-		go storeMacroPartial(img, macro, coverPartial, add, errs)
+		go storeMacroPartial(img, macro, coverPartial, add)
 	}
 
 	for i := 0; i < cap(sem); i++ {
@@ -203,18 +203,14 @@ func processMacroPartials(macroPartialService service.MacroPartialService, img *
 	close(sem)
 }
 
-func storeMacroPartial(img *image.Image, macro *model.Macro, coverPartial *model.CoverPartial, add chan<- *model.MacroPartial, errs chan<- error) {
+func storeMacroPartial(img *image.Image, macro *model.Macro, coverPartial *model.CoverPartial, add chan<- *model.MacroPartial) {
 	macroPartial := model.MacroPartial{
 		MacroId:        macro.Id,
 		CoverPartialId: coverPartial.Id,
 		AspectId:       coverPartial.AspectId,
 	}
 
-	pixels, err := util.GetImgPartialLab(img, coverPartial)
-	if err != nil {
-		errs <- err
-		return
-	}
+	pixels := util.GetImgPartialLab(img, coverPartial)
 	macroPartial.Pixels = pixels
 
 	add <- &macroPartial

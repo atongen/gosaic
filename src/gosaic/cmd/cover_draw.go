@@ -9,25 +9,25 @@ import (
 )
 
 var (
-	coverDrawOutPath string
+	coverDrawId int
 )
 
 func init() {
-	addLocalFlag(&coverDrawOutPath, "out", "o", "", "Path to write output file", CoverDrawCmd)
+	addLocalIntFlag(&coverDrawId, "cover-id", "", 0, "Id of cover to draw", CoverDrawCmd)
 	RootCmd.AddCommand(CoverDrawCmd)
 }
 
 var CoverDrawCmd = &cobra.Command{
-	Use:   "cover_draw NAME",
+	Use:   "cover_draw PATH",
 	Short: "Draw a cover image",
 	Long:  "Draw a cover image",
 	Run: func(c *cobra.Command, args []string) {
 		if len(args) != 1 {
-			Env.Fatalln("name is required")
+			Env.Fatalln("Path is required")
 		}
 
-		if coverDrawOutPath == "" {
-			Env.Fatalln("out path is required")
+		if coverDrawId == 0 {
+			Env.Fatalln("cover id is required")
 		}
 
 		err := Env.Init()
@@ -36,11 +36,11 @@ var CoverDrawCmd = &cobra.Command{
 		}
 		defer Env.Close()
 
-		ext := strings.ToLower(filepath.Ext(coverDrawOutPath))
+		ext := strings.ToLower(filepath.Ext(args[0]))
 		if ext != ".png" {
 			Env.Fatalf("Out path must be a .png file")
 		}
 
-		controller.CoverDraw(Env, args[0], coverDrawOutPath)
+		controller.CoverDraw(Env, int64(coverDrawId), args[0])
 	},
 }

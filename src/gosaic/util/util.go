@@ -184,10 +184,10 @@ func GetPartialLab(i model.Image, coverPartial *model.CoverPartial) ([]*model.La
 		}
 	}
 
-	return GetImgPartialLab(img, coverPartial)
+	return GetImgPartialLab(img, coverPartial), nil
 }
 
-func GetImgPartialLab(img *image.Image, coverPartial *model.CoverPartial) ([]*model.Lab, error) {
+func GetImgPartialLab(img *image.Image, coverPartial *model.CoverPartial) []*model.Lab {
 	cropImg := imaging.Crop((*img), coverPartial.Rectangle())
 	dataImg := imaging.Resize(cropImg, DATA_SIZE, DATA_SIZE, imaging.Lanczos)
 
@@ -200,7 +200,43 @@ func GetImgPartialLab(img *image.Image, coverPartial *model.CoverPartial) ([]*mo
 		}
 	}
 
-	return labs, nil
+	return labs
+}
+
+func GetImgAvgDist(img *image.Image, coverPartial *model.CoverPartial) float64 {
+	labs := GetImgPartialLab(img, coverPartial)
+	avgLab := LabAvg(labs)
+	dist := float64(0.0)
+	for _, lab := range labs {
+		dist += lab.Dist(avgLab)
+	}
+	return dist
+}
+
+func LabAvg(labs []*model.Lab) *model.Lab {
+	if len(labs) == 0 {
+		return &model.Lab{}
+	}
+
+	sL := float64(0.0)
+	sA := float64(0.0)
+	sB := float64(0.0)
+	sAlpha := float64(0.0)
+
+	for _, lab := range labs {
+		sL += lab.L
+		sA += lab.A
+		sB += lab.B
+		sAlpha += lab.Alpha
+	}
+
+	l := float64(len(labs))
+	return &model.Lab{
+		L:     sL / l,
+		A:     sA / l,
+		B:     sB / l,
+		Alpha: sAlpha / l,
+	}
 }
 
 func FillAspect(img *image.Image, aspect *model.Aspect) *image.Image {

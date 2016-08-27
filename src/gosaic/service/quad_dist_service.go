@@ -11,7 +11,7 @@ type QuadDistService interface {
 	Service
 	Get(int64) (*model.QuadDist, error)
 	Insert(*model.QuadDist) error
-	GetWorst(*model.Macro) (*model.QuadDist, error)
+	GetWorst(*model.Macro) (*model.CoverPartial, error)
 }
 
 type quadDistServiceImpl struct {
@@ -50,25 +50,23 @@ func (s *quadDistServiceImpl) Insert(pc *model.QuadDist) error {
 	return s.dbMap.Insert(pc)
 }
 
-func (s *quadDistServiceImpl) GetWorst(macro *model.Macro) (*model.QuadDist, error) {
+func (s *quadDistServiceImpl) GetWorst(macro *model.Macro) (*model.CoverPartial, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
 	sql := `
-		select qd.id,
-			qd.macro_partial_id,
-			qd.dist
+		select cop.*
 		from quad_dists qd
 		inner join macro_partials map
 			on qd.macro_partial_id = map.id
-		inner join macros m
-			on map.macro_id = m.id
-		where m.id = ?
+		inner join cover_partials cop
+			on map.cover_partial_id = cop.id
+		where map.macro_id = ?
 		order by qd.dist desc
 		limit 1
 	`
-	var quadDist model.QuadDist
-	err := s.dbMap.SelectOne(&quadDist, sql, macro.Id)
+	var coverPartial model.CoverPartial
+	err := s.dbMap.SelectOne(&coverPartial, sql, macro.Id)
 	if err != nil {
 		if err.Error() == "sql: no rows in result set" {
 			return nil, nil
@@ -77,5 +75,5 @@ func (s *quadDistServiceImpl) GetWorst(macro *model.Macro) (*model.QuadDist, err
 		}
 	}
 
-	return &quadDist, nil
+	return &coverPartial, nil
 }

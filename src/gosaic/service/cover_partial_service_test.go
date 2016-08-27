@@ -94,13 +94,13 @@ func TestCoverPartialServiceBulkInsert(t *testing.T) {
 		t.Fatalf("Expected bulk insert result to be 5, but got %d\n", num)
 	}
 
-	icps, err := coverPartialService.FindAll(cover.Id, "id asc")
+	num, err = coverPartialService.Count(&cover)
 	if err != nil {
 		t.Fatalf("Error finding bulk inserted cover partials: %s\n", err.Error())
 	}
 
-	if len(icps) != 5 {
-		t.Fatalf("Expected 5 bulk inserted cover partials, got %d\n", len(icps))
+	if num != 5 {
+		t.Fatalf("Expected 5 bulk inserted cover partials, got %d\n", num)
 	}
 }
 
@@ -159,6 +159,38 @@ func TestCoverPartialServiceDelete(t *testing.T) {
 	}
 
 	err = coverPartialService.Delete(&p1)
+	if err != nil {
+		t.Fatalf("Error deleting cover partial: %s\n", err.Error())
+	}
+
+	p2, err := coverPartialService.Get(p1.Id)
+	if err != nil {
+		t.Fatalf("Error getting cover partial: %s\n", err.Error())
+	} else if p2 != nil {
+		t.Fatalf("Cover partial not deleted")
+	}
+}
+
+func TestCoverPartialServiceDeleteId(t *testing.T) {
+	setupCoverPartialServiceTest()
+	coverPartialService := getTestCoverPartialService()
+	defer coverPartialService.Close()
+
+	p1 := model.CoverPartial{
+		CoverId:  cover.Id,
+		AspectId: aspect.Id,
+		X1:       0,
+		Y1:       0,
+		X2:       2,
+		Y2:       2,
+	}
+
+	err := coverPartialService.Insert(&p1)
+	if err != nil {
+		t.Fatalf("Error inserting cover partial: %s\n", err.Error())
+	}
+
+	err = coverPartialService.Delete(&model.CoverPartial{Id: p1.Id})
 	if err != nil {
 		t.Fatalf("Error deleting cover partial: %s\n", err.Error())
 	}
