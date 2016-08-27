@@ -5,9 +5,11 @@ import (
 	"gosaic/environment"
 	"gosaic/model"
 	"gosaic/service"
+	"gosaic/util"
 	"log"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 
 	"gopkg.in/cheggaaa/pb.v1"
@@ -96,7 +98,7 @@ func createMissingGidxIndexes(l *log.Logger, gidxPartialService service.GidxPart
 				return errors.New("Cancelled")
 			}
 
-			gidxs, err := gidxPartialService.FindMissing(aspect, "gidx.id ASC", 100, 0)
+			gidxs, err := gidxPartialService.FindMissing(aspect, "gidx.id ASC", 200, 0)
 			if err != nil {
 				return err
 			}
@@ -105,12 +107,14 @@ func createMissingGidxIndexes(l *log.Logger, gidxPartialService service.GidxPart
 				break
 			}
 
-			for _, gidx := range gidxs {
-				_, err := gidxPartialService.Create(gidx, aspect)
+			gidxPartials := buildGidxPartials(l, gidxs, aspect)
+
+			if len(gidxPartials) > 0 {
+				numCreated, err := gidxPartialService.BulkInsert(gidxPartials)
 				if err != nil {
 					return err
 				}
-				bar.Increment()
+				bar.Add(int(numCreated))
 			}
 		}
 	}
@@ -118,4 +122,64 @@ func createMissingGidxIndexes(l *log.Logger, gidxPartialService service.GidxPart
 	bar.Finish()
 
 	return nil
+}
+
+func buildGidxPartials(l *log.Logger, gidxs []*model.Gidx, aspect *model.Aspect) []*model.GidxPartial {
+	var wg sync.WaitGroup
+	wg.Add(len(gidxs))
+
+	gidxPartials := make([]*model.GidxPartial, len(gidxs))
+	add := make(chan *model.GidxPartial)
+	errs := make(chan error)
+
+	go func(myLog *log.Logger, gps []*model.GidxPartial, addCh chan *model.GidxPartial, errsCh chan error) {
+		idx := 0
+		for i := 0; i < len(gps); i++ {
+			select {
+			case gp := <-addCh:
+				gps[idx] = gp
+				idx++
+			case err := <-errsCh:
+				l.Printf("Error building index partial: %s\n", err.Error())
+			}
+			wg.Done()
+		}
+	}(l, gidxPartials, add, errs)
+
+	for _, gidx := range gidxs {
+		go func(g *model.Gidx, addCh chan *model.GidxPartial, errsCh chan error) {
+			gp, err := buildGidxPartial(g, aspect)
+			if err != nil {
+				errsCh <- err
+				return
+			}
+			addCh <- gp
+		}(gidx, add, errs)
+	}
+
+	wg.Wait()
+	close(add)
+	close(errs)
+
+	return gidxPartials
+}
+
+func buildGidxPartial(gidx *model.Gidx, aspect *model.Aspect) (*model.GidxPartial, error) {
+	p := model.GidxPartial{
+		GidxId:   gidx.Id,
+		AspectId: aspect.Id,
+	}
+
+	pixels, err := util.GetAspectLab(gidx, aspect)
+	if err != nil {
+		return nil, err
+	}
+	p.Pixels = pixels
+
+	err = p.EncodePixels()
+	if err != nil {
+		return nil, err
+	}
+
+	return &p, nil
 }

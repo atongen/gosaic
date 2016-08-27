@@ -87,6 +87,110 @@ func TestGidxPartialServiceInsert(t *testing.T) {
 	}
 }
 
+func TestGidxPartialServiceBulkInsert(t *testing.T) {
+	setupGidxPartialServiceTest()
+	gidxPartialService := getTestGidxPartialService()
+	aspectService := getTestAspectService()
+	defer gidxPartialService.Close()
+
+	aspect2, err := aspectService.FindOrCreate(5, 7)
+	if err != nil {
+		t.Fatalf("Failed to create 2nd aspect: %s\n", err.Error())
+	}
+
+	gidxPartials := []*model.GidxPartial{
+		&model.GidxPartial{
+			GidxId:   gidx.Id,
+			AspectId: aspect.Id,
+			Pixels: []*model.Lab{
+				&model.Lab{
+					L:     0.4,
+					A:     0.5,
+					B:     0.6,
+					Alpha: 0.0,
+				},
+			},
+		},
+		&model.GidxPartial{
+			GidxId:   gidx.Id,
+			AspectId: aspect2.Id,
+			Pixels: []*model.Lab{
+				&model.Lab{
+					L:     0.7,
+					A:     0.8,
+					B:     0.9,
+					Alpha: 0.1,
+				},
+			},
+		},
+	}
+
+	for _, gp := range gidxPartials {
+		err = gp.EncodePixels()
+		if err != nil {
+			t.Fatalf("Error encoding gidx partial pixels: %s\n", err.Error())
+		}
+	}
+
+	num, err := gidxPartialService.BulkInsert(gidxPartials)
+	if err != nil {
+		t.Fatalf("Error bulk inserting gidx partial: %s\n", err.Error())
+	}
+
+	if num != 2 {
+		t.Fatalf("Expected 2 bulk insert gidx partial, but got: %d\n", num)
+	}
+
+	found := make([]*model.GidxPartial, 2)
+	f0, err := gidxPartialService.Find(&gidx, &aspect)
+	if err != nil {
+		t.Fatalf("Error finding bulk inserted gidx partial: %s\n", err.Error())
+	}
+
+	f1, err := gidxPartialService.Find(&gidx, aspect2)
+	if err != nil {
+		t.Fatalf("Error finding bulk inserted gidx partial: %s\n", err.Error())
+	}
+	found[0] = f0
+	found[1] = f1
+
+	for i := 0; i < 2; i++ {
+		f := found[i]
+		// gp id is still zero
+		gp := gidxPartials[i]
+
+		if f.GidxId != gp.GidxId ||
+			f.AspectId != gp.AspectId {
+			t.Fatal("Bulk inserted gidx partial data does not match")
+		}
+
+		if len(f.Pixels) == 0 {
+			t.Fatal("Expected found bulk inserted gidx partial pixel data to have length greater than zero")
+		}
+
+		if len(f.Pixels) != len(gp.Pixels) {
+			t.Fatal("Found bulk inserted pixel data does not match")
+		}
+
+		lab1 := f.Pixels[0]
+		lab2 := gp.Pixels[0]
+
+		if lab1.L == 0.0 &&
+			lab1.A == 0.0 &&
+			lab1.B == 0.0 &&
+			lab1.Alpha == 0.0 {
+			t.Fatal("Bulk inserted gidx partial pixel data is empty")
+		}
+
+		if lab1.L != lab2.L &&
+			lab2.A != lab2.A &&
+			lab2.B != lab2.B &&
+			lab2.Alpha != lab2.Alpha {
+			t.Fatal("Bulk inserted gidx partial pixel data not match")
+		}
+	}
+}
+
 func TestGidxPartialServiceUpdate(t *testing.T) {
 	setupGidxPartialServiceTest()
 	gidxPartialService := getTestGidxPartialService()

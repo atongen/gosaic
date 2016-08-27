@@ -130,10 +130,10 @@ func GetAspectLab(i model.Image, aspect *model.Aspect) ([]*model.Lab, error) {
 		}
 	}
 
-	return GetImgAspectLab(img, i, aspect)
+	return GetImgAspectLab(img, i, aspect), nil
 }
 
-func GetImgAspectLab(img *image.Image, i model.Image, aspect *model.Aspect) ([]*model.Lab, error) {
+func GetImgAspectLab(img *image.Image, i model.Image, aspect *model.Aspect) []*model.Lab {
 	w, h := aspect.ScaleRound(int(i.GetWidth()), int(i.GetHeight()))
 
 	aspectImg := imaging.Fill((*img), w, h, imaging.Center, imaging.Lanczos)
@@ -148,7 +148,7 @@ func GetImgAspectLab(img *image.Image, i model.Image, aspect *model.Aspect) ([]*
 		}
 	}
 
-	return labs, nil
+	return labs
 }
 
 func GetImageCoverPartial(i model.Image, coverPartial *model.CoverPartial) (*image.Image, error) {

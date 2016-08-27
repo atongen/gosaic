@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"fmt"
 	"gosaic/model"
 	"gosaic/util"
@@ -12,6 +13,7 @@ import (
 type GidxPartialService interface {
 	Service
 	Insert(*model.GidxPartial) error
+	BulkInsert([]*model.GidxPartial) (int64, error)
 	Update(*model.GidxPartial) error
 	Delete(*model.GidxPartial) error
 	Get(int64) (*model.GidxPartial, error)
@@ -53,6 +55,44 @@ func (s *gidxPartialServiceImpl) Insert(gidxPartial *model.GidxPartial) error {
 		return err
 	}
 	return s.dbMap.Insert(gidxPartial)
+}
+
+func (s *gidxPartialServiceImpl) BulkInsert(gidxPartials []*model.GidxPartial) (int64, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	if len(gidxPartials) == 0 {
+		return int64(0), nil
+	} else if len(gidxPartials) == 1 {
+		err := s.dbMap.Insert(gidxPartials[0])
+		if err != nil {
+			return int64(0), err
+		}
+		return int64(1), nil
+	}
+
+	var b bytes.Buffer
+
+	b.WriteString("insert into gidx_partials (id, gidx_id, aspect_id, data) ")
+	b.WriteString(fmt.Sprintf("select null as id, %d as gidx_id, %d as aspect_id, '%s' as data",
+		gidxPartials[0].GidxId, gidxPartials[0].AspectId, gidxPartials[0].Data))
+
+	for i := 1; i < len(gidxPartials); i++ {
+		b.WriteString(fmt.Sprintf(" union select null, %d, %d, '%s'",
+			gidxPartials[i].GidxId, gidxPartials[i].AspectId, gidxPartials[i].Data))
+	}
+
+	res, err := s.dbMap.Db.Exec(b.String())
+	if err != nil {
+		return int64(0), err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return int64(0), err
+	}
+
+	return rowsAffected, nil
 }
 
 func (s *gidxPartialServiceImpl) Update(gidxPartial *model.GidxPartial) error {
