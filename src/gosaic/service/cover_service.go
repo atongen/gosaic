@@ -1,6 +1,7 @@
 package service
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"gosaic/model"
@@ -89,12 +90,12 @@ func (s *coverServiceImpl) GetOneBy(conditions string, params ...interface{}) (*
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	sql := fmt.Sprintf("select * from covers where %s limit 1", conditions)
+	sqlStr := fmt.Sprintf("select * from covers where %s limit 1", conditions)
 
 	var cover model.Cover
-	err := s.dbMap.SelectOne(&cover, sql, params...)
+	err := s.dbMap.SelectOne(&cover, sqlStr, params...)
 	if err != nil {
-		if err.Error() == "sql: no rows in result set" {
+		if err == sql.ErrNoRows {
 			return nil, nil
 		} else {
 			return nil, err

@@ -7,16 +7,20 @@ import (
 )
 
 var (
-	macroQuadWidth   int
-	macroQuadHeight  int
-	macroQuadNum     int
-	macroQuadOutfile string
+	macroQuadWidth    int
+	macroQuadHeight   int
+	macroQuadNum      int
+	macroQuadMaxDepth int
+	macroQuadMinArea  int
+	macroQuadOutfile  string
 )
 
 func init() {
 	addLocalIntFlag(&macroQuadWidth, "width", "", 0, "Pixel width of cover, 0 maintains aspect from height", MacroQuadCmd)
 	addLocalIntFlag(&macroQuadHeight, "height", "", 0, "Pixel height of cover, 0 maintains aspect from width", MacroQuadCmd)
 	addLocalIntFlag(&macroQuadNum, "num", "n", 0, "Number of times to subdivide the image into quads", MacroQuadCmd)
+	addLocalIntFlag(&macroQuadMaxDepth, "max-depth", "", 0, "Maximum depth of quad subdivisions", MacroQuadCmd)
+	addLocalIntFlag(&macroQuadMinArea, "min-area", "", 0, "Minimum area of quad subdivisions", MacroQuadCmd)
 	addLocalFlag(&macroQuadOutfile, "out", "", "", "File to write resized macro image", MacroQuadCmd)
 	RootCmd.AddCommand(MacroQuadCmd)
 }
@@ -42,18 +46,12 @@ var MacroQuadCmd = &cobra.Command{
 			Env.Fatalln("height must be greater than zero")
 		}
 
-		if macroQuadNum == 0 {
-			Env.Fatalln("num is required")
-		} else if macroQuadNum < 0 {
-			Env.Fatalln("num must be greater than zero")
-		}
-
 		err := Env.Init()
 		if err != nil {
 			Env.Fatalf("Unable to initialize environment: %s\n", err.Error())
 		}
 		defer Env.Close()
 
-		controller.MacroQuad(Env, args[0], macroQuadWidth, macroQuadHeight, macroQuadNum, macroQuadOutfile)
+		controller.MacroQuad(Env, args[0], macroQuadWidth, macroQuadHeight, macroQuadNum, macroQuadMaxDepth, macroQuadMinArea, macroQuadOutfile)
 	},
 }

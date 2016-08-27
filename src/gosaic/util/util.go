@@ -7,6 +7,7 @@ import (
 	"image"
 	_ "image/jpeg"
 	"io"
+	"math"
 	"os"
 
 	"github.com/disintegration/imaging"
@@ -264,4 +265,14 @@ func SliceContainsString(s []string, a string) bool {
 		}
 	}
 	return false
+}
+
+func Round(f float64) int {
+	var r float64
+	if f >= float64(0.0) {
+		r = math.Floor(f + 0.5)
+	} else {
+		r = math.Ceil(f - 0.5)
+	}
+	return int(r)
 }

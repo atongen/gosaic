@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"gosaic/model"
 	"sync"
@@ -400,7 +401,7 @@ func (s *partialComparisonServiceImpl) GetBestAvailable(mosaic *model.Mosaic) (*
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	sql := `
+	sqlStr := `
 		select pc.id,
 		pc.macro_partial_id,
 		pc.gidx_partial_id,
@@ -421,9 +422,9 @@ func (s *partialComparisonServiceImpl) GetBestAvailable(mosaic *model.Mosaic) (*
 
 	var partialComparison model.PartialComparison
 	// returns error on no results
-	err := s.dbMap.SelectOne(&partialComparison, sql, mosaic.MacroId, mosaic.Id)
+	err := s.dbMap.SelectOne(&partialComparison, sqlStr, mosaic.MacroId, mosaic.Id)
 	if err != nil {
-		if err.Error() == "sql: no rows in result set" {
+		if err == sql.ErrNoRows {
 			return nil, nil
 		} else {
 			return nil, err
@@ -437,7 +438,7 @@ func (s *partialComparisonServiceImpl) GetBestAvailableMax(mosaic *model.Mosaic,
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	sql := fmt.Sprintf(`
+	sqlStr := fmt.Sprintf(`
 		select pc.*
 		from partial_comparisons pc
 		join macro_partials map
@@ -466,9 +467,9 @@ func (s *partialComparisonServiceImpl) GetBestAvailableMax(mosaic *model.Mosaic,
 
 	var partialComparison model.PartialComparison
 	// returns error on no results
-	err := s.dbMap.SelectOne(&partialComparison, sql, mosaic.Id)
+	err := s.dbMap.SelectOne(&partialComparison, sqlStr, mosaic.Id)
 	if err != nil {
-		if err.Error() == "sql: no rows in result set" {
+		if err == sql.ErrNoRows {
 			return nil, nil
 		} else {
 			return nil, err

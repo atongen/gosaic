@@ -82,6 +82,8 @@ func TestQuadDistServiceInsert(t *testing.T) {
 
 	pc := model.QuadDist{
 		MacroPartialId: macroPartial.Id,
+		Depth:          10,
+		Area:           100,
 		Dist:           0.5,
 	}
 
@@ -103,6 +105,8 @@ func TestQuadDistServiceInsert(t *testing.T) {
 
 	if pc.Id != pc2.Id ||
 		pc.MacroPartialId != pc2.MacroPartialId ||
+		pc.Area != pc2.Area ||
+		pc.Depth != pc2.Depth ||
 		pc.Dist != pc2.Dist {
 		t.Fatal("Inserted macro partial data does not match")
 	}
@@ -115,6 +119,8 @@ func TestQuadDistServiceGetWorst(t *testing.T) {
 
 	pc1 := model.QuadDist{
 		MacroPartialId: int64(1),
+		Depth:          2,
+		Area:           10,
 		Dist:           0.4,
 	}
 
@@ -125,6 +131,8 @@ func TestQuadDistServiceGetWorst(t *testing.T) {
 
 	pc2 := model.QuadDist{
 		MacroPartialId: int64(2),
+		Depth:          2,
+		Area:           10,
 		Dist:           0.6,
 	}
 
@@ -133,16 +141,16 @@ func TestQuadDistServiceGetWorst(t *testing.T) {
 		t.Fatalf("Error inserting quad dist: %s\n", err.Error())
 	}
 
-	coverPartial, err := quadDistService.GetWorst(&macro)
+	coverPartialQuadView, err := quadDistService.GetWorst(&macro, 100, 0)
 	if err != nil {
 		t.Fatalf("Error getting worst quad dist: %s\n", err.Error())
-	} else if coverPartial == nil {
+	} else if coverPartialQuadView == nil {
 		t.Fatal("worst quad dist not found")
 	}
 
 	// id 3 corresponds to 2nd macro partial
-	if coverPartial.Id != int64(3) {
-		t.Fatalf("Expected cover partial id 3 to be worst, got %d\n", coverPartial.Id)
+	if coverPartialQuadView.CoverPartial.Id != int64(3) {
+		t.Fatalf("Expected cover partial id 3 to be worst, got %d\n", coverPartialQuadView.CoverPartial.Id)
 	}
 
 }

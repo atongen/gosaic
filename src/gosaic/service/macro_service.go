@@ -1,6 +1,7 @@
 package service
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"gosaic/model"
@@ -94,7 +95,7 @@ func (s *macroServiceImpl) GetOneBy(conditions string, params ...interface{}) (*
 
 	err := s.dbMap.SelectOne(&macro, fmt.Sprintf("select * from macros where %s limit 1", conditions), params...)
 	if err != nil {
-		if err.Error() == "sql: no rows in result set" {
+		if err == sql.ErrNoRows {
 			return nil, nil
 		} else {
 			return nil, err

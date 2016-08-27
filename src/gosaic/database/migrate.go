@@ -368,6 +368,8 @@ func createQuadDistTable(db *sql.DB) error {
 		create table quad_dists (
 			id integer not null primary key,
 			macro_partial_id integer not null,
+			depth integer not null,
+			area integer not null,
 			dist real not null,
 			FOREIGN KEY(macro_partial_id) REFERENCES macro_partials(id) ON DELETE CASCADE
 		);

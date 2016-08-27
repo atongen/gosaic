@@ -27,3 +27,7 @@ func (cp *CoverPartial) Width() int {
 func (cp *CoverPartial) Height() int {
 	return int(cp.Y2 - cp.Y1)
 }
+
+func (cp *CoverPartial) Area() int {
+	return cp.Width() * cp.Height()
+}

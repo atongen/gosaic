@@ -18,7 +18,7 @@ func CoverNameAspect(aspectId int64, width, height, num int) string {
 		aspectId, width, height, num)
 }
 
-func CoverNameQuad(aspectId int64, width, height, num int) string {
-	return fmt.Sprintf("type:quad,aspectId:%d,width:%d,height:%d,num:%d,ts:%d",
-		aspectId, width, height, num, time.Now().Unix())
+func CoverNameQuad(aspectId int64, width, height, num, maxDepth, minArea int) string {
+	return fmt.Sprintf("type:quad,aspectId:%d,width:%d,height:%d,num:%d,maxDepth:%d,minArea:%d,ts:%d",
+		aspectId, width, height, num, maxDepth, minArea, time.Now().Unix())
 }

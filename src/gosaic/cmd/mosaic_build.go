@@ -14,8 +14,8 @@ var (
 
 func init() {
 	addLocalIntFlag(&mosaicBuildMacroId, "macro_id", "", 0, "Id of macro to use to build mosaic", MosaicBuildCmd)
-	addLocalIntFlag(&maxRepeats, "max_repeats", "", 0, "Number of times an index image can be repeated in the mosaic, 0 indicates unlimited", MosaicBuildCmd)
-	addLocalFlag(&mosaicBuildType, "type", "", "best", "Mosaic build type, either 'best' or 'random'", MosaicBuildCmd)
+	addLocalIntFlag(&maxRepeats, "max_repeats", "", -1, "Number of times an index image can be repeated in the mosaic, 0 indicates unlimited, -1 is the minimum number", MosaicBuildCmd)
+	addLocalFlag(&mosaicBuildType, "type", "", "random", "Mosaic build type, either 'best' or 'random'", MosaicBuildCmd)
 	RootCmd.AddCommand(MosaicBuildCmd)
 }
 

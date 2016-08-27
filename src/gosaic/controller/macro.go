@@ -51,34 +51,36 @@ func Macro(env environment.Environment, path string, coverId int64, outfile stri
 		return nil
 	}
 
-	aspect, err := aspectService.Get(cover.AspectId)
+	macro, img, err := findOrCreateMacro(macroService, aspectService, cover, path, outfile)
+
+	err = buildMacroPartials(env.Log(), macroPartialService, img, macro, env.Workers())
 	if err != nil {
-		env.Printf("Error getting cover aspect: %s\n", err.Error())
+		env.Printf("Error creating macro: %s\n", err.Error())
 		return nil
 	}
 
+	return macro
+}
+
+func findOrCreateMacro(macroService service.MacroService, aspectService service.AspectService, cover *model.Cover, path, outfile string) (*model.Macro, *image.Image, error) {
 	md5sum, err := util.Md5sum(path)
 	if err != nil {
-		env.Printf("Error getting macro md5sum: %s\n", err.Error())
-		return nil
+		return nil, nil, err
 	}
 
 	img, err := util.OpenImage(path)
 	if err != nil {
-		env.Printf("Failed to open image: %s\n", err.Error())
-		return nil
+		return nil, nil, err
 	}
 
 	orientation, err := util.GetOrientation(path)
 	if err != nil {
-		env.Printf("Failed to get image orientation: %s\n", err.Error())
-		return nil
+		return nil, nil, err
 	}
 
 	err = util.FixOrientation(img, orientation)
 	if err != nil {
-		env.Printf("Failed to fix image orientation: %s\n", err.Error())
-		return nil
+		return nil, nil, err
 	}
 	bounds := (*img).Bounds()
 
@@ -88,18 +90,21 @@ func Macro(env environment.Environment, path string, coverId int64, outfile stri
 	if outfile != "" {
 		err = imaging.Save(imgCov, outfile)
 		if err != nil {
-			env.Printf("Error saving file: %s\n", err.Error())
-			return nil
+			return nil, nil, err
 		}
 	}
 
 	macro, err := macroService.GetOneBy("cover_id = ? AND md5sum = ?", cover.Id, md5sum)
 	if err != nil {
-		env.Printf("Error finding macro: %s\n", err.Error())
-		return nil
+		return nil, nil, err
 	}
 
 	if macro == nil {
+		aspect, err := aspectService.FindOrCreate(bounds.Max.X, bounds.Max.Y)
+		if err != nil {
+			return nil, nil, err
+		}
+
 		macro = &model.Macro{
 			AspectId:    aspect.Id,
 			CoverId:     cover.Id,
@@ -111,18 +116,11 @@ func Macro(env environment.Environment, path string, coverId int64, outfile stri
 		}
 		err = macroService.Insert(macro)
 		if err != nil {
-			env.Printf("Error creating macro: %s\n", err.Error())
-			return nil
+			return nil, nil, err
 		}
 	}
 
-	err = buildMacroPartials(env.Log(), macroPartialService, &imgCov, macro, env.Workers())
-	if err != nil {
-		env.Printf("Error creating macro: %s\n", err.Error())
-		return nil
-	}
-
-	return macro
+	return macro, &imgCov, nil
 }
 
 func buildMacroPartials(l *log.Logger, macroPartialService service.MacroPartialService, img *image.Image, macro *model.Macro, workers int) error {
