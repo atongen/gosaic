@@ -7,22 +7,23 @@ import (
 )
 
 var (
-	maxRepeats         int
-	mosaicBuildMacroId int
-	mosaicBuildType    string
+	mosaicBuildMaxRepeats int
+	mosaicBuildMacroId    int
+	mosaicBuildFillType   string
 )
 
 func init() {
-	addLocalIntFlag(&mosaicBuildMacroId, "macro_id", "", 0, "Id of macro to use to build mosaic", MosaicBuildCmd)
-	addLocalIntFlag(&maxRepeats, "max_repeats", "", -1, "Number of times an index image can be repeated in the mosaic, 0 indicates unlimited, -1 is the minimum number", MosaicBuildCmd)
-	addLocalFlag(&mosaicBuildType, "type", "", "random", "Mosaic build type, either 'best' or 'random'", MosaicBuildCmd)
+	addLocalIntFlag(&mosaicBuildMacroId, "macro-id", "", 0, "Id of macro to use to build mosaic", MosaicBuildCmd)
+	addLocalIntFlag(&mosaicBuildMaxRepeats, "max-repeats", "", -1, "Number of times an index image can be repeated in the mosaic, 0 indicates unlimited, -1 is the minimum number", MosaicBuildCmd)
+	addLocalStrFlag(&mosaicBuildFillType, "fill-type", "f", "random", "Mosaic build type, either 'best' or 'random'", MosaicBuildCmd)
 	RootCmd.AddCommand(MosaicBuildCmd)
 }
 
 var MosaicBuildCmd = &cobra.Command{
-	Use:   "mosaic_build NAME",
-	Short: "Build mosaic",
-	Long:  "Build mosaic",
+	Use:    "mosaic_build NAME",
+	Short:  "Build mosaic",
+	Long:   "Build mosaic",
+	Hidden: true,
 	Run: func(c *cobra.Command, args []string) {
 		if len(args) != 1 {
 			Env.Fatalln("Mosaic name is required")
@@ -36,7 +37,7 @@ var MosaicBuildCmd = &cobra.Command{
 			Env.Fatalln("Macro id is required")
 		}
 
-		if mosaicBuildType != "best" && mosaicBuildType != "random" {
+		if mosaicBuildFillType != "best" && mosaicBuildFillType != "random" {
 			Env.Fatalln("type must be either 'best' or 'random'")
 		}
 
@@ -46,6 +47,6 @@ var MosaicBuildCmd = &cobra.Command{
 		}
 		defer Env.Close()
 
-		controller.MosaicBuild(Env, args[0], mosaicBuildType, int64(mosaicBuildMacroId), maxRepeats)
+		controller.MosaicBuild(Env, args[0], mosaicBuildFillType, int64(mosaicBuildMacroId), mosaicBuildMaxRepeats)
 	},
 }

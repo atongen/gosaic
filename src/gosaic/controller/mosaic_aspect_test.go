@@ -8,29 +8,30 @@ import (
 	"testing"
 )
 
-func TestMosaic(t *testing.T) {
+func TestMosaicAspect(t *testing.T) {
 	env, out, err := setupControllerTest()
 	if err != nil {
 		t.Fatalf("Error getting test environment: %s\n", err.Error())
 	}
 	defer env.Close()
 
-	dir, err := ioutil.TempDir("", "gosaic_test_mosaic_draw")
+	dir, err := ioutil.TempDir("", "gosaic_test_mosaic_aspect")
 	if err != nil {
-		t.Fatal("Error getting temp dir for mosaic draw test: %s\n", err.Error())
+		t.Fatal("Error getting temp dir for mosaic aspect test: %s\n", err.Error())
 	}
 	defer os.RemoveAll(dir)
 
 	Index(env, []string{"testdata", "../service/testdata"})
 
-	mosaic := Mosaic(
+	mosaic := MosaicAspect(
 		env,
 		"testdata/jumping_bunny.jpg",
 		"Jumping Bunny",
 		"best",
 		1000, 1000, 3, 2, 10, -1,
-		filepath.Join(dir, "jumping_bunny_mosaic.jpg"),
+		filepath.Join(dir, "jumping_bunny_cover.png"),
 		filepath.Join(dir, "jumping_bunny_macro.jpg"),
+		filepath.Join(dir, "jumping_bunny_mosaic.jpg"),
 	)
 	if mosaic == nil {
 		t.Fatal("Failed to create mosaic")

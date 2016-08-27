@@ -11,9 +11,10 @@ func init() {
 }
 
 var MacroListCmd = &cobra.Command{
-	Use:   "macro_list",
-	Short: "List macro entries",
-	Long:  "List macro entries",
+	Use:    "macro_list",
+	Short:  "List macro entries",
+	Long:   "List macro entries",
+	Hidden: true,
 	Run: func(c *cobra.Command, args []string) {
 		err := Env.Init()
 		if err != nil {

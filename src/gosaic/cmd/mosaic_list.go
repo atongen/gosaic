@@ -11,9 +11,10 @@ func init() {
 }
 
 var MosaicListCmd = &cobra.Command{
-	Use:   "mosaic_list",
-	Short: "List mosaic entries",
-	Long:  "List mosaic entries",
+	Use:    "mosaic_list",
+	Short:  "List mosaic entries",
+	Long:   "List mosaic entries",
+	Hidden: true,
 	Run: func(c *cobra.Command, args []string) {
 		err := Env.Init()
 		if err != nil {

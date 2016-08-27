@@ -5,14 +5,14 @@ import (
 	"testing"
 )
 
-func TestMacroAspect(t *testing.T) {
+func TestMacroQuad(t *testing.T) {
 	env, out, err := setupControllerTest()
 	if err != nil {
 		t.Fatalf("Error getting test environment: %s\n", err.Error())
 	}
 	defer env.Close()
 
-	cover, macro := MacroAspect(env, "testdata/jumping_bunny.jpg", 1000, 1000, 2, 3, 10, "", "")
+	cover, macro := MacroQuad(env, "testdata/jumping_bunny.jpg", 1000, 1000, 10, 2, 250, "", "")
 	if cover == nil || macro == nil {
 		t.Fatal("Failed to create cover or macro")
 	}

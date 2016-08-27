@@ -12,15 +12,16 @@ var (
 )
 
 func init() {
-	addLocalIntFlag(&macroCoverId, "cover_id", "", 0, "Id of cover to use for macro", MacroCmd)
-	addLocalFlag(&macroOutfile, "out", "", "", "Outfile for resized macro image", MacroCmd)
+	addLocalIntFlag(&macroCoverId, "cover-id", "c", 0, "Id of cover to use for macro", MacroCmd)
+	addLocalStrFlag(&macroOutfile, "out", "o", "", "Outfile for resized macro image", MacroCmd)
 	RootCmd.AddCommand(MacroCmd)
 }
 
 var MacroCmd = &cobra.Command{
-	Use:   "macro PATH",
-	Short: "Add macro",
-	Long:  "Add macro",
+	Use:    "macro PATH",
+	Short:  "Add macro",
+	Long:   "Add macro",
+	Hidden: true,
 	Run: func(c *cobra.Command, args []string) {
 		if len(args) != 1 {
 			Env.Fatalln("Macro path is required")

@@ -11,9 +11,10 @@ func init() {
 }
 
 var CoverListCmd = &cobra.Command{
-	Use:   "cover_list",
-	Short: "List cover entries",
-	Long:  "List cover entries",
+	Use:    "cover_list",
+	Short:  "List cover entries",
+	Long:   "List cover entries",
+	Hidden: true,
 	Run: func(c *cobra.Command, args []string) {
 		err := Env.Init()
 		if err != nil {

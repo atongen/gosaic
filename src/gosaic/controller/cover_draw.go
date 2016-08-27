@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"gosaic/environment"
 	"gosaic/model"
 	"gosaic/service"
@@ -8,32 +9,30 @@ import (
 	"github.com/fogleman/gg"
 )
 
-func CoverDraw(env environment.Environment, coverId int64, outPath string) {
+func CoverDraw(env environment.Environment, coverId int64, outPath string) error {
 	coverService, err := env.CoverService()
 	if err != nil {
-		env.Printf("Error creating cover service: %s\n", err.Error())
-		return
+		return err
 	}
 
 	coverPartialService, err := env.CoverPartialService()
 	if err != nil {
-		env.Printf("Error creating cover partial service: %s\n", err.Error())
-		return
+		return err
 	}
 
 	cover, err := coverService.Get(coverId)
 	if err != nil {
-		env.Printf("Error getting cover: %s\n", err.Error())
-		return
+		return err
 	} else if cover == nil {
-		env.Println("Cover not found")
-		return
+		return errors.New("Cover not found")
 	}
 
 	err = doCoverDraw(cover, outPath, coverPartialService)
 	if err != nil {
-		env.Printf("Error drawing cover: %s\n", err.Error())
+		return err
 	}
+
+	return nil
 }
 
 func doCoverDraw(cover *model.Cover, outPath string, coverPartialService service.CoverPartialService) error {

@@ -16,17 +16,18 @@ var (
 )
 
 func init() {
-	addLocalIntFlag(&coverAspectWidth, "width", "", 0, "Pixel width of cover", CoverAspectCmd)
+	addLocalIntFlag(&coverAspectWidth, "width", "w", 0, "Pixel width of cover", CoverAspectCmd)
 	addLocalIntFlag(&coverAspectHeight, "height", "", 0, "Pixel height of cover", CoverAspectCmd)
-	addLocalFlag(&coverAspect, "aspect", "a", "1x1", "Aspect of cover partials (CxR)", CoverAspectCmd)
+	addLocalStrFlag(&coverAspect, "aspect", "a", "1x1", "Aspect of cover partials (CxR)", CoverAspectCmd)
 	addLocalIntFlag(&coverAspectSize, "size", "s", 0, "Number of partials in smallest dimension", CoverAspectCmd)
 	RootCmd.AddCommand(CoverAspectCmd)
 }
 
 var CoverAspectCmd = &cobra.Command{
-	Use:   "cover_aspect",
-	Short: "Create a aspect cover",
-	Long:  "Create a aspect cover",
+	Use:    "cover_aspect",
+	Short:  "Create a aspect cover",
+	Long:   "Create a aspect cover",
+	Hidden: true,
 	Run: func(c *cobra.Command, args []string) {
 		if coverAspectWidth == 0 {
 			Env.Fatalln("width is required")

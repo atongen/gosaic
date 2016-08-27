@@ -1,59 +1,89 @@
 package controller
 
 import (
+	"errors"
 	"gosaic/environment"
 	"gosaic/model"
 	"gosaic/util"
 	"os"
+	"os/signal"
+	"syscall"
+
+	"gopkg.in/cheggaaa/pb.v1"
 )
 
-func IndexClean(env environment.Environment) {
+func IndexClean(env environment.Environment) (int, error) {
+	num := 0
+
 	gidxService, err := env.GidxService()
 	if err != nil {
-		env.Printf("Error getting index service: %s\n", err.Error())
-		return
+		return num, err
 	}
 
-	batchSize := 1000
+	count, err := gidxService.Count()
+	if err != nil {
+		return num, err
+	}
 
+	if count == 0 {
+		return num, nil
+	}
+
+	env.Printf("Checking %d images...\n", count)
+
+	bar := pb.StartNew(int(count))
+
+	batchSize := 1000
 	toRm := []*model.Gidx{}
 
+	cancel := false
+	c := make(chan os.Signal, 2)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		cancel = true
+	}()
+
 	for i := 0; ; i++ {
+		if cancel {
+			return num, errors.New("Cancelled")
+		}
+
 		gidxs, err := gidxService.FindAll("gidx.id", batchSize, batchSize*i)
 		if err != nil {
-			env.Printf("Error finding indexes: %s\n", err.Error())
-			return
+			return num, err
 		}
 		if len(gidxs) == 0 {
 			// we are done
-			return
+			return num, nil
 		}
 
 		for _, gidx := range gidxs {
 			rm, err := shouldRmGidx(gidx)
 			if err != nil {
-				env.Printf("Error checking index: %s\n", err.Error())
+				return num, err
 			} else if rm {
 				toRm = append(toRm, gidx)
 			}
+			bar.Increment()
 		}
 	}
 
 	if len(toRm) == 0 {
-		env.Printf("No indexes deleted")
-	} else {
-		num := 0
-		for _, gidx := range toRm {
-			_, err := gidxService.Delete(gidx)
-			if err != nil {
-				env.Printf("Error deleting indexes: %s\n", err.Error())
-			}
-			num++
-		}
-		if num > 0 {
-			env.Printf("Deleted %s indexes\n", num)
-		}
+		return num, nil
 	}
+
+	for _, gidx := range toRm {
+		_, err := gidxService.Delete(gidx)
+		if err != nil {
+			return num, err
+		}
+		num++
+	}
+
+	bar.Finish()
+
+	return num, nil
 }
 
 func shouldRmGidx(gidx *model.Gidx) (bool, error) {

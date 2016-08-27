@@ -11,14 +11,15 @@ var (
 )
 
 func init() {
-	addLocalIntFlag(&partialAspectMacroId, "macro_id", "", 0, "Id of macro to build partials", PartialAspectCmd)
+	addLocalIntFlag(&partialAspectMacroId, "macro-id", "", 0, "Id of macro to build partials", PartialAspectCmd)
 	RootCmd.AddCommand(PartialAspectCmd)
 }
 
 var PartialAspectCmd = &cobra.Command{
-	Use:   "partial_aspect",
-	Short: "Build partial aspects for indexed images",
-	Long:  "Build partial aspects for indexed images",
+	Use:    "partial_aspect",
+	Short:  "Build partial aspects for indexed images",
+	Long:   "Build partial aspects for indexed images",
+	Hidden: true,
 	Run: func(c *cobra.Command, args []string) {
 		err := Env.Init()
 		if err != nil {

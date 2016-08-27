@@ -9,26 +9,29 @@ import (
 )
 
 var (
-	macroAspectWidth   int
-	macroAspectHeight  int
-	macroAspect        string
-	macroAspectSize    int
-	macroAspectOutfile string
+	macroAspectWidth        int
+	macroAspectHeight       int
+	macroAspect             string
+	macroAspectSize         int
+	macroAspectCoverOutfile string
+	macroAspectMacroOutfile string
 )
 
 func init() {
-	addLocalIntFlag(&macroAspectWidth, "width", "", 0, "Pixel width of cover, 0 maintains aspect from height", MacroAspectCmd)
+	addLocalIntFlag(&macroAspectWidth, "width", "w", 0, "Pixel width of cover, 0 maintains aspect from height", MacroAspectCmd)
 	addLocalIntFlag(&macroAspectHeight, "height", "", 0, "Pixel height of cover, 0 maintains aspect from width", MacroAspectCmd)
-	addLocalFlag(&macroAspect, "aspect", "a", "1x1", "Aspect of cover partials (CxR)", MacroAspectCmd)
+	addLocalStrFlag(&macroAspect, "aspect", "a", "1x1", "Aspect of cover partials (CxR)", MacroAspectCmd)
 	addLocalIntFlag(&macroAspectSize, "size", "s", 0, "Number of partials in smallest dimension", MacroAspectCmd)
-	addLocalFlag(&macroAspectOutfile, "out", "", "", "File to write resized macro image", MacroAspectCmd)
+	addLocalStrFlag(&macroAspectCoverOutfile, "cover-out", "", "", "File to write resized macro image", MacroAspectCmd)
+	addLocalStrFlag(&macroAspectMacroOutfile, "out", "o", "", "File to write resized macro image", MacroAspectCmd)
 	RootCmd.AddCommand(MacroAspectCmd)
 }
 
 var MacroAspectCmd = &cobra.Command{
-	Use:   "macro_aspect PATH",
-	Short: "Add cover aspect and macro",
-	Long:  "Add cover aspect and macro",
+	Use:    "macro_aspect PATH",
+	Short:  "Add cover aspect and macro",
+	Long:   "Add cover aspect and macro",
+	Hidden: true,
 	Run: func(c *cobra.Command, args []string) {
 		if len(args) != 1 {
 			Env.Fatalln("PATH is required")
@@ -89,6 +92,6 @@ var MacroAspectCmd = &cobra.Command{
 		}
 		defer Env.Close()
 
-		controller.MacroAspect(Env, args[0], macroAspectWidth, macroAspectHeight, aw, ah, macroAspectSize, macroAspectOutfile)
+		controller.MacroAspect(Env, args[0], macroAspectWidth, macroAspectHeight, aw, ah, macroAspectSize, macroAspectCoverOutfile, macroAspectMacroOutfile)
 	},
 }

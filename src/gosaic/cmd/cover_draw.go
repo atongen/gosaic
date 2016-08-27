@@ -18,9 +18,10 @@ func init() {
 }
 
 var CoverDrawCmd = &cobra.Command{
-	Use:   "cover_draw PATH",
-	Short: "Draw a cover image",
-	Long:  "Draw a cover image",
+	Use:    "cover_draw PATH",
+	Short:  "Draw a cover image",
+	Long:   "Draw a cover image",
+	Hidden: true,
 	Run: func(c *cobra.Command, args []string) {
 		if len(args) != 1 {
 			Env.Fatalln("Path is required")

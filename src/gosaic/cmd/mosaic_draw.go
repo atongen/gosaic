@@ -7,18 +7,19 @@ import (
 )
 
 var (
-	mosaicId int
+	mosaicDrawMosaicId int
 )
 
 func init() {
-	addLocalIntFlag(&mosaicId, "mosaic_id", "", 0, "Id of mosaic to draw", MosaicDrawCmd)
+	addLocalIntFlag(&mosaicDrawMosaicId, "mosaic-id", "", 0, "Id of mosaic to draw", MosaicDrawCmd)
 	RootCmd.AddCommand(MosaicDrawCmd)
 }
 
 var MosaicDrawCmd = &cobra.Command{
-	Use:   "mosaic_draw OUTFILE",
-	Short: "Draw mosaic",
-	Long:  "Draw mosaic",
+	Use:    "mosaic_draw OUTFILE",
+	Short:  "Draw mosaic",
+	Long:   "Draw mosaic",
+	Hidden: true,
 	Run: func(c *cobra.Command, args []string) {
 		if len(args) != 1 {
 			Env.Fatalln("Mosaic out file is required")
@@ -28,7 +29,7 @@ var MosaicDrawCmd = &cobra.Command{
 			Env.Fatalln("Mosaic out file is required")
 		}
 
-		if mosaicId == 0 {
+		if mosaicDrawMosaicId == 0 {
 			Env.Fatalln("Mosaic id is required")
 		}
 
@@ -38,6 +39,6 @@ var MosaicDrawCmd = &cobra.Command{
 		}
 		defer Env.Close()
 
-		controller.MosaicDraw(Env, int64(mosaicId), args[0])
+		controller.MosaicDraw(Env, int64(mosaicDrawMosaicId), args[0])
 	},
 }

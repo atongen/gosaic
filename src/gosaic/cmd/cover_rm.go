@@ -11,9 +11,10 @@ func init() {
 }
 
 var CoverRmCmd = &cobra.Command{
-	Use:   "cover_rm NAMES...",
-	Short: "Remove cover entries",
-	Long:  "Remove cover entries",
+	Use:    "cover_rm NAMES...",
+	Short:  "Remove cover entries",
+	Long:   "Remove cover entries",
+	Hidden: true,
 	Run: func(c *cobra.Command, args []string) {
 		err := Env.Init()
 		if err != nil {

@@ -2,11 +2,10 @@ package controller
 
 import "gosaic/environment"
 
-func IndexList(env environment.Environment) {
+func IndexList(env environment.Environment) error {
 	gidxService, err := env.GidxService()
 	if err != nil {
-		env.Printf("Error getting index service: %s\n", err.Error())
-		return
+		return err
 	}
 
 	batchSize := 1000
@@ -14,16 +13,17 @@ func IndexList(env environment.Environment) {
 	for i := 0; ; i++ {
 		gidxs, err := gidxService.FindAll("gidx.path ASC", batchSize, batchSize*i)
 		if err != nil {
-			env.Printf("Error finding indexes: %s\n", err.Error())
-			return
+			return err
 		}
 		if len(gidxs) == 0 {
 			// we are done
-			return
+			return nil
 		}
 
 		for _, gidx := range gidxs {
 			env.Println(gidx.Path)
 		}
 	}
+
+	return nil
 }

@@ -56,6 +56,18 @@ func calculateDimensions(aspectService service.AspectService, path string, width
 		return 0, 0, err
 	}
 
+	return calculateDimensionsFromAspect(aspect, width, height)
+}
+
+func calculateDimensionsFromAspect(aspect *model.Aspect, width, height int) (int, int, error) {
+	if width < 0 || height < 0 {
+		return 0, 0, errors.New("Width and height must be greater than or equal to zero")
+	}
+
+	if width > 0 && height > 0 {
+		return width, height, nil
+	}
+
 	var cWidth, cHeight int
 
 	if width == 0 {

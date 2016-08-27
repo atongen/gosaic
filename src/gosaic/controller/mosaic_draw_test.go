@@ -26,7 +26,7 @@ func TestMosaicDraw(t *testing.T) {
 		t.Fatalf("Error indexing images: %s\n", err.Error())
 	}
 
-	cover, macro := MacroAspect(env, "testdata/jumping_bunny.jpg", 1000, 1000, 2, 3, 10, "")
+	cover, macro := MacroAspect(env, "testdata/jumping_bunny.jpg", 1000, 1000, 2, 3, 10, "", "")
 	if cover == nil || macro == nil {
 		t.Fatal("Failed to create cover or macro")
 	}

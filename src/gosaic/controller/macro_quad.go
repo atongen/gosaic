@@ -16,7 +16,11 @@ import (
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
-func MacroQuad(env environment.Environment, path string, coverWidth, coverHeight, num, maxDepth, minArea int, outfile string) (*model.Cover, *model.Macro) {
+func MacroQuad(env environment.Environment,
+	path string,
+	coverWidth, coverHeight, num, maxDepth, minArea int,
+	coverOutfile, macroOutfile string) (*model.Cover, *model.Macro) {
+
 	aspectService, err := env.AspectService()
 	if err != nil {
 		env.Printf("Error getting aspect service: %s\n", err.Error())
@@ -67,7 +71,7 @@ func MacroQuad(env environment.Environment, path string, coverWidth, coverHeight
 		return nil, nil
 	}
 
-	macro, img, err := findOrCreateMacro(macroService, aspectService, cover, path, outfile)
+	macro, img, err := findOrCreateMacro(macroService, aspectService, cover, path, macroOutfile)
 	if err != nil {
 		env.Printf("Error building macro: %s\n", err.Error())
 		coverService.Delete(cover)
@@ -79,6 +83,14 @@ func MacroQuad(env environment.Environment, path string, coverWidth, coverHeight
 		env.Printf("Error building quad partials: %s\n", err.Error())
 		coverService.Delete(cover)
 		return nil, nil
+	}
+
+	if coverOutfile != "" {
+		err = CoverDraw(env, cover.Id, coverOutfile)
+		if err != nil {
+			env.Printf("Error drawing cover: %s\n", err.Error())
+			return cover, nil
+		}
 	}
 
 	return cover, macro
