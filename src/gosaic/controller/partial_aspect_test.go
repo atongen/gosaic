@@ -1,9 +1,6 @@
 package controller
 
-import (
-	"strings"
-	"testing"
-)
+import "testing"
 
 func TestPartialAspect(t *testing.T) {
 	env, out, err := setupControllerTest()
@@ -27,20 +24,9 @@ func TestPartialAspect(t *testing.T) {
 		t.Fatalf("Error building partial aspects: %s\n", err.Error())
 	}
 
-	result := out.String()
 	expect := []string{
 		"Building 4 indexed image partials...",
 	}
 
-	for _, e := range expect {
-		if !strings.Contains(result, e) {
-			t.Fatalf("Expected result to contain '%s', but it did not", e)
-		}
-	}
-
-	for _, ne := range []string{"fail", "error"} {
-		if strings.Contains(strings.ToLower(result), ne) {
-			t.Fatalf("Did not expect result to contain: %s, but it did\n", ne)
-		}
-	}
+	testResultExpect(t, out.String(), expect)
 }

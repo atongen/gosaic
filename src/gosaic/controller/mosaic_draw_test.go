@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"testing"
 )
 
@@ -51,20 +50,9 @@ func TestMosaicDraw(t *testing.T) {
 		t.Fatalf("Error drawing mosaic: %s\n", err.Error())
 	}
 
-	result := out.String()
 	expect := []string{
 		"Drawing 150 mosaic partials...",
 	}
 
-	for _, e := range expect {
-		if !strings.Contains(result, e) {
-			t.Fatalf("Expected result to contain '%s', but it did not\n", e)
-		}
-	}
-
-	for _, ne := range []string{"fail", "error"} {
-		if strings.Contains(strings.ToLower(result), ne) {
-			t.Fatalf("Did not expect result to contain: %s, but it did\n", ne)
-		}
-	}
+	testResultExpect(t, out.String(), expect)
 }

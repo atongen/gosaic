@@ -3,6 +3,8 @@ package controller
 import (
 	"bytes"
 	"gosaic/environment"
+	"strings"
+	"testing"
 )
 
 func setupControllerTest() (environment.Environment, *bytes.Buffer, error) {
@@ -18,4 +20,18 @@ func setupControllerTest() (environment.Environment, *bytes.Buffer, error) {
 	}
 
 	return env, &out, nil
+}
+
+func testResultExpect(t *testing.T, result string, expect []string) {
+	for _, e := range expect {
+		if !strings.Contains(result, e) {
+			t.Fatalf("Expected result to contain '%s', but it did not:\n%s\n", e, result)
+		}
+	}
+
+	for _, ne := range []string{"fail", "error"} {
+		if strings.Contains(strings.ToLower(result), ne) {
+			t.Fatalf("Did not expect result to contain: %s, but it did:\n%s\n", ne, result)
+		}
+	}
 }

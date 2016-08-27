@@ -37,22 +37,11 @@ func TestMosaicBuildRandom(t *testing.T) {
 		t.Fatal("Failed to build mosaic")
 	}
 
-	result := out.String()
 	expect := []string{
 		"Building 150 mosaic partials...",
 	}
 
-	for _, e := range expect {
-		if !strings.Contains(result, e) {
-			t.Fatalf("Expected result to contain '%s', but it did not\n", e)
-		}
-	}
-
-	for _, ne := range []string{"fail", "error"} {
-		if strings.Contains(strings.ToLower(result), ne) {
-			t.Fatalf("Did not expect result to contain: %s, but it did\n", ne)
-		}
-	}
+	testResultExpect(t, out.String(), expect)
 }
 
 func TestMosaicBuildBest(t *testing.T) {

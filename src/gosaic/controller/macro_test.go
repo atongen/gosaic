@@ -1,9 +1,6 @@
 package controller
 
-import (
-	"strings"
-	"testing"
-)
+import "testing"
 
 func TestMacro(t *testing.T) {
 	env, out, err := setupControllerTest()
@@ -27,16 +24,11 @@ func TestMacro(t *testing.T) {
 		t.Fatal("Failed to create macro")
 	}
 
-	result := out.String()
 	expect := []string{
 		"Building 160 macro partials...",
 	}
 
-	for _, e := range expect {
-		if !strings.Contains(result, e) {
-			t.Fatalf("Expected result to contain '%s', but it did not", e)
-		}
-	}
+	testResultExpect(t, out.String(), expect)
 
 	macroPartials, err := macroPartialService.FindAll("id DESC", 1000, 0, "macro_id = ?", macro.Id)
 	if err != nil {
@@ -59,12 +51,6 @@ func TestMacro(t *testing.T) {
 				lab.Alpha == 0.0 {
 				t.Fatal("macro partial pixel lab is empty")
 			}
-		}
-	}
-
-	for _, ne := range []string{"fail", "error"} {
-		if strings.Contains(strings.ToLower(result), ne) {
-			t.Fatalf("Did not expect result to contain: %s, but it did\n", ne)
 		}
 	}
 }
