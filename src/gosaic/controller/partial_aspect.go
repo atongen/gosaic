@@ -89,7 +89,6 @@ func createMissingGidxIndexes(l *log.Logger, gidxPartialService service.GidxPart
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
-		l.Println("Caught sigterm signal. Please wait to stop cleanly...")
 		cancel = true
 	}()
 
