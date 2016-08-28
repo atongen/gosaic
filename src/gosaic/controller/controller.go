@@ -1,21 +1,20 @@
 package controller
 
 import (
-	"errors"
 	"gosaic/model"
 	"gosaic/service"
 	"gosaic/util"
 )
 
-func getImageAspect(path string, aspectService service.AspectService) (*model.Aspect, error) {
+func getImageDimensions(aspectService service.AspectService, path string) (*model.Aspect, int, int, error) {
 	img, err := util.OpenImage(path)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 
 	orientation, err := util.GetOrientation(path)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 
 	swap := false
@@ -36,36 +35,31 @@ func getImageAspect(path string, aspectService service.AspectService) (*model.As
 
 	aspect, err := aspectService.FindOrCreate(width, height)
 	if err != nil {
-		return nil, err
+		return nil, 0, 0, err
 	}
 
-	return aspect, nil
+	return aspect, width, height, nil
 }
 
-func calculateDimensions(aspectService service.AspectService, path string, width, height int) (int, int, error) {
-	if width < 0 || height < 0 {
-		return 0, 0, errors.New("Width and height must be greater than or equal to zero")
+func calculateDimensions(aspectService service.AspectService, path string, targetWidth, targetHeight int) (int, int, error) {
+	if targetWidth > 0 && targetHeight > 0 {
+		return targetWidth, targetHeight, nil
 	}
 
-	if width > 0 && height > 0 {
-		return width, height, nil
-	}
-
-	aspect, err := getImageAspect(path, aspectService)
+	aspect, width, height, err := getImageDimensions(aspectService, path)
 	if err != nil {
 		return 0, 0, err
 	}
 
-	return calculateDimensionsFromAspect(aspect, width, height)
+	cWidth, cHeight := calculateDimensionsFromAspect(aspect, targetWidth, targetHeight, width, height)
+	return cWidth, cHeight, nil
 }
 
-func calculateDimensionsFromAspect(aspect *model.Aspect, width, height int) (int, int, error) {
-	if width < 0 || height < 0 {
-		return 0, 0, errors.New("Width and height must be greater than or equal to zero")
-	}
-
+func calculateDimensionsFromAspect(aspect *model.Aspect, width, height, baseWidth, baseHeight int) (int, int) {
 	if width > 0 && height > 0 {
-		return width, height, nil
+		return width, height
+	} else if width <= 0 && height <= 0 {
+		return baseWidth, baseHeight
 	}
 
 	var cWidth, cHeight int
@@ -82,5 +76,5 @@ func calculateDimensionsFromAspect(aspect *model.Aspect, width, height int) (int
 		cHeight = height
 	}
 
-	return cWidth, cHeight, nil
+	return cWidth, cHeight
 }

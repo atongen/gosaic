@@ -9,7 +9,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 
 	"gopkg.in/cheggaaa/pb.v1"
@@ -62,7 +61,7 @@ func PartialAspect(env environment.Environment, macroId int64) error {
 		return err
 	}
 
-	err = createMissingGidxIndexes(env.Log(), gidxPartialService, aspects)
+	err = createMissingGidxIndexes(env.Log(), gidxPartialService, aspects, env.Workers())
 	if err != nil {
 		env.Printf("Error creating index aspects: %s\n", err.Error())
 		return err
@@ -71,7 +70,7 @@ func PartialAspect(env environment.Environment, macroId int64) error {
 	return nil
 }
 
-func createMissingGidxIndexes(l *log.Logger, gidxPartialService service.GidxPartialService, aspects []*model.Aspect) error {
+func createMissingGidxIndexes(l *log.Logger, gidxPartialService service.GidxPartialService, aspects []*model.Aspect, workers int) error {
 	count, err := gidxPartialService.CountMissing(aspects)
 	if err != nil {
 		return err
@@ -83,12 +82,14 @@ func createMissingGidxIndexes(l *log.Logger, gidxPartialService service.GidxPart
 
 	l.Printf("Building %d indexed image partials...\n", count)
 	bar := pb.StartNew(int(count))
+	batchSize := workers * 4
 
 	cancel := false
 	c := make(chan os.Signal, 2)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
+		l.Println("Caught sigterm signal. Please wait to stop cleanly...")
 		cancel = true
 	}()
 
@@ -98,7 +99,7 @@ func createMissingGidxIndexes(l *log.Logger, gidxPartialService service.GidxPart
 				return errors.New("Cancelled")
 			}
 
-			gidxs, err := gidxPartialService.FindMissing(aspect, "gidx.id ASC", 200, 0)
+			gidxs, err := gidxPartialService.FindMissing(aspect, "gidx.id ASC", batchSize, 0)
 			if err != nil {
 				return err
 			}
@@ -107,14 +108,13 @@ func createMissingGidxIndexes(l *log.Logger, gidxPartialService service.GidxPart
 				break
 			}
 
-			gidxPartials := buildGidxPartials(l, gidxs, aspect)
+			gidxPartials := buildGidxPartials(l, gidxs, aspect, workers, bar)
 
 			if len(gidxPartials) > 0 {
-				numCreated, err := gidxPartialService.BulkInsert(gidxPartials)
+				_, err := gidxPartialService.BulkInsert(gidxPartials)
 				if err != nil {
 					return err
 				}
-				bar.Add(int(numCreated))
 			}
 		}
 	}
@@ -124,42 +124,46 @@ func createMissingGidxIndexes(l *log.Logger, gidxPartialService service.GidxPart
 	return nil
 }
 
-func buildGidxPartials(l *log.Logger, gidxs []*model.Gidx, aspect *model.Aspect) []*model.GidxPartial {
-	var wg sync.WaitGroup
-	wg.Add(len(gidxs))
-
+func buildGidxPartials(l *log.Logger, gidxs []*model.Gidx, aspect *model.Aspect, workers int, bar *pb.ProgressBar) []*model.GidxPartial {
 	gidxPartials := make([]*model.GidxPartial, len(gidxs))
 	add := make(chan *model.GidxPartial)
 	errs := make(chan error)
+	sem := make(chan bool, workers)
 
-	go func(myLog *log.Logger, gps []*model.GidxPartial, addCh chan *model.GidxPartial, errsCh chan error) {
+	go func(gps []*model.GidxPartial) {
 		idx := 0
 		for i := 0; i < len(gps); i++ {
 			select {
-			case gp := <-addCh:
+			case gp := <-add:
 				gps[idx] = gp
 				idx++
-			case err := <-errsCh:
+			case err := <-errs:
 				l.Printf("Error building index partial: %s\n", err.Error())
 			}
-			wg.Done()
+			bar.Increment()
+			<-sem
 		}
-	}(l, gidxPartials, add, errs)
+	}(gidxPartials)
 
 	for _, gidx := range gidxs {
-		go func(g *model.Gidx, addCh chan *model.GidxPartial, errsCh chan error) {
+		sem <- true
+		go func(g *model.Gidx) {
 			gp, err := buildGidxPartial(g, aspect)
 			if err != nil {
-				errsCh <- err
+				errs <- err
 				return
 			}
-			addCh <- gp
-		}(gidx, add, errs)
+			add <- gp
+		}(gidx)
 	}
 
-	wg.Wait()
+	for i := 0; i < cap(sem); i++ {
+		sem <- true
+	}
+
 	close(add)
 	close(errs)
+	close(sem)
 
 	return gidxPartials
 }

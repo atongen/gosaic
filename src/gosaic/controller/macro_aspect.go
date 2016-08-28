@@ -12,23 +12,21 @@ func MacroAspect(env environment.Environment, path string, coverWidth, coverHeig
 		return nil, nil
 	}
 
-	aspect, err := getImageAspect(path, aspectService)
+	aspect, width, height, err := getImageDimensions(aspectService, path)
 	if err != nil {
 		env.Printf("Error getting image aspect: %s\n", err.Error())
 		return nil, nil
 	}
 
-	myCoverWidth, myCoverHeight, err := calculateDimensionsFromAspect(aspect, coverWidth, coverHeight)
+	myCoverWidth, myCoverHeight := calculateDimensionsFromAspect(aspect, coverWidth, coverHeight, width, height)
+
+	coverAspect, err := aspectService.FindOrCreate(myCoverWidth, myCoverHeight)
 	if err != nil {
-		env.Printf("Error getting cover dimensions: %s\n", err.Error())
+		env.Printf("Error getting cover aspect: %s\n", err.Error())
 		return nil, nil
 	}
 
-	myPartialWidth, myPartialHeight, err := calculateDimensionsFromAspect(aspect, partialWidth, partialHeight)
-	if err != nil {
-		env.Printf("Error getting partial dimensions: %s\n", err.Error())
-		return nil, nil
-	}
+	myPartialWidth, myPartialHeight := calculateDimensionsFromAspect(coverAspect, partialWidth, partialHeight, coverWidth, coverHeight)
 
 	cover := CoverAspect(env, myCoverWidth, myCoverHeight, myPartialWidth, myPartialHeight, num)
 	if cover == nil {
