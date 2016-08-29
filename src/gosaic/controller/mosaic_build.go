@@ -78,7 +78,7 @@ func MosaicBuild(env environment.Environment, name, mosaicType string, macroId i
 	// maxRepeats > 0 sets explicitly
 	// maxRepeats == -1 (<0) calculates minimum
 	if maxRepeats < 0 {
-		if numGidxs > numMacroPartials {
+		if numGidxs >= numMacroPartials {
 			maxRepeats = 1
 		} else {
 			maxRepeats = int(math.Ceil(float64(numMacroPartials) / float64(numGidxs)))
