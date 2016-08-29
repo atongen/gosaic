@@ -26,7 +26,8 @@ func MacroAspect(env environment.Environment, path string, coverWidth, coverHeig
 		return nil, nil
 	}
 
-	myPartialWidth, myPartialHeight := calculateDimensionsFromAspect(coverAspect, partialWidth, partialHeight, coverWidth, coverHeight)
+	myPartialWidth, myPartialHeight := calculateDimensionsFromAspect(coverAspect, partialWidth, partialHeight, myCoverWidth, myCoverHeight)
+	env.Println(myPartialWidth, myPartialHeight)
 
 	cover := CoverAspect(env, myCoverWidth, myCoverHeight, myPartialWidth, myPartialHeight, num)
 	if cover == nil {

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"gosaic/model"
@@ -15,6 +16,7 @@ type MosaicService interface {
 	Get(int64) (*model.Mosaic, error)
 	Insert(*model.Mosaic) error
 	GetOneBy(string, ...interface{}) (*model.Mosaic, error)
+	ExistsBy(string, ...interface{}) (bool, error)
 	FindAll(string) ([]*model.Mosaic, error)
 }
 
@@ -78,13 +80,31 @@ func (s *mosaicServiceImpl) GetOneBy(conditions string, params ...interface{}) (
 	var mosaic model.Mosaic
 
 	err := s.dbMap.SelectOne(&mosaic, fmt.Sprintf("select * from mosaics where %s limit 1", conditions), params...)
-	// returns error if none are found
-	// or if more than one is found
 	if err != nil {
-		return nil, nil
+		if err == sql.ErrNoRows {
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
 
 	return &mosaic, nil
+}
+
+func (s *mosaicServiceImpl) ExistsBy(conditions string, params ...interface{}) (bool, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	num, err := s.dbMap.SelectInt(fmt.Sprintf("select 1 from mosaics where %s limit 1", conditions), params...)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		} else {
+			return false, err
+		}
+	}
+
+	return num == 1, nil
 }
 
 func (s *mosaicServiceImpl) FindAll(order string) ([]*model.Mosaic, error) {

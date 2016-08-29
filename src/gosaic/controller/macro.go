@@ -52,10 +52,14 @@ func Macro(env environment.Environment, path string, coverId int64, outfile stri
 	}
 
 	macro, img, err := findOrCreateMacro(macroService, aspectService, cover, path, outfile)
+	if err != nil {
+		env.Printf("Error creating macro: %s\n", err.Error())
+		return nil
+	}
 
 	err = buildMacroPartials(env.Log(), macroPartialService, img, macro, env.Workers())
 	if err != nil {
-		env.Printf("Error creating macro: %s\n", err.Error())
+		env.Printf("Error creating macro partials: %s\n", err.Error())
 		return nil
 	}
 

@@ -124,6 +124,42 @@ func TestMosaicServiceGetOneByNot(t *testing.T) {
 	}
 }
 
+func TestMosaicServiceExistsBy(t *testing.T) {
+	setupMosaicServiceTest()
+	mosaicService := getTestMosaicService()
+	defer mosaicService.Close()
+
+	c1 := model.Mosaic{
+		MacroId: macro.Id,
+		Name:    "testme1",
+	}
+
+	err := mosaicService.Insert(&c1)
+	if err != nil {
+		t.Fatalf("Error inserting mosaic: %s\n", err.Error())
+	}
+
+	found, err := mosaicService.ExistsBy("macro_id = ? and name = ?", macro.Id, "testme1")
+	if err != nil {
+		t.Fatalf("Error getting inserted mosaic: %s\n", err.Error())
+	} else if !found {
+		t.Fatalf("Mosaic not inserted\n")
+	}
+}
+
+func TestMosaicServiceExistsByNot(t *testing.T) {
+	setupMosaicServiceTest()
+	mosaicService := getTestMosaicService()
+	defer mosaicService.Close()
+
+	found, err := mosaicService.ExistsBy("macro_id = ? and name = ?", int64(123), "not a valid name")
+	if err != nil {
+		t.Fatalf("Error getting inserted mosaic: %s\n", err.Error())
+	} else if found {
+		t.Fatal("Mosaic found when should not exist")
+	}
+}
+
 func TestMosaicServiceFindAll(t *testing.T) {
 	setupMosaicServiceTest()
 	mosaicService := getTestMosaicService()

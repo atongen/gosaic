@@ -47,7 +47,7 @@ func Md5sum(path string) (string, error) {
 func GetOrientation(path string) (int, error) {
 	f, err := os.Open(path)
 	if err != nil {
-		return 0, err
+		return 1, err
 	}
 
 	x, err := exif.Decode(f)
@@ -63,6 +63,10 @@ func GetOrientation(path string) (int, error) {
 
 	val, err := orientation.Int(0)
 	if err != nil {
+		return 1, nil
+	}
+
+	if val == 0 {
 		return 1, nil
 	}
 

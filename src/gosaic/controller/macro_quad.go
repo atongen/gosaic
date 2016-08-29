@@ -213,10 +213,14 @@ func macroQuadBuildCoverPartials(coverPartialService service.CoverPartialService
 	coverPartials := make([]*model.CoverPartial, 4)
 
 	for i, pt := range [][]int{
+		//[]int{x1, y1, midX, midY},
+		//[]int{midX + 1, y1, x2, midY},
+		//[]int{x1, midY + 1, midX, y2},
+		//[]int{midX + 1, midY + 1, x2, y2},
 		[]int{x1, y1, midX, midY},
-		[]int{midX + 1, y1, x2, midY},
-		[]int{x1, midY + 1, midX, y2},
-		[]int{midX + 1, midY + 1, x2, y2},
+		[]int{midX, y1, x2, midY},
+		[]int{x1, midY, midX, y2},
+		[]int{midX, midY, x2, y2},
 	} {
 		cp := &model.CoverPartial{
 			CoverId: coverPartialQuadView.CoverPartial.CoverId,

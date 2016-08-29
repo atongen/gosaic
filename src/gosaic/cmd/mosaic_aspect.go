@@ -89,6 +89,10 @@ var MosaicAspectCmd = &cobra.Command{
 			}
 		}
 
+		if mosaicAspectFillType != "best" && mosaicAspectFillType != "random" {
+			Env.Fatalln("Invalid fill-type")
+		}
+
 		if mosaicAspectSize <= 0 {
 			Env.Fatalln("size is required and must be greater than zero")
 		}
@@ -99,6 +103,20 @@ var MosaicAspectCmd = &cobra.Command{
 		}
 		defer Env.Close()
 
-		controller.MosaicAspect(Env, args[0], mosaicAspectName, mosaicAspectFillType, mosaicAspectCoverWidth, mosaicAspectCoverHeight, aw, ah, mosaicAspectSize, mosaicAspectMaxRepeats, mosaicAspectCoverOutfile, mosaicAspectMacroOutfile, mosaicAspectOutfile)
+		controller.MosaicAspect(
+			Env,
+			args[0],
+			mosaicAspectName,
+			mosaicAspectFillType,
+			mosaicAspectCoverWidth,
+			mosaicAspectCoverHeight,
+			aw,
+			ah,
+			mosaicAspectSize,
+			mosaicAspectMaxRepeats,
+			mosaicAspectCoverOutfile,
+			mosaicAspectMacroOutfile,
+			mosaicAspectOutfile,
+		)
 	},
 }

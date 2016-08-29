@@ -1,9 +1,14 @@
 package controller
 
 import (
+	"errors"
+	"fmt"
 	"gosaic/model"
 	"gosaic/service"
 	"gosaic/util"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
 func getImageDimensions(aspectService service.AspectService, path string) (*model.Aspect, int, int, error) {
@@ -77,4 +82,52 @@ func calculateDimensionsFromAspect(aspect *model.Aspect, width, height, baseWidt
 	}
 
 	return cWidth, cHeight
+}
+
+func validateMosaicArgs(mosaicService service.MosaicService, inPath, name, coverOutfile, macroOutfile, mosaicOutfile string) (string, string, string, string, error) {
+	if inPath == "" {
+		return "", "", "", "", errors.New("path is empty")
+	}
+
+	if _, err := os.Stat(inPath); os.IsNotExist(err) {
+		return "", "", "", "", fmt.Errorf("file not found: %s\n", inPath)
+	}
+
+	dir, err := filepath.Abs(filepath.Dir(inPath))
+	if err != nil {
+		return "", "", "", "", fmt.Errorf("Error getting image directory: %s\n", err.Error())
+	}
+
+	fName := filepath.Base(inPath)
+	ext := filepath.Ext(fName)
+	extL := strings.ToLower(ext)
+	if extL != ".jpg" && extL != ".jpeg" {
+		return "", "", "", "", errors.New("only jpg images can be processed")
+	}
+
+	basename := fName[:len(fName)-len(ext)]
+	if name == "" {
+		name = basename
+	}
+
+	found, err := mosaicService.ExistsBy("name = ?", name)
+	if err != nil {
+		return "", "", "", "", fmt.Errorf("Error checking for mosaic name uniqueness: %s\n", err.Error())
+	} else if found {
+		return "", "", "", "", fmt.Errorf("Mosaic with name '%s' already exists\n", name)
+	}
+
+	if coverOutfile == "" {
+		coverOutfile = filepath.Join(dir, basename+"-cover.png")
+	}
+
+	if macroOutfile == "" {
+		macroOutfile = filepath.Join(dir, basename+"-macro"+ext)
+	}
+
+	if mosaicOutfile == "" {
+		mosaicOutfile = filepath.Join(dir, basename+"-mosaic"+ext)
+	}
+
+	return name, coverOutfile, macroOutfile, mosaicOutfile, nil
 }

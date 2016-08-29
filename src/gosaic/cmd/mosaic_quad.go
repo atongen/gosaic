@@ -28,6 +28,7 @@ func init() {
 	addLocalIntFlag(&mosaicQuadNum, "num", "", 1024, "Number of times to split the partials into quads", MosaicQuadCmd)
 	addLocalIntFlag(&mosaicQuadMaxDepth, "max-depth", "", 0, "Number of times a partial can be split into quads", MosaicQuadCmd)
 	addLocalIntFlag(&mosaicQuadMinArea, "min-area", "", 0, "The smallest an partial can get before it can't be split", MosaicQuadCmd)
+	addLocalIntFlag(&mosaicQuadMaxRepeats, "max-repeats", "", -1, "Number of times an index image can be repeated, 0 is unlimited, -1 is the minimun number", MosaicQuadCmd)
 	addLocalStrFlag(&mosaicQuadOutfile, "out", "o", "", "File to write final mosaic image", MosaicQuadCmd)
 	addLocalStrFlag(&mosaicQuadCoverOutfile, "cover-out", "", "", "File to write cover partial pattern image", MosaicQuadCmd)
 	addLocalStrFlag(&mosaicQuadMacroOutfile, "macro-out", "", "", "File to write resized macro image", MosaicQuadCmd)
@@ -57,6 +58,10 @@ var MosaicQuadCmd = &cobra.Command{
 
 		if mosaicQuadNum <= 0 {
 			Env.Fatalln("num is required and must be greater than zero")
+		}
+
+		if mosaicQuadFillType != "best" && mosaicAspectFillType != "random" {
+			Env.Fatalln("Invalid fill-type")
 		}
 
 		err := Env.Init()

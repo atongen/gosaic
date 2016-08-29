@@ -143,8 +143,10 @@ func addCoverAspectPartials(l *log.Logger, coverPartialService service.CoverPart
 
 			x1 := i*width + xOffset
 			y1 := j*height + yOffset
-			x2 := (i+1)*width + xOffset - 1
-			y2 := (j+1)*height + yOffset - 1
+			//x2 := (i+1)*width + xOffset - 1
+			//y2 := (j+1)*height + yOffset - 1
+			x2 := (i+1)*width + xOffset
+			y2 := (j+1)*height + yOffset
 
 			var coverPartial model.CoverPartial = model.CoverPartial{
 				CoverId:  cover.Id,
