@@ -117,16 +117,27 @@ func validateMosaicArgs(mosaicService service.MosaicService, inPath, name, cover
 		return "", "", "", "", fmt.Errorf("Mosaic with name '%s' already exists\n", name)
 	}
 
+	baseFilename := util.CleanStr(name)
+
 	if coverOutfile == "" {
-		coverOutfile = filepath.Join(dir, basename+"-cover.png")
+		coverOutfile = filepath.Join(dir, baseFilename+"-cover.png")
+	}
+	if _, err := os.Stat(coverOutfile); err == nil {
+		return "", "", "", "", fmt.Errorf("cover out file already exists: %s\n", coverOutfile)
 	}
 
 	if macroOutfile == "" {
-		macroOutfile = filepath.Join(dir, basename+"-macro"+ext)
+		macroOutfile = filepath.Join(dir, baseFilename+"-macro"+ext)
+	}
+	if _, err := os.Stat(macroOutfile); err == nil {
+		return "", "", "", "", fmt.Errorf("macro out file already exists: %s\n", macroOutfile)
 	}
 
 	if mosaicOutfile == "" {
-		mosaicOutfile = filepath.Join(dir, basename+"-mosaic"+ext)
+		mosaicOutfile = filepath.Join(dir, baseFilename+"-mosaic"+ext)
+	}
+	if _, err := os.Stat(macroOutfile); err == nil {
+		return "", "", "", "", fmt.Errorf("mosaic out file already exists: %s\n", mosaicOutfile)
 	}
 
 	return name, coverOutfile, macroOutfile, mosaicOutfile, nil

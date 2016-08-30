@@ -9,6 +9,8 @@ import (
 	"io"
 	"math"
 	"os"
+	"regexp"
+	"strings"
 
 	"github.com/disintegration/imaging"
 	"github.com/rwcarlsen/goexif/exif"
@@ -279,4 +281,18 @@ func Round(f float64) int {
 		r = math.Ceil(f - 0.5)
 	}
 	return int(r)
+}
+
+var (
+	cleanStr1Re = regexp.MustCompile("[^0-9a-z-]+")
+	cleanStr2Re = regexp.MustCompile("(?:^_|_$)")
+)
+
+func CleanStr(s string) string {
+	s = strings.ToLower(s)
+	s = cleanStr1Re.ReplaceAllString(s, "_")
+	s = strings.Replace(s, "_-_", "-", -1)
+	s = strings.Replace(s, "_-", "-", -1)
+	s = strings.Replace(s, "-_", "-", -1)
+	return cleanStr2Re.ReplaceAllString(s, "")
 }

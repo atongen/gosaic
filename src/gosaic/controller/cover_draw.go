@@ -31,6 +31,7 @@ func CoverDraw(env environment.Environment, coverId int64, outPath string) error
 	if err != nil {
 		return err
 	}
+	env.Printf("Wrote cover image: %s\n", outPath)
 
 	return nil
 }

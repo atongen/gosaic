@@ -51,7 +51,7 @@ func Macro(env environment.Environment, path string, coverId int64, outfile stri
 		return nil
 	}
 
-	macro, img, err := findOrCreateMacro(macroService, aspectService, cover, path, outfile)
+	macro, img, err := findOrCreateMacro(env.Log(), macroService, aspectService, cover, path, outfile)
 	if err != nil {
 		env.Printf("Error creating macro: %s\n", err.Error())
 		return nil
@@ -66,7 +66,7 @@ func Macro(env environment.Environment, path string, coverId int64, outfile stri
 	return macro
 }
 
-func findOrCreateMacro(macroService service.MacroService, aspectService service.AspectService, cover *model.Cover, path, outfile string) (*model.Macro, *image.Image, error) {
+func findOrCreateMacro(l *log.Logger, macroService service.MacroService, aspectService service.AspectService, cover *model.Cover, path, outfile string) (*model.Macro, *image.Image, error) {
 	md5sum, err := util.Md5sum(path)
 	if err != nil {
 		return nil, nil, err
@@ -96,6 +96,7 @@ func findOrCreateMacro(macroService service.MacroService, aspectService service.
 		if err != nil {
 			return nil, nil, err
 		}
+		l.Printf("Wrote macro image: %s\n", outfile)
 	}
 
 	macro, err := macroService.GetOneBy("cover_id = ? AND md5sum = ?", cover.Id, md5sum)

@@ -84,6 +84,7 @@ func MosaicDraw(env environment.Environment, mosaicId int64, outfile string) err
 		env.Printf("Error drawing mosaic: %s\n", err.Error())
 		return err
 	}
+	env.Printf("Wrote mosaic image: %s\n", outfile)
 
 	return nil
 }

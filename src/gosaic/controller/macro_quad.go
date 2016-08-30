@@ -71,7 +71,7 @@ func MacroQuad(env environment.Environment,
 		return nil, nil
 	}
 
-	macro, img, err := findOrCreateMacro(macroService, aspectService, cover, path, macroOutfile)
+	macro, img, err := findOrCreateMacro(env.Log(), macroService, aspectService, cover, path, macroOutfile)
 	if err != nil {
 		env.Printf("Error building macro: %s\n", err.Error())
 		coverService.Delete(cover)
