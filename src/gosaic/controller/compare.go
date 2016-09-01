@@ -89,6 +89,7 @@ func createMissingComparisons(l *log.Logger, partialComparisonService service.Pa
 			bar.Add(int(numCreated))
 		}
 	}
+
 	bar.Finish()
 	return nil
 }

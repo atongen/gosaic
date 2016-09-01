@@ -61,7 +61,7 @@ func PartialAspect(env environment.Environment, macroId int64) error {
 		return err
 	}
 
-	err = createMissingGidxIndexes(env.Log(), gidxPartialService, aspects, env.Workers())
+	err = createMissingGidxIndexes(env.Log(), gidxPartialService, aspects, env.Workers()/2)
 	if err != nil {
 		env.Printf("Error creating index aspects: %s\n", err.Error())
 		return err
@@ -82,7 +82,7 @@ func createMissingGidxIndexes(l *log.Logger, gidxPartialService service.GidxPart
 
 	l.Printf("Building %d indexed image partials...\n", count)
 	bar := pb.StartNew(int(count))
-	batchSize := workers * 4
+	batchSize := workers
 
 	cancel := false
 	c := make(chan os.Signal, 2)
