@@ -61,7 +61,7 @@ func PartialAspect(env environment.Environment, macroId int64) error {
 		return err
 	}
 
-	err = createMissingGidxIndexes(env.Log(), gidxPartialService, aspects, env.Workers()/2)
+	err = createMissingGidxIndexes(env.Log(), gidxPartialService, aspects, 1)
 	if err != nil {
 		env.Printf("Error creating index aspects: %s\n", err.Error())
 		return err
