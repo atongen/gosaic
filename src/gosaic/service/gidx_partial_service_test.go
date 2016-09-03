@@ -369,6 +369,73 @@ func TestGidxPartialServiceCount(t *testing.T) {
 	}
 }
 
+func TestGidxPartialServiceCountBy(t *testing.T) {
+	setupGidxPartialServiceTest()
+	gidxPartialService := getTestGidxPartialService()
+	defer gidxPartialService.Close()
+
+	mp := model.GidxPartial{
+		GidxId:   gidx.Id,
+		AspectId: aspect.Id,
+		Pixels: []*model.Lab{
+			&model.Lab{
+				L:     0.4,
+				A:     0.5,
+				B:     0.6,
+				Alpha: 0.0,
+			},
+		},
+	}
+
+	err := gidxPartialService.Insert(&mp)
+	if err != nil {
+		t.Fatalf("Error inserting gidx partial: %s\n", err.Error())
+	}
+
+	num, err := gidxPartialService.CountBy("gidx_id = ?", gidx.Id)
+	if err != nil {
+		t.Fatalf("Error counting by gidx partial: %s\n", err.Error())
+	}
+
+	if num != int64(1) {
+		t.Fatalf("Gidx partial count incorrect\n")
+	}
+}
+
+func TestGidxPartialServiceCountForMacro(t *testing.T) {
+	setupGidxPartialServiceTest()
+	gidxPartialService := getTestGidxPartialService()
+	defer gidxPartialService.Close()
+
+	gp := model.GidxPartial{
+		GidxId:   gidx.Id,
+		AspectId: aspect.Id,
+		Pixels: []*model.Lab{
+			&model.Lab{
+				L:     0.4,
+				A:     0.5,
+				B:     0.6,
+				Alpha: 0.0,
+			},
+		},
+	}
+
+	err := gidxPartialService.Insert(&gp)
+	if err != nil {
+		t.Fatalf("Error inserting gidx partial: %s\n", err.Error())
+	}
+
+	num, err := gidxPartialService.CountForMacro(&macro)
+	if err != nil {
+		t.Fatalf("Error counting gidx partial for macro: %s\n", err.Error())
+	}
+
+	// we have no marco partials at this point
+	if num != int64(0) {
+		t.Fatalf("Expected 0 gidx partial count for macro, but got %d\n", num)
+	}
+}
+
 func TestGidxPartialServiceFindOrCreate(t *testing.T) {
 	setupGidxPartialServiceTest()
 	gidxPartialService := getTestGidxPartialService()

@@ -170,7 +170,14 @@ func (s *partialComparisonServiceImpl) CountBy(conditions string, params ...inte
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	return s.dbMap.SelectInt(fmt.Sprintf("select count(*) from partial_comparisons where %s", conditions), params...)
+	sql := fmt.Sprintf(`
+		select count(*)
+		from partial_comparisons
+		where %s
+		limit 1
+	`, conditions)
+
+	return s.dbMap.SelectInt(sql, params...)
 }
 
 func (s *partialComparisonServiceImpl) FindAll(order string, limit, offset int, conditions string, params ...interface{}) ([]*model.PartialComparison, error) {

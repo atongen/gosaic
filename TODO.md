@@ -1,5 +1,8 @@
 # todo
 
+* partial_aspect refactor
+  - concurency per gidx image, each aspect
+  - aspect ratio similarity threashold
 * cover bin pack
   - cluster index image aspect ratios
 * cover pythagorean tiling

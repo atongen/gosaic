@@ -230,7 +230,10 @@ func TestMosaicPartialServiceGetMissing(t *testing.T) {
 	mosaicPartialService := getTestMosaicPartialService()
 	defer mosaicPartialService.Close()
 
-	mp1 := mosaicPartialService.GetMissing(&mosaic)
+	mp1, err := mosaicPartialService.GetMissing(&mosaic)
+	if err != nil {
+		t.Fatalf("Error finding missing mosaic partial: %s\n", err.Error())
+	}
 	if mp1 == nil {
 		t.Fatal("Missing macro partial not found")
 	}
@@ -245,12 +248,15 @@ func TestMosaicPartialServiceGetMissing(t *testing.T) {
 		GidxPartialId:  gidxPartial.Id,
 	}
 
-	err := mosaicPartialService.Insert(&c1)
+	err = mosaicPartialService.Insert(&c1)
 	if err != nil {
 		t.Fatalf("Error inserting mosaic partial: %s\n", err.Error())
 	}
 
-	c2 := mosaicPartialService.GetMissing(&mosaic)
+	c2, err := mosaicPartialService.GetMissing(&mosaic)
+	if err != nil {
+		t.Fatalf("Error finding missing mosaic partial: %s\n", err.Error())
+	}
 	if c2 == nil {
 		t.Fatal("Missing macro partial not found")
 	}
@@ -265,7 +271,10 @@ func TestMosaicPartialServiceGetRandomMissing(t *testing.T) {
 	mosaicPartialService := getTestMosaicPartialService()
 	defer mosaicPartialService.Close()
 
-	mp1 := mosaicPartialService.GetRandomMissing(&mosaic)
+	mp1, err := mosaicPartialService.GetRandomMissing(&mosaic)
+	if err != nil {
+		t.Fatalf("Error finding random missing mosaic partial: %s\n", err.Error())
+	}
 	if mp1 == nil {
 		t.Fatal("Missing macro partial not found")
 	}
@@ -276,13 +285,16 @@ func TestMosaicPartialServiceGetRandomMissing(t *testing.T) {
 		GidxPartialId:  gidxPartial.Id,
 	}
 
-	err := mosaicPartialService.Insert(&c1)
+	err = mosaicPartialService.Insert(&c1)
 	if err != nil {
 		t.Fatalf("Error inserting mosaic partial: %s\n", err.Error())
 	}
 
 	for i := 0; i < 10; i++ {
-		c2 := mosaicPartialService.GetRandomMissing(&mosaic)
+		c2, err := mosaicPartialService.GetRandomMissing(&mosaic)
+		if err != nil {
+			t.Fatalf("Error finding random missing mosaic partial: %s\n", err.Error())
+		}
 		if c2 == nil {
 			t.Fatal("Missing macro partial not found")
 		}

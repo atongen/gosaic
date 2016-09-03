@@ -1,6 +1,7 @@
 package service
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"gosaic/model"
@@ -15,8 +16,8 @@ type MosaicPartialService interface {
 	Insert(*model.MosaicPartial) error
 	Count(*model.Mosaic) (int64, error)
 	CountMissing(*model.Mosaic) (int64, error)
-	GetMissing(*model.Mosaic) *model.MacroPartial
-	GetRandomMissing(*model.Mosaic) *model.MacroPartial
+	GetMissing(*model.Mosaic) (*model.MacroPartial, error)
+	GetRandomMissing(*model.Mosaic) (*model.MacroPartial, error)
 	FindAllPartialViews(*model.Mosaic, string, int, int) ([]*model.MosaicPartialView, error)
 }
 
@@ -99,11 +100,11 @@ func (s *mosaicPartialServiceImpl) Count(mosaic *model.Mosaic) (int64, error) {
 	return s.dbMap.SelectInt(sql, mosaic.Id)
 }
 
-func (s *mosaicPartialServiceImpl) GetMissing(mosaic *model.Mosaic) *model.MacroPartial {
+func (s *mosaicPartialServiceImpl) GetMissing(mosaic *model.Mosaic) (*model.MacroPartial, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	sql := `
+	sqlStr := `
 		select *
 		from macro_partials map
 		where map.macro_id = ?
@@ -116,19 +117,23 @@ func (s *mosaicPartialServiceImpl) GetMissing(mosaic *model.Mosaic) *model.Macro
 		limit 1
 	`
 	var macroPartial model.MacroPartial
-	err := s.dbMap.SelectOne(&macroPartial, sql, mosaic.MacroId, mosaic.Id)
+	err := s.dbMap.SelectOne(&macroPartial, sqlStr, mosaic.MacroId, mosaic.Id)
 	if err != nil {
-		return nil
+		if err == sql.ErrNoRows {
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
 
-	return &macroPartial
+	return &macroPartial, nil
 }
 
-func (s *mosaicPartialServiceImpl) GetRandomMissing(mosaic *model.Mosaic) *model.MacroPartial {
+func (s *mosaicPartialServiceImpl) GetRandomMissing(mosaic *model.Mosaic) (*model.MacroPartial, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	sql := `
+	sqlStr := `
 		select *
 		from macro_partials map
 		where map.macro_id = ?
@@ -141,12 +146,16 @@ func (s *mosaicPartialServiceImpl) GetRandomMissing(mosaic *model.Mosaic) *model
 		limit 1
 	`
 	var macroPartial model.MacroPartial
-	err := s.dbMap.SelectOne(&macroPartial, sql, mosaic.MacroId, mosaic.Id)
+	err := s.dbMap.SelectOne(&macroPartial, sqlStr, mosaic.MacroId, mosaic.Id)
 	if err != nil {
-		return nil
+		if err == sql.ErrNoRows {
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
 
-	return &macroPartial
+	return &macroPartial, nil
 }
 
 func (s *mosaicPartialServiceImpl) FindAllPartialViews(mosaic *model.Mosaic, order string, limit, offset int) ([]*model.MosaicPartialView, error) {

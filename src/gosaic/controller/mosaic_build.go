@@ -15,9 +15,9 @@ import (
 )
 
 func MosaicBuild(env environment.Environment, name, mosaicType string, macroId int64, maxRepeats int) *model.Mosaic {
-	gidxService, err := env.GidxService()
+	gidxPartialService, err := env.GidxPartialService()
 	if err != nil {
-		env.Printf("Error getting index service: %s\n", err.Error())
+		env.Printf("Error getting index partial service: %s\n", err.Error())
 		return nil
 	}
 
@@ -68,7 +68,7 @@ func MosaicBuild(env environment.Environment, name, mosaicType string, macroId i
 		return nil
 	}
 
-	numGidxs, err := gidxService.Count()
+	numGidxs, err := gidxPartialService.CountForMacro(macro)
 	if err != nil {
 		env.Printf("Error counting index images: %s\n", err.Error())
 		return nil
@@ -151,7 +151,10 @@ func createMosaicPartialsRandom(l *log.Logger, mosaicPartialService service.Mosa
 			return errors.New("Cancelled")
 		}
 
-		macroPartial := mosaicPartialService.GetRandomMissing(mosaic)
+		macroPartial, err := mosaicPartialService.GetRandomMissing(mosaic)
+		if err != nil {
+			return err
+		}
 		if macroPartial == nil {
 			break
 		}

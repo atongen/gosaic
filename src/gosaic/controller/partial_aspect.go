@@ -6,6 +6,7 @@ import (
 	"gosaic/model"
 	"gosaic/service"
 	"gosaic/util"
+	"image"
 	"log"
 	"os"
 	"os/signal"
@@ -14,7 +15,7 @@ import (
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
-func PartialAspect(env environment.Environment, macroId int64) error {
+func PartialAspect(env environment.Environment, macroId int64, threashold float64) error {
 	aspectService, err := env.AspectService()
 	if err != nil {
 		env.Printf("Error getting aspect service: %s\n", err.Error())
@@ -30,6 +31,12 @@ func PartialAspect(env environment.Environment, macroId int64) error {
 	macroPartialService, err := env.MacroPartialService()
 	if err != nil {
 		env.Printf("Error getting macro partial service: %s\n", err.Error())
+		return err
+	}
+
+	gidxService, err := env.GidxService()
+	if err != nil {
+		env.Printf("Error getting gidx service: %s\n", err.Error())
 		return err
 	}
 
@@ -61,7 +68,7 @@ func PartialAspect(env environment.Environment, macroId int64) error {
 		return err
 	}
 
-	err = createMissingGidxIndexes(env.Log(), gidxPartialService, aspects, 1)
+	err = createPartialGidxIndexes(env.Log(), gidxService, gidxPartialService, aspects, threashold, env.Workers())
 	if err != nil {
 		env.Printf("Error creating index aspects: %s\n", err.Error())
 		return err
@@ -70,8 +77,8 @@ func PartialAspect(env environment.Environment, macroId int64) error {
 	return nil
 }
 
-func createMissingGidxIndexes(l *log.Logger, gidxPartialService service.GidxPartialService, aspects []*model.Aspect, workers int) error {
-	count, err := gidxPartialService.CountMissing(aspects)
+func createPartialGidxIndexes(l *log.Logger, gidxService service.GidxService, gidxPartialService service.GidxPartialService, aspects []*model.Aspect, threashold float64, workers int) error {
+	count, err := gidxService.Count()
 	if err != nil {
 		return err
 	}
@@ -80,9 +87,9 @@ func createMissingGidxIndexes(l *log.Logger, gidxPartialService service.GidxPart
 		return nil
 	}
 
-	l.Printf("Building %d indexed image partials...\n", count)
+	l.Printf("Building %d index image partials...\n", count)
 	bar := pb.StartNew(int(count))
-	batchSize := workers
+	batchSize := workers * 8
 
 	cancel := false
 	c := make(chan os.Signal, 2)
@@ -92,29 +99,31 @@ func createMissingGidxIndexes(l *log.Logger, gidxPartialService service.GidxPart
 		cancel = true
 	}()
 
-	for _, aspect := range aspects {
-		for {
+	for i := 0; ; i++ {
+		gidxs, err := gidxService.FindAll("id asc", batchSize, i*batchSize)
+		if err != nil {
+			return err
+		}
+
+		if len(gidxs) == 0 {
+			break
+		}
+
+		for _, gidx := range gidxs {
 			if cancel {
 				return errors.New("Cancelled")
 			}
 
-			gidxs, err := gidxPartialService.FindMissing(aspect, "gidx.id ASC", batchSize, 0)
+			gidxPartials, err := buildGidxPartials(l, gidxPartialService, gidx, aspects, threashold, workers)
 			if err != nil {
 				return err
 			}
 
-			if len(gidxs) == 0 {
-				break
+			_, err = gidxPartialService.BulkInsert(gidxPartials)
+			if err != nil {
+				return err
 			}
-
-			gidxPartials := buildGidxPartials(l, gidxs, aspect, workers, bar)
-
-			if len(gidxPartials) > 0 {
-				_, err := gidxPartialService.BulkInsert(gidxPartials)
-				if err != nil {
-					return err
-				}
-			}
+			bar.Increment()
 		}
 	}
 
@@ -123,37 +132,64 @@ func createMissingGidxIndexes(l *log.Logger, gidxPartialService service.GidxPart
 	return nil
 }
 
-func buildGidxPartials(l *log.Logger, gidxs []*model.Gidx, aspect *model.Aspect, workers int, bar *pb.ProgressBar) []*model.GidxPartial {
-	gidxPartials := make([]*model.GidxPartial, len(gidxs))
+func buildGidxPartials(l *log.Logger, gidxPartialService service.GidxPartialService, gidx *model.Gidx, aspects []*model.Aspect, threashold float64, workers int) ([]*model.GidxPartial, error) {
+	myAspects := []*model.Aspect{}
+	if threashold < 0.0 {
+		myAspects = aspects
+	} else {
+		for _, aspect := range aspects {
+			if gidx.Within(threashold, aspect) {
+				exists, err := gidxPartialService.ExistsBy("gidx_id = ? and aspect_id = ?", gidx.Id, aspect.Id)
+				if err != nil {
+					return nil, err
+				} else if !exists {
+					myAspects = append(myAspects, aspect)
+				}
+			}
+		}
+	}
+	num := len(myAspects)
+
+	var gidxPartials []*model.GidxPartial
+	if num == 0 {
+		return gidxPartials, nil
+	}
+
+	gidxPartials = make([]*model.GidxPartial, num)
+
+	img, err := util.OpenImg(gidx)
+	if err != nil {
+		return nil, err
+	}
+
 	add := make(chan *model.GidxPartial)
 	errs := make(chan error)
 	sem := make(chan bool, workers)
 
 	go func(gps []*model.GidxPartial) {
 		idx := 0
-		for i := 0; i < len(gps); i++ {
+		for i := 0; i < num; i++ {
 			select {
 			case gp := <-add:
 				gps[idx] = gp
-				idx++
+				idx += 1
 			case err := <-errs:
 				l.Printf("Error building index partial: %s\n", err.Error())
 			}
-			bar.Increment()
 			<-sem
 		}
 	}(gidxPartials)
 
-	for _, gidx := range gidxs {
+	for _, aspect := range myAspects {
 		sem <- true
-		go func(g *model.Gidx) {
-			gp, err := buildGidxPartial(g, aspect)
+		go func(a *model.Aspect) {
+			gp, err := buildGidxPartial(img, gidx, a)
 			if err != nil {
 				errs <- err
 				return
 			}
 			add <- gp
-		}(gidx)
+		}(aspect)
 	}
 
 	for i := 0; i < cap(sem); i++ {
@@ -164,22 +200,17 @@ func buildGidxPartials(l *log.Logger, gidxs []*model.Gidx, aspect *model.Aspect,
 	close(errs)
 	close(sem)
 
-	return gidxPartials
+	return gidxPartials, nil
 }
 
-func buildGidxPartial(gidx *model.Gidx, aspect *model.Aspect) (*model.GidxPartial, error) {
+func buildGidxPartial(img *image.Image, gidx *model.Gidx, aspect *model.Aspect) (*model.GidxPartial, error) {
 	p := model.GidxPartial{
 		GidxId:   gidx.Id,
 		AspectId: aspect.Id,
+		Pixels:   util.GetImgAspectLab(img, gidx, aspect),
 	}
 
-	pixels, err := util.GetAspectLab(gidx, aspect)
-	if err != nil {
-		return nil, err
-	}
-	p.Pixels = pixels
-
-	err = p.EncodePixels()
+	err := p.EncodePixels()
 	if err != nil {
 		return nil, err
 	}

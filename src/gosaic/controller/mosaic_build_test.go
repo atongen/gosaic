@@ -22,7 +22,7 @@ func TestMosaicBuildRandom(t *testing.T) {
 		t.Fatal("Failed to create cover or macro")
 	}
 
-	err = PartialAspect(env, macro.Id)
+	err = PartialAspect(env, macro.Id, -1.0)
 	if err != nil {
 		t.Fatalf("Error building partial aspects: %s\n", err.Error())
 	}
@@ -61,7 +61,7 @@ func TestMosaicBuildBest(t *testing.T) {
 		t.Fatal("Failed to create cover or macro")
 	}
 
-	err = PartialAspect(env, macro.Id)
+	err = PartialAspect(env, macro.Id, -1.0)
 	if err != nil {
 		t.Fatalf("Error building partial aspects: %s\n", err.Error())
 	}

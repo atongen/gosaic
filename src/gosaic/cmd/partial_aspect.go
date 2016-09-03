@@ -7,11 +7,13 @@ import (
 )
 
 var (
-	partialAspectMacroId int
+	partialAspectMacroId    int
+	partialAspectThreashold float64
 )
 
 func init() {
 	addLocalIntFlag(&partialAspectMacroId, "macro-id", "", 0, "Id of macro to build partials", PartialAspectCmd)
+	addLocalFloatFlag(&partialAspectThreashold, "threashold", "t", -1.0, "How similar aspect ratios must be", PartialAspectCmd)
 	RootCmd.AddCommand(PartialAspectCmd)
 }
 
@@ -31,6 +33,6 @@ var PartialAspectCmd = &cobra.Command{
 			Env.Fatalf("Macro id is required")
 		}
 
-		controller.PartialAspect(Env, int64(partialAspectMacroId))
+		controller.PartialAspect(Env, int64(partialAspectMacroId), partialAspectThreashold)
 	},
 }

@@ -69,6 +69,11 @@ func addGlobalBoolFlag(myVar *bool, longName, shortName string, defVal bool, des
 	bindGlobalFlags(longName)
 }
 
+func addGlobalFloatFlag(myVar *float64, longName, shortName string, defVal float64, desc string) {
+	RootCmd.PersistentFlags().Float64VarP(myVar, longName, shortName, defVal, desc)
+	bindGlobalFlags(longName)
+}
+
 func bindGlobalFlags(flags ...string) {
 	for _, flag := range flags {
 		viper.BindPFlag(flag, RootCmd.PersistentFlags().Lookup(flag))
@@ -92,6 +97,13 @@ func addLocalIntFlag(myVar *int, longName, shortName string, defVal int, desc st
 func addLocalBoolFlag(myVar *bool, longName, shortName string, defVal bool, desc string, cmds ...*cobra.Command) {
 	for _, cmd := range cmds {
 		cmd.Flags().BoolVarP(myVar, longName, shortName, defVal, desc)
+		bindLocalFlags(cmd, longName)
+	}
+}
+
+func addLocalFloatFlag(myVar *float64, longName, shortName string, defVal float64, desc string, cmds ...*cobra.Command) {
+	for _, cmd := range cmds {
+		cmd.Flags().Float64VarP(myVar, longName, shortName, defVal, desc)
 		bindLocalFlags(cmd, longName)
 	}
 }

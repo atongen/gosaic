@@ -1,5 +1,7 @@
 package model
 
+import "math"
+
 type Gidx struct {
 	Id          int64  `db:"id"`
 	AspectId    int64  `db:"aspect_id"`
@@ -8,6 +10,17 @@ type Gidx struct {
 	Width       int    `db:"width"`
 	Height      int    `db:"height"`
 	Orientation int    `db:"orientation"`
+}
+
+func (gidx *Gidx) Within(threashold float64, aspect *Aspect) bool {
+	gRatio := float64(gidx.Width) / float64(gidx.Height)
+	aRatio := aspect.Ratio()
+
+	if gRatio == aRatio {
+		return true
+	}
+
+	return math.Abs(gRatio-aRatio) <= threashold
 }
 
 // implement Image interface

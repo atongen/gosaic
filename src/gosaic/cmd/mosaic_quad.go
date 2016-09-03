@@ -15,6 +15,7 @@ var (
 	mosaicQuadMaxDepth     int
 	mosaicQuadMinArea      int
 	mosaicQuadMaxRepeats   int
+	mosaicQuadThreashold   float64
 	mosaicQuadOutfile      string
 	mosaicQuadCoverOutfile string
 	mosaicQuadMacroOutfile string
@@ -29,6 +30,7 @@ func init() {
 	addLocalIntFlag(&mosaicQuadMaxDepth, "max-depth", "", 0, "Number of times a partial can be split into quads", MosaicQuadCmd)
 	addLocalIntFlag(&mosaicQuadMinArea, "min-area", "", 0, "The smallest an partial can get before it can't be split", MosaicQuadCmd)
 	addLocalIntFlag(&mosaicQuadMaxRepeats, "max-repeats", "", -1, "Number of times an index image can be repeated, 0 is unlimited, -1 is the minimun number", MosaicQuadCmd)
+	addLocalFloatFlag(&mosaicQuadThreashold, "threashold", "t", -1.0, "How similar aspect ratios must be", MosaicQuadCmd)
 	addLocalStrFlag(&mosaicQuadOutfile, "out", "o", "", "File to write final mosaic image", MosaicQuadCmd)
 	addLocalStrFlag(&mosaicQuadCoverOutfile, "cover-out", "", "", "File to write cover partial pattern image", MosaicQuadCmd)
 	addLocalStrFlag(&mosaicQuadMacroOutfile, "macro-out", "", "", "File to write resized macro image", MosaicQuadCmd)
@@ -81,6 +83,7 @@ var MosaicQuadCmd = &cobra.Command{
 			mosaicQuadMaxDepth,
 			mosaicQuadMinArea,
 			mosaicQuadMaxRepeats,
+			mosaicQuadThreashold,
 			mosaicQuadCoverOutfile,
 			mosaicQuadMacroOutfile,
 			mosaicQuadOutfile,

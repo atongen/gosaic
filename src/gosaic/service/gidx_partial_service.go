@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"gosaic/model"
 	"gosaic/util"
@@ -18,9 +19,10 @@ type GidxPartialService interface {
 	Delete(*model.GidxPartial) error
 	Get(int64) (*model.GidxPartial, error)
 	GetOneBy(string, interface{}) (*model.GidxPartial, error)
-	ExistsBy(string, interface{}) (bool, error)
+	ExistsBy(string, ...interface{}) (bool, error)
 	Count() (int64, error)
-	CountBy(string, interface{}) (int64, error)
+	CountBy(string, ...interface{}) (int64, error)
+	CountForMacro(*model.Macro) (int64, error)
 	Find(*model.Gidx, *model.Aspect) (*model.GidxPartial, error)
 	Create(*model.Gidx, *model.Aspect) (*model.GidxPartial, error)
 	FindOrCreate(*model.Gidx, *model.Aspect) (*model.GidxPartial, error)
@@ -157,11 +159,11 @@ func (s *gidxPartialServiceImpl) GetOneBy(column string, value interface{}) (*mo
 	return &gidxPartial, err
 }
 
-func (s *gidxPartialServiceImpl) ExistsBy(column string, value interface{}) (bool, error) {
+func (s *gidxPartialServiceImpl) ExistsBy(conditions string, params ...interface{}) (bool, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	count, err := s.dbMap.SelectInt(fmt.Sprintf("select 1 from gidx_partials where %s = ? limit 1", column), value)
+	count, err := s.dbMap.SelectInt(fmt.Sprintf("select 1 from gidx_partials where %s limit 1", conditions), params...)
 	return count == 1, err
 }
 
@@ -172,11 +174,32 @@ func (s *gidxPartialServiceImpl) Count() (int64, error) {
 	return s.dbMap.SelectInt("select count(*) from gidx_partials")
 }
 
-func (s *gidxPartialServiceImpl) CountBy(column string, value interface{}) (int64, error) {
+func (s *gidxPartialServiceImpl) CountBy(conditions string, params ...interface{}) (int64, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	return s.dbMap.SelectInt(fmt.Sprintf("select count(*) from gidx_partials where %s = ?", column), value)
+	sql := fmt.Sprintf(`
+		select count(*)
+		from gidx_partials
+		where %s
+		limit 1
+	`, conditions)
+
+	return s.dbMap.SelectInt(sql, params...)
+}
+
+func (s *gidxPartialServiceImpl) CountForMacro(macro *model.Macro) (int64, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	sql := `
+		select count(*)
+		from gidx_partials gp
+		, macro_partials mp
+		where gp.aspect_id = mp.aspect_id
+		and mp.macro_id = ?
+	`
+	return s.dbMap.SelectInt(sql, macro.Id)
 }
 
 func (s *gidxPartialServiceImpl) doFind(gidx *model.Gidx, aspect *model.Aspect) (*model.GidxPartial, error) {
@@ -185,9 +208,13 @@ func (s *gidxPartialServiceImpl) doFind(gidx *model.Gidx, aspect *model.Aspect) 
 		AspectId: aspect.Id,
 	}
 
-	err := s.dbMap.SelectOne(&p, "select * from gidx_partials where gidx_id = ? and aspect_id = ?", p.GidxId, p.AspectId)
+	err := s.dbMap.SelectOne(&p, "select * from gidx_partials where gidx_id = ? and aspect_id = ? limit 1", p.GidxId, p.AspectId)
 	if err != nil {
-		return nil, err
+		if err == sql.ErrNoRows {
+			return nil, nil
+		} else {
+			return nil, err
+		}
 	}
 
 	err = p.DecodeData()
@@ -242,7 +269,9 @@ func (s *gidxPartialServiceImpl) FindOrCreate(gidx *model.Gidx, aspect *model.As
 	defer s.m.Unlock()
 
 	p, err := s.doFind(gidx, aspect)
-	if err == nil {
+	if err != nil {
+		return nil, err
+	} else if p != nil {
 		return p, nil
 	}
 

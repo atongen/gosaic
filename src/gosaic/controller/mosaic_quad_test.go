@@ -28,6 +28,7 @@ func TestMosaicQuad(t *testing.T) {
 		"Jumping Bunny",
 		"random",
 		200, 200, 10, 2, 50, -1,
+		-1.0,
 		filepath.Join(dir, "jumping_bunny_cover.png"),
 		filepath.Join(dir, "jumping_bunny_macro.jpg"),
 		filepath.Join(dir, "jumping_bunny_mosaic.jpg"),
@@ -39,7 +40,7 @@ func TestMosaicQuad(t *testing.T) {
 	expect := []string{
 		"Indexing 4 images...",
 		"Building 10 macro partial quads...",
-		"Building 4 indexed image partials...",
+		"Building 4 index image partials...",
 		"Building 120 partial image comparisons...",
 		"Building 30 mosaic partials...",
 		"Drawing 30 mosaic partials...",
