@@ -9,6 +9,7 @@ import (
 	"io"
 	"math"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -295,4 +296,29 @@ func CleanStr(s string) string {
 	s = strings.Replace(s, "_-", "-", -1)
 	s = strings.Replace(s, "-_", "-", -1)
 	return cleanStr2Re.ReplaceAllString(s, "")
+}
+
+func NextAvailableFilename(myPath string) (string, error) {
+	dir, err := filepath.Abs(filepath.Dir(myPath))
+	if err != nil {
+		return "", err
+	}
+
+	myName := filepath.Base(myPath)
+	ext := filepath.Ext(myName)
+	baseName := myName[:len(myName)-len(ext)]
+
+	var iName string
+	for i := 0; ; i++ {
+		if i == 0 {
+			iName = myPath
+		} else {
+			iName = filepath.Join(dir, fmt.Sprintf("%s-%d%s", baseName, i, ext))
+		}
+		if _, err := os.Stat(iName); os.IsNotExist(err) {
+			break
+		}
+	}
+
+	return iName, nil
 }

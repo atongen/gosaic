@@ -160,6 +160,44 @@ func TestMosaicServiceExistsByNot(t *testing.T) {
 	}
 }
 
+func TestMosaicServiceUpdate(t *testing.T) {
+	setupMosaicServiceTest()
+	mosaicService := getTestMosaicService()
+	defer mosaicService.Close()
+
+	updateMosaic := model.Mosaic{
+		MacroId: macro.Id,
+		Name:    "testme1",
+	}
+	err := mosaicService.Insert(&updateMosaic)
+	if err != nil {
+		t.Fatalf("Error inserting mosaic: %s\n", err.Error())
+	}
+
+	newName := "testme2"
+	updateMosaic.Name = newName
+	updateMosaic.IsComplete = true
+
+	num, err := mosaicService.Update(&updateMosaic)
+	if err != nil {
+		t.Error("Error updating mosaic", err)
+	}
+
+	if num == 0 {
+		t.Error("Nothing was updated")
+	}
+
+	mosaic2, err := mosaicService.Get(updateMosaic.Id)
+	if err != nil {
+		t.Error("Error finding update mosaic", err)
+	}
+
+	if mosaic2.Name != newName ||
+		!mosaic2.IsComplete {
+		t.Error("mosaic was not updated")
+	}
+}
+
 func TestMosaicServiceFindAll(t *testing.T) {
 	setupMosaicServiceTest()
 	mosaicService := getTestMosaicService()

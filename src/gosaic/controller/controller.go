@@ -101,7 +101,7 @@ func validateMosaicArgs(mosaicService service.MosaicService, inPath, name, cover
 	fName := filepath.Base(inPath)
 	ext := filepath.Ext(fName)
 	extL := strings.ToLower(ext)
-	if extL != ".jpg" && extL != ".jpeg" {
+	if !util.SliceContainsString([]string{".jpg", ".jpeg", ".png"}, extL) {
 		return "", "", "", "", errors.New("only jpg images can be processed")
 	}
 
@@ -110,34 +110,34 @@ func validateMosaicArgs(mosaicService service.MosaicService, inPath, name, cover
 		name = basename
 	}
 
-	found, err := mosaicService.ExistsBy("name = ?", name)
+	baseFilename := util.CleanStr(name)
+
+	found, err := mosaicService.ExistsBy("name = ? and is_complete = ?", name, true)
 	if err != nil {
 		return "", "", "", "", fmt.Errorf("Error checking for mosaic name uniqueness: %s\n", err.Error())
 	} else if found {
-		return "", "", "", "", fmt.Errorf("Mosaic with name '%s' already exists\n", name)
+		return "", "", "", "", fmt.Errorf("Complete mosaic with name '%s' already exists\n", name)
 	}
-
-	baseFilename := util.CleanStr(name)
 
 	if coverOutfile == "" {
-		coverOutfile = filepath.Join(dir, baseFilename+"-cover.png")
-	}
-	if _, err := os.Stat(coverOutfile); err == nil {
-		return "", "", "", "", fmt.Errorf("cover out file already exists: %s\n", coverOutfile)
+		coverOutfile, err = util.NextAvailableFilename(filepath.Join(dir, baseFilename+"-cover.png"))
+		if err != nil {
+			return "", "", "", "", fmt.Errorf("Error getting next available filename for cover: %s\n", err.Error())
+		}
 	}
 
 	if macroOutfile == "" {
-		macroOutfile = filepath.Join(dir, baseFilename+"-macro"+ext)
-	}
-	if _, err := os.Stat(macroOutfile); err == nil {
-		return "", "", "", "", fmt.Errorf("macro out file already exists: %s\n", macroOutfile)
+		macroOutfile, err = util.NextAvailableFilename(filepath.Join(dir, baseFilename+"-macro"+ext))
+		if err != nil {
+			return "", "", "", "", fmt.Errorf("Error getting next available filename for macro: %s\n", err.Error())
+		}
 	}
 
 	if mosaicOutfile == "" {
-		mosaicOutfile = filepath.Join(dir, baseFilename+"-mosaic"+ext)
-	}
-	if _, err := os.Stat(macroOutfile); err == nil {
-		return "", "", "", "", fmt.Errorf("mosaic out file already exists: %s\n", mosaicOutfile)
+		mosaicOutfile, err = util.NextAvailableFilename(filepath.Join(dir, baseFilename+"-mosaic"+ext))
+		if err != nil {
+			return "", "", "", "", fmt.Errorf("Error getting next available filename for mosaic: %s\n", err.Error())
+		}
 	}
 
 	return name, coverOutfile, macroOutfile, mosaicOutfile, nil

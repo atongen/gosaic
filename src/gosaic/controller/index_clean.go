@@ -46,21 +46,24 @@ func IndexClean(env environment.Environment) (int, error) {
 
 	for i := 0; ; i++ {
 		if cancel {
+			close(c)
 			return num, errors.New("Cancelled")
 		}
 
 		gidxs, err := gidxService.FindAll("gidx.id", batchSize, batchSize*i)
 		if err != nil {
+			close(c)
 			return num, err
 		}
 		if len(gidxs) == 0 {
 			// we are done
-			return num, nil
+			break
 		}
 
 		for _, gidx := range gidxs {
 			rm, err := shouldRmGidx(gidx)
 			if err != nil {
+				close(c)
 				return num, err
 			} else if rm {
 				toRm = append(toRm, gidx)
@@ -69,20 +72,19 @@ func IndexClean(env environment.Environment) (int, error) {
 		}
 	}
 
-	if len(toRm) == 0 {
-		return num, nil
-	}
-
-	for _, gidx := range toRm {
-		_, err := gidxService.Delete(gidx)
-		if err != nil {
-			return num, err
+	if len(toRm) > 0 {
+		for _, gidx := range toRm {
+			_, err := gidxService.Delete(gidx)
+			if err != nil {
+				close(c)
+				return num, err
+			}
+			num++
 		}
-		num++
 	}
 
+	close(c)
 	bar.Finish()
-
 	return num, nil
 }
 

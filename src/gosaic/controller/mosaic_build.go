@@ -2,6 +2,7 @@ package controller
 
 import (
 	"errors"
+	"fmt"
 	"gosaic/environment"
 	"gosaic/model"
 	"gosaic/service"
@@ -14,7 +15,7 @@ import (
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
-func MosaicBuild(env environment.Environment, name, mosaicType string, macroId int64, maxRepeats int) *model.Mosaic {
+func MosaicBuild(env environment.Environment, name, fillType string, macroId int64, maxRepeats int) *model.Mosaic {
 	gidxPartialService, err := env.GidxPartialService()
 	if err != nil {
 		env.Printf("Error getting index partial service: %s\n", err.Error())
@@ -108,9 +109,9 @@ func MosaicBuild(env environment.Environment, name, mosaicType string, macroId i
 		}
 	}
 
-	switch mosaicType {
+	switch fillType {
 	default:
-		env.Printf("Invalid mosaic type: %s\n", mosaicType)
+		env.Printf("Invalid mosaic type: %s\n", fillType)
 		return nil
 	case "random":
 		err = createMosaicPartialsRandom(env.Log(), mosaicPartialService, partialComparisonService, mosaic, maxRepeats)
@@ -119,6 +120,13 @@ func MosaicBuild(env environment.Environment, name, mosaicType string, macroId i
 	}
 	if err != nil {
 		env.Printf("Error creating mosaic partials: %s\n", err.Error())
+		return nil
+	}
+
+	mosaic.IsComplete = true
+	_, err = mosaicService.Update(mosaic)
+	if err != nil {
+		env.Printf("Error marking mosaic complete: %s\n", err.Error())
 		return nil
 	}
 
@@ -148,11 +156,13 @@ func createMosaicPartialsRandom(l *log.Logger, mosaicPartialService service.Mosa
 
 	for {
 		if cancel {
+			close(c)
 			return errors.New("Cancelled")
 		}
 
 		macroPartial, err := mosaicPartialService.GetRandomMissing(mosaic)
 		if err != nil {
+			close(c)
 			return err
 		}
 		if macroPartial == nil {
@@ -166,11 +176,13 @@ func createMosaicPartialsRandom(l *log.Logger, mosaicPartialService service.Mosa
 			gidxPartialId, err = partialComparisonService.GetClosestMax(macroPartial, mosaic, maxRepeats)
 		}
 		if err != nil {
+			close(c)
 			return err
 		}
 
 		if gidxPartialId == int64(0) {
-			return err
+			close(c)
+			return fmt.Errorf("Error: Invalid closest gidx partial found")
 		}
 
 		mosaicPartial := model.MosaicPartial{
@@ -180,11 +192,13 @@ func createMosaicPartialsRandom(l *log.Logger, mosaicPartialService service.Mosa
 		}
 		err = mosaicPartialService.Insert(&mosaicPartial)
 		if err != nil {
+			close(c)
 			return err
 		}
 		bar.Increment()
 	}
 
+	close(c)
 	bar.Finish()
 	return nil
 }
@@ -212,6 +226,7 @@ func createMosaicPartialsBest(l *log.Logger, mosaicPartialService service.Mosaic
 
 	for {
 		if cancel {
+			close(c)
 			return errors.New("Cancelled")
 		}
 
@@ -223,6 +238,7 @@ func createMosaicPartialsBest(l *log.Logger, mosaicPartialService service.Mosaic
 		}
 
 		if err != nil {
+			close(c)
 			return err
 		} else if partialComparison == nil {
 			break
@@ -235,11 +251,13 @@ func createMosaicPartialsBest(l *log.Logger, mosaicPartialService service.Mosaic
 		}
 		err = mosaicPartialService.Insert(&mosaicPartial)
 		if err != nil {
+			close(c)
 			return err
 		}
 		bar.Increment()
 	}
 
+	close(c)
 	bar.Finish()
 	return nil
 }

@@ -65,7 +65,13 @@ func MacroQuad(env environment.Environment,
 
 	num, maxDepth, minArea = macroQuadFixArgs(myCoverWidth, myCoverHeight, num, maxDepth, minArea)
 
-	cover, err := macroQuadCreateCover(coverService, aspectService, myCoverWidth, myCoverHeight, num, maxDepth, minArea)
+	md5sum, err := util.Md5sum(path)
+	if err != nil {
+		env.Printf("Error checking for existing cover: %s\n", err.Error())
+		return nil, nil
+	}
+
+	cover, err := macroQuadFindOrCreateCover(coverService, aspectService, myCoverWidth, myCoverHeight, num, maxDepth, minArea, md5sum)
 	if err != nil {
 		env.Printf("Error building cover: %s\n", err.Error())
 		return nil, nil
@@ -134,11 +140,13 @@ func macroQuadBuildPartials(l *log.Logger, aspectService service.AspectService, 
 
 		err = macroQuadSplit(aspectService, coverPartialService, macroPartialService, quadDistService, macro, coverPartialQuadView, img)
 		if err != nil {
+			close(c)
 			return err
 		}
 
 		coverPartialQuadView, err = quadDistService.GetWorst(macro, maxDepth, minArea)
 		if err != nil {
+			close(c)
 			return err
 		}
 
@@ -150,6 +158,7 @@ func macroQuadBuildPartials(l *log.Logger, aspectService service.AspectService, 
 		if coverPartialQuadView.CoverPartial.Id != int64(0) {
 			err = coverPartialService.Delete(coverPartialQuadView.CoverPartial)
 			if err != nil {
+				close(c)
 				return err
 			}
 		}
@@ -157,6 +166,7 @@ func macroQuadBuildPartials(l *log.Logger, aspectService service.AspectService, 
 		bar.Increment()
 	}
 
+	close(c)
 	if cancel {
 		return errors.New("Cancelled")
 	}
@@ -165,26 +175,35 @@ func macroQuadBuildPartials(l *log.Logger, aspectService service.AspectService, 
 	return nil
 }
 
-func macroQuadCreateCover(coverService service.CoverService, aspectService service.AspectService, width, height, num, maxDepth, minArea int) (*model.Cover, error) {
+func macroQuadFindOrCreateCover(coverService service.CoverService, aspectService service.AspectService, width, height, num, maxDepth, minArea int, md5sum string) (*model.Cover, error) {
 	aspect, err := aspectService.FindOrCreate(width, height)
 	if err != nil {
 		return nil, err
 	}
 
-	coverName := model.CoverNameQuad(aspect.Id, width, height, num, maxDepth, minArea)
-	cover := model.Cover{
+	coverName := model.CoverNameQuad(aspect.Id, width, height, num, maxDepth, minArea, md5sum)
+	cover, err := coverService.GetOneBy("name = ?", coverName)
+	if err != nil {
+		return nil, err
+	}
+	// Existing cover is found, use it
+	if cover != nil {
+		return cover, nil
+	}
+
+	cover = &model.Cover{
 		Name:     coverName,
 		AspectId: aspect.Id,
 		Width:    width,
 		Height:   height,
 	}
 
-	err = coverService.Insert(&cover)
+	err = coverService.Insert(cover)
 	if err != nil {
 		return nil, err
 	}
 
-	return &cover, nil
+	return cover, nil
 }
 
 func macroQuadSplit(aspectService service.AspectService, coverPartialService service.CoverPartialService, macroPartialService service.MacroPartialService, quadDistService service.QuadDistService, macro *model.Macro, coverPartialQuadView *model.CoverPartialQuadView, img *image.Image) error {

@@ -22,7 +22,7 @@ type addIndex struct {
 }
 
 func Index(env environment.Environment, paths []string) error {
-	found := getJpgPaths(env.Log(), paths)
+	found := indexGetPaths(env.Log(), paths)
 	if len(found) == 0 {
 		return nil
 	}
@@ -48,9 +48,10 @@ func Index(env environment.Environment, paths []string) error {
 	return nil
 }
 
-func getJpgPaths(l *log.Logger, paths []string) []string {
+func indexGetPaths(l *log.Logger, paths []string) []string {
 	found := make([]string, 0)
 
+	exts := []string{".jpg", ".jpeg", ".png"}
 	for _, myPath := range paths {
 		err := filepath.Walk(myPath, func(path string, f os.FileInfo, err error) error {
 			if err != nil {
@@ -60,7 +61,7 @@ func getJpgPaths(l *log.Logger, paths []string) []string {
 				return nil
 			}
 			ext := strings.ToLower(filepath.Ext(path))
-			if ext != ".jpg" && ext != ".jpeg" {
+			if !util.SliceContainsString(exts, ext) {
 				return nil
 			}
 			absPath, err := filepath.Abs(path)
@@ -139,6 +140,7 @@ func processIndexPaths(l *log.Logger, workers int, paths []string, gidxService s
 	}
 
 	done <- true
+	close(c)
 	close(add)
 	close(sem)
 	close(done)

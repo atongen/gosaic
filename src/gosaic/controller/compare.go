@@ -66,11 +66,13 @@ func createMissingComparisons(l *log.Logger, partialComparisonService service.Pa
 
 	for {
 		if cancel {
+			close(c)
 			return errors.New("Cancelled")
 		}
 
 		views, err := partialComparisonService.FindMissing(macro, batchSize)
 		if err != nil {
+			close(c)
 			return err
 		}
 
@@ -83,6 +85,7 @@ func createMissingComparisons(l *log.Logger, partialComparisonService service.Pa
 		if len(partialComparisons) > 0 {
 			numCreated, err := partialComparisonService.BulkInsert(partialComparisons)
 			if err != nil {
+				close(c)
 				return err
 			}
 
@@ -90,6 +93,7 @@ func createMissingComparisons(l *log.Logger, partialComparisonService service.Pa
 		}
 	}
 
+	close(c)
 	bar.Finish()
 	return nil
 }

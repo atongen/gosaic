@@ -15,6 +15,7 @@ type MosaicService interface {
 	Service
 	Get(int64) (*model.Mosaic, error)
 	Insert(*model.Mosaic) error
+	Update(*model.Mosaic) (int64, error)
 	GetOneBy(string, ...interface{}) (*model.Mosaic, error)
 	ExistsBy(string, ...interface{}) (bool, error)
 	FindAll(string) ([]*model.Mosaic, error)
@@ -71,6 +72,13 @@ func (s *mosaicServiceImpl) Insert(mosaic *model.Mosaic) error {
 		mosaic.CreatedAt = time.Now()
 	}
 	return s.dbMap.Insert(mosaic)
+}
+
+func (s *mosaicServiceImpl) Update(mosaic *model.Mosaic) (int64, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	return s.dbMap.Update(mosaic)
 }
 
 func (s *mosaicServiceImpl) GetOneBy(conditions string, params ...interface{}) (*model.Mosaic, error) {

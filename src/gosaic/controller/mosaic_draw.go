@@ -118,11 +118,13 @@ func drawMosaic(l *log.Logger, mosaic *model.Mosaic, cover *model.Cover, mosaicP
 
 	for {
 		if cancel {
+			close(c)
 			return errors.New("Cancelled")
 		}
 
 		mosaicPartialViews, err := mosaicPartialService.FindAllPartialViews(mosaic, "mosaic_partials.id asc", batchSize, numCreated)
 		if err != nil {
+			close(c)
 			return err
 		}
 
@@ -134,6 +136,7 @@ func drawMosaic(l *log.Logger, mosaic *model.Mosaic, cover *model.Cover, mosaicP
 		for _, view := range mosaicPartialViews {
 			img, err := util.GetImageCoverPartial(view.Gidx, view.CoverPartial)
 			if err != nil {
+				close(c)
 				return err
 			}
 			dst = imaging.Paste(dst, *img, view.CoverPartial.Pt())
@@ -147,8 +150,10 @@ func drawMosaic(l *log.Logger, mosaic *model.Mosaic, cover *model.Cover, mosaicP
 
 	err = imaging.Save(dst, outfile)
 	if err != nil {
+		close(c)
 		return err
 	}
 
+	close(c)
 	return nil
 }

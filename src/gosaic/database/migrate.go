@@ -320,6 +320,7 @@ func createMosaicTable(db *sql.DB) error {
 			id integer not null primary key,
 			name text not null,
 			macro_id integer not null,
+			is_complete bool not null default false,
 			created_at timestamp default current_timestamp not null,
 			FOREIGN KEY(macro_id) REFERENCES macros (id) ON DELETE CASCADE,
 			CHECK(name <> '')

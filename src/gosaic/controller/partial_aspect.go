@@ -102,6 +102,7 @@ func createPartialGidxIndexes(l *log.Logger, gidxService service.GidxService, gi
 	for i := 0; ; i++ {
 		gidxs, err := gidxService.FindAll("id asc", batchSize, i*batchSize)
 		if err != nil {
+			close(c)
 			return err
 		}
 
@@ -111,51 +112,65 @@ func createPartialGidxIndexes(l *log.Logger, gidxService service.GidxService, gi
 
 		for _, gidx := range gidxs {
 			if cancel {
+				close(c)
 				return errors.New("Cancelled")
 			}
 
 			gidxPartials, err := buildGidxPartials(l, gidxPartialService, gidx, aspects, threashold, workers)
 			if err != nil {
+				close(c)
 				return err
 			}
 
 			_, err = gidxPartialService.BulkInsert(gidxPartials)
 			if err != nil {
+				close(c)
 				return err
 			}
 			bar.Increment()
 		}
 	}
 
+	close(c)
 	bar.Finish()
 
 	return nil
 }
 
 func buildGidxPartials(l *log.Logger, gidxPartialService service.GidxPartialService, gidx *model.Gidx, aspects []*model.Aspect, threashold float64, workers int) ([]*model.GidxPartial, error) {
-	myAspects := []*model.Aspect{}
+	var gidxPartials []*model.GidxPartial
+
+	pAspects := []*model.Aspect{}
 	if threashold < 0.0 {
-		myAspects = aspects
+		pAspects = aspects
 	} else {
 		for _, aspect := range aspects {
 			if gidx.Within(threashold, aspect) {
-				exists, err := gidxPartialService.ExistsBy("gidx_id = ? and aspect_id = ?", gidx.Id, aspect.Id)
-				if err != nil {
-					return nil, err
-				} else if !exists {
-					myAspects = append(myAspects, aspect)
-				}
+				pAspects = append(pAspects, aspect)
 			}
 		}
 	}
-	num := len(myAspects)
 
-	var gidxPartials []*model.GidxPartial
-	if num == 0 {
+	if len(pAspects) == 0 {
 		return gidxPartials, nil
 	}
 
-	gidxPartials = make([]*model.GidxPartial, num)
+	myAspects := []*model.Aspect{}
+	for _, aspect := range pAspects {
+		exists, err := gidxPartialService.ExistsBy("gidx_id = ? and aspect_id = ?", gidx.Id, aspect.Id)
+		if err != nil {
+			return nil, err
+		} else if !exists {
+			myAspects = append(myAspects, aspect)
+		}
+
+	}
+
+	if len(myAspects) == 0 {
+		return gidxPartials, nil
+	}
+
+	gidxPartials = make([]*model.GidxPartial, len(myAspects))
 
 	img, err := util.OpenImg(gidx)
 	if err != nil {
@@ -168,7 +183,7 @@ func buildGidxPartials(l *log.Logger, gidxPartialService service.GidxPartialServ
 
 	go func(gps []*model.GidxPartial) {
 		idx := 0
-		for i := 0; i < num; i++ {
+		for i := 0; i < len(myAspects); i++ {
 			select {
 			case gp := <-add:
 				gps[idx] = gp

@@ -161,6 +161,7 @@ func buildMacroPartials(l *log.Logger, macroPartialService service.MacroPartialS
 
 	for {
 		if cancel {
+			close(c)
 			return errors.New("Cancelled")
 		}
 
@@ -168,6 +169,7 @@ func buildMacroPartials(l *log.Logger, macroPartialService service.MacroPartialS
 
 		coverPartials, err = macroPartialService.FindMissing(macro, "cover_partials.id ASC", batchSize, 0)
 		if err != nil {
+			close(c)
 			return err
 		}
 
@@ -180,10 +182,9 @@ func buildMacroPartials(l *log.Logger, macroPartialService service.MacroPartialS
 		bar.Add(num)
 	}
 
-	bar.Finish()
-
+	close(c)
 	close(errs)
-
+	bar.Finish()
 	return err
 }
 

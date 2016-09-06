@@ -195,9 +195,12 @@ func (s *gidxPartialServiceImpl) CountForMacro(macro *model.Macro) (int64, error
 	sql := `
 		select count(*)
 		from gidx_partials gp
-		, macro_partials mp
-		where gp.aspect_id = mp.aspect_id
-		and mp.macro_id = ?
+		where exists (
+			select 1
+			from macro_partials mp
+			where mp.macro_id = ?
+			and mp.aspect_id = gp.aspect_id
+		)
 	`
 	return s.dbMap.SelectInt(sql, macro.Id)
 }
