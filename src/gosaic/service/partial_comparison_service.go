@@ -359,16 +359,20 @@ func (s *partialComparisonServiceImpl) GetClosest(macroPartial *model.MacroParti
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	sql := `
+	sqlStr := `
 		select pc.gidx_partial_id
 		from partial_comparisons pc
 		where pc.macro_partial_id = ?
 		order by pc.dist asc
 		limit 1
 	`
-	gidxPartialId, err := s.dbMap.SelectInt(sql, macroPartial.Id)
+	gidxPartialId, err := s.dbMap.SelectInt(sqlStr, macroPartial.Id)
 	if err != nil {
-		return int64(0), err
+		if err == sql.ErrNoRows {
+			return 0, nil
+		} else {
+			return 0, err
+		}
 	}
 
 	return gidxPartialId, nil
@@ -378,7 +382,7 @@ func (s *partialComparisonServiceImpl) GetClosestMax(macroPartial *model.MacroPa
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	sql := fmt.Sprintf(`
+	sqlStr := fmt.Sprintf(`
 		select pc.gidx_partial_id
 		from partial_comparisons pc
 		where pc.macro_partial_id = ?
@@ -396,9 +400,13 @@ func (s *partialComparisonServiceImpl) GetClosestMax(macroPartial *model.MacroPa
 		limit 1
 	`, maxRepeats)
 
-	gidxPartialId, err := s.dbMap.SelectInt(sql, macroPartial.Id, mosaic.Id, maxRepeats)
+	gidxPartialId, err := s.dbMap.SelectInt(sqlStr, macroPartial.Id, mosaic.Id)
 	if err != nil {
-		return int64(0), err
+		if err == sql.ErrNoRows {
+			return 0, nil
+		} else {
+			return 0, err
+		}
 	}
 
 	return gidxPartialId, nil
