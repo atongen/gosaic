@@ -5,13 +5,8 @@ import (
 	"fmt"
 	"gosaic/environment"
 	"gosaic/model"
-	"gosaic/service"
 	"gosaic/util"
 	"image/color"
-	"log"
-	"os"
-	"os/signal"
-	"syscall"
 
 	"gopkg.in/cheggaaa/pb.v1"
 
@@ -19,29 +14,9 @@ import (
 )
 
 func MosaicDraw(env environment.Environment, mosaicId int64, outfile string) error {
-	macroService, err := env.MacroService()
-	if err != nil {
-		env.Printf("Error getting macro service: %s\n", err.Error())
-		return err
-	}
-
-	coverService, err := env.CoverService()
-	if err != nil {
-		env.Printf("Error getting cover service: %s\n", err.Error())
-		return err
-	}
-
-	mosaicService, err := env.MosaicService()
-	if err != nil {
-		env.Printf("Error getting mosaic service: %s\n", err.Error())
-		return err
-	}
-
-	mosaicPartialService, err := env.MosaicPartialService()
-	if err != nil {
-		env.Printf("Error getting mosaic partial service: %s\n", err.Error())
-		return err
-	}
+	macroService := env.MustMacroService()
+	coverService := env.MustCoverService()
+	mosaicService := env.MustMosaicService()
 
 	mosaic, err := mosaicService.Get(mosaicId)
 	if err != nil {
@@ -79,7 +54,7 @@ func MosaicDraw(env environment.Environment, mosaicId int64, outfile string) err
 		return errors.New(msg)
 	}
 
-	err = drawMosaic(env.Log(), mosaic, cover, mosaicPartialService, outfile)
+	err = drawMosaic(env, mosaic, cover, outfile)
 	if err != nil {
 		env.Printf("Error drawing mosaic: %s\n", err.Error())
 		return err
@@ -89,14 +64,16 @@ func MosaicDraw(env environment.Environment, mosaicId int64, outfile string) err
 	return nil
 }
 
-func drawMosaic(l *log.Logger, mosaic *model.Mosaic, cover *model.Cover, mosaicPartialService service.MosaicPartialService, outfile string) error {
+func drawMosaic(env environment.Environment, mosaic *model.Mosaic, cover *model.Cover, outfile string) error {
+	mosaicPartialService := env.MustMosaicPartialService()
+
 	numPartials, err := mosaicPartialService.Count(mosaic)
 	if err != nil {
 		return err
 	}
 
 	if numPartials == 0 {
-		l.Println("This mosaic has 0 partials")
+		env.Println("This mosaic has 0 partials")
 		return nil
 	}
 
@@ -105,26 +82,16 @@ func drawMosaic(l *log.Logger, mosaic *model.Mosaic, cover *model.Cover, mosaicP
 	batchSize := 100
 	numCreated := 0
 
-	l.Printf("Drawing %d mosaic partials...\n", numPartials)
+	env.Printf("Drawing %d mosaic partials...\n", numPartials)
 	bar := pb.StartNew(int(numPartials))
 
-	cancel := false
-	c := make(chan os.Signal, 2)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-c
-		cancel = true
-	}()
-
 	for {
-		if cancel {
-			close(c)
+		if env.Cancel() {
 			return errors.New("Cancelled")
 		}
 
 		mosaicPartialViews, err := mosaicPartialService.FindAllPartialViews(mosaic, "mosaic_partials.id asc", batchSize, numCreated)
 		if err != nil {
-			close(c)
 			return err
 		}
 
@@ -136,7 +103,6 @@ func drawMosaic(l *log.Logger, mosaic *model.Mosaic, cover *model.Cover, mosaicP
 		for _, view := range mosaicPartialViews {
 			img, err := util.GetImageCoverPartial(view.Gidx, view.CoverPartial)
 			if err != nil {
-				close(c)
 				return err
 			}
 			dst = imaging.Paste(dst, *img, view.CoverPartial.Pt())
@@ -150,10 +116,8 @@ func drawMosaic(l *log.Logger, mosaic *model.Mosaic, cover *model.Cover, mosaicP
 
 	err = imaging.Save(dst, outfile)
 	if err != nil {
-		close(c)
 		return err
 	}
 
-	close(c)
 	return nil
 }

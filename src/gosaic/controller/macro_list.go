@@ -6,29 +6,10 @@ import (
 )
 
 func MacroList(env environment.Environment) {
-	macroService, err := env.MacroService()
-	if err != nil {
-		env.Printf("Error getting macro service: %s\n", err.Error())
-		return
-	}
-
-	macroPartialService, err := env.MacroPartialService()
-	if err != nil {
-		env.Printf("Error getting macro partial service: %s\n", err.Error())
-		return
-	}
-
-	coverService, err := env.CoverService()
-	if err != nil {
-		env.Printf("Error getting cover service: %s\n", err.Error())
-		return
-	}
-
-	aspectService, err := env.AspectService()
-	if err != nil {
-		env.Printf("Error getting aspect service: %s\n", err.Error())
-		return
-	}
+	macroService := env.MustMacroService()
+	macroPartialService := env.MustMacroPartialService()
+	coverService := env.MustCoverService()
+	aspectService := env.MustAspectService()
 
 	macros, err := macroService.FindAll("macros.id desc")
 	if err != nil {

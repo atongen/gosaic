@@ -11,11 +11,7 @@ func MosaicAspect(env environment.Environment,
 	threashold float64,
 	coverOutfile, macroOutfile, mosaicOutfile string) *model.Mosaic {
 
-	mosaicService, err := env.MosaicService()
-	if err != nil {
-		env.Printf("Error getting mosaic service: %s\n", err.Error())
-		return nil
-	}
+	mosaicService := env.MustMosaicService()
 
 	myName, myCoverOutfile, myMacroOutfile, myMosaicOutfile, err := validateMosaicArgs(
 		mosaicService, inPath, name, coverOutfile, macroOutfile, mosaicOutfile,

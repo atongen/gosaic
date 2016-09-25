@@ -6,11 +6,7 @@ import (
 )
 
 func MacroAspect(env environment.Environment, path string, coverWidth, coverHeight, partialWidth, partialHeight, num int, coverOutfile, macroOutfile string) (*model.Cover, *model.Macro) {
-	aspectService, err := env.AspectService()
-	if err != nil {
-		env.Printf("Error getting aspect service: %s\n", err.Error())
-		return nil, nil
-	}
+	aspectService := env.MustAspectService()
 
 	aspect, width, height, err := getImageDimensions(aspectService, path)
 	if err != nil {
