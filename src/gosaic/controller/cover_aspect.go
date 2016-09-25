@@ -4,34 +4,14 @@ import (
 	"errors"
 	"gosaic/environment"
 	"gosaic/model"
-	"gosaic/service"
-	"log"
 	"math"
-	"os"
-	"os/signal"
-	"syscall"
 
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
 func CoverAspect(env environment.Environment, coverWidth, coverHeight, partialWidth, partialHeight, num int) *model.Cover {
-	coverService, err := env.CoverService()
-	if err != nil {
-		env.Printf("Error creating cover service: %s\n", err.Error())
-		return nil
-	}
-
-	coverPartialService, err := env.CoverPartialService()
-	if err != nil {
-		env.Printf("Error creating cover partial service: %s\n", err.Error())
-		return nil
-	}
-
-	aspectService, err := env.AspectService()
-	if err != nil {
-		env.Printf("Error getting aspect service: %s\n", err.Error())
-		return nil
-	}
+	coverService := env.MustCoverService()
+	aspectService := env.MustAspectService()
 
 	coverAspect, err := aspectService.FindOrCreate(coverWidth, coverHeight)
 	if err != nil {
@@ -69,7 +49,7 @@ func CoverAspect(env environment.Environment, coverWidth, coverHeight, partialWi
 		return nil
 	}
 
-	err = addCoverAspectPartials(env.Log(), coverPartialService, cover, coverPartialAspect, num)
+	err = addCoverAspectPartials(env, cover, coverPartialAspect, num)
 	if err != nil {
 		env.Printf("Error adding cover partials: %s\n", err.Error())
 		// attempt to delete cover
@@ -115,37 +95,28 @@ func getCoverAspectDims(coverWidth, coverHeight, partialAspectWidth, partialAspe
 	return
 }
 
-func addCoverAspectPartials(l *log.Logger, coverPartialService service.CoverPartialService, cover *model.Cover, coverPartialAspect *model.Aspect, num int) error {
+func addCoverAspectPartials(env environment.Environment, cover *model.Cover, coverPartialAspect *model.Aspect, num int) error {
+	coverPartialService := env.MustCoverPartialService()
+
 	width, height, columns, rows := getCoverAspectDims(cover.Width, cover.Height, coverPartialAspect.Columns, coverPartialAspect.Rows, num)
 
 	xOffset := int(math.Floor(float64(cover.Width-width*columns) / float64(2.0)))
 	yOffset := int(math.Floor(float64(cover.Height-height*rows) / float64(2.0)))
 
 	count := columns * rows
-	l.Printf("Building %d cover partials...\n", count)
+	env.Printf("Building %d cover partials...\n", count)
 
 	bar := pb.StartNew(count)
-
-	cancel := false
-	c := make(chan os.Signal, 2)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-c
-		cancel = true
-	}()
 
 	for i := 0; i < columns; i++ {
 		var coverPartials []*model.CoverPartial = make([]*model.CoverPartial, rows)
 		for j := 0; j < rows; j++ {
-			if cancel {
-				close(c)
+			if env.Cancel() {
 				return errors.New("Cancelled")
 			}
 
 			x1 := i*width + xOffset
 			y1 := j*height + yOffset
-			//x2 := (i+1)*width + xOffset - 1
-			//y2 := (j+1)*height + yOffset - 1
 			x2 := (i+1)*width + xOffset
 			y2 := (j+1)*height + yOffset
 
@@ -161,13 +132,11 @@ func addCoverAspectPartials(l *log.Logger, coverPartialService service.CoverPart
 		}
 		num, err := coverPartialService.BulkInsert(coverPartials)
 		if err != nil {
-			close(c)
 			return err
 		}
 		bar.Add(int(num))
 	}
 
-	close(c)
 	bar.Finish()
 	return nil
 }

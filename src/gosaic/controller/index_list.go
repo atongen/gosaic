@@ -3,10 +3,7 @@ package controller
 import "gosaic/environment"
 
 func IndexList(env environment.Environment) error {
-	gidxService, err := env.GidxService()
-	if err != nil {
-		return err
-	}
+	gidxService := env.MustGidxService()
 
 	batchSize := 1000
 

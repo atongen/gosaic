@@ -8,10 +8,8 @@ import (
 	"gosaic/util"
 	"log"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"strings"
-	"syscall"
 
 	"gopkg.in/cheggaaa/pb.v1"
 )
@@ -27,19 +25,7 @@ func Index(env environment.Environment, paths []string) error {
 		return nil
 	}
 
-	gidxService, err := env.GidxService()
-	if err != nil {
-		env.Printf("Error getting index service: %s\n", err.Error())
-		return err
-	}
-
-	aspectService, err := env.AspectService()
-	if err != nil {
-		env.Printf("Error getting aspect service: %s\n", err.Error())
-		return err
-	}
-
-	err = processIndexPaths(env.Log(), env.Workers(), found, gidxService, aspectService)
+	err := processIndexPaths(env, env.Workers(), found)
 	if err != nil {
 		env.Printf("Error indexing images: %s\n", err.Error())
 		return err
@@ -82,13 +68,16 @@ func indexGetPaths(l *log.Logger, paths []string) []string {
 	return found
 }
 
-func processIndexPaths(l *log.Logger, workers int, paths []string, gidxService service.GidxService, aspectService service.AspectService) error {
+func processIndexPaths(env environment.Environment, workers int, paths []string) error {
+	gidxService := env.MustGidxService()
+	aspectService := env.MustAspectService()
+
 	num := len(paths)
 	if num == 0 {
 		return nil
 	}
 
-	l.Printf("Indexing %d images...\n", num)
+	env.Printf("Indexing %d images...\n", num)
 
 	bar := pb.StartNew(num)
 
@@ -96,13 +85,13 @@ func processIndexPaths(l *log.Logger, workers int, paths []string, gidxService s
 	sem := make(chan bool, workers)
 	done := make(chan bool)
 
-	go func(myLog *log.Logger, myBar *pb.ProgressBar, addCh <-chan addIndex, semCh <-chan bool, doneCh <-chan bool, myGidxService service.GidxService, myAspectService service.AspectService) {
+	go func(myBar *pb.ProgressBar, addCh <-chan addIndex, semCh <-chan bool, doneCh <-chan bool, myGidxService service.GidxService, myAspectService service.AspectService) {
 		for {
 			select {
 			case newIndex := <-addCh:
-				err := storeIndexPath(myLog, newIndex, myGidxService, myAspectService)
+				err := storeIndexPath(env.Log(), newIndex, myGidxService, myAspectService)
 				if err != nil {
-					l.Printf("Error indexing path %s: %s\n", newIndex.path, err.Error())
+					env.Printf("Error indexing path %s: %s\n", newIndex.path, err.Error())
 				}
 				myBar.Increment()
 				<-semCh
@@ -110,29 +99,21 @@ func processIndexPaths(l *log.Logger, workers int, paths []string, gidxService s
 				return
 			}
 		}
-	}(l, bar, add, sem, done, gidxService, aspectService)
-
-	cancel := false
-	c := make(chan os.Signal, 2)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-c
-		cancel = true
-	}()
+	}(bar, add, sem, done, gidxService, aspectService)
 
 	for _, p := range paths {
-		if cancel {
+		if env.Cancel() {
 			break
 		}
 		sem <- true
-		go func(myLog *log.Logger, myPath string) {
+		go func(myPath string) {
 			md5sum, err := util.Md5sum(myPath)
 			if err != nil {
-				myLog.Printf("Error getting md5 sum for path %s: %s\n", myPath, err.Error())
+				env.Printf("Error getting md5 sum for path %s: %s\n", myPath, err.Error())
 				return
 			}
 			add <- addIndex{myPath, md5sum}
-		}(l, p)
+		}(p)
 	}
 
 	for i := 0; i < cap(sem); i++ {
@@ -140,12 +121,11 @@ func processIndexPaths(l *log.Logger, workers int, paths []string, gidxService s
 	}
 
 	done <- true
-	close(c)
 	close(add)
 	close(sem)
 	close(done)
 
-	if cancel {
+	if env.Cancel() {
 		return errors.New("Cancelled")
 	}
 

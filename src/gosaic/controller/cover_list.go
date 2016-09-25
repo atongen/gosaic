@@ -3,11 +3,7 @@ package controller
 import "gosaic/environment"
 
 func CoverList(env environment.Environment) {
-	coverService, err := env.CoverService()
-	if err != nil {
-		env.Printf("Error getting cover service: %s\n", err.Error())
-		return
-	}
+	coverService := env.MustCoverService()
 
 	covers, err := coverService.FindAll("covers.name ASC")
 	if err != nil {

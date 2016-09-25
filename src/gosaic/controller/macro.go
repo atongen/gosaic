@@ -4,13 +4,8 @@ import (
 	"errors"
 	"gosaic/environment"
 	"gosaic/model"
-	"gosaic/service"
 	"gosaic/util"
 	"image"
-	"log"
-	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/disintegration/imaging"
 
@@ -18,29 +13,7 @@ import (
 )
 
 func Macro(env environment.Environment, path string, coverId int64, outfile string) *model.Macro {
-	aspectService, err := env.AspectService()
-	if err != nil {
-		env.Printf("Error getting aspect service: %s\n", err.Error())
-		return nil
-	}
-
-	coverService, err := env.CoverService()
-	if err != nil {
-		env.Printf("Error creating cover service: %s\n", err.Error())
-		return nil
-	}
-
-	macroService, err := env.MacroService()
-	if err != nil {
-		env.Printf("Error creating macro service: %s\n", err.Error())
-		return nil
-	}
-
-	macroPartialService, err := env.MacroPartialService()
-	if err != nil {
-		env.Printf("Error creating macro partial service: %s\n", err.Error())
-		return nil
-	}
+	coverService := env.MustCoverService()
 
 	cover, err := coverService.Get(coverId)
 	if err != nil {
@@ -51,13 +24,13 @@ func Macro(env environment.Environment, path string, coverId int64, outfile stri
 		return nil
 	}
 
-	macro, img, err := findOrCreateMacro(env.Log(), macroService, aspectService, cover, path, outfile)
+	macro, img, err := findOrCreateMacro(env, cover, path, outfile)
 	if err != nil {
 		env.Printf("Error creating macro: %s\n", err.Error())
 		return nil
 	}
 
-	err = buildMacroPartials(env.Log(), macroPartialService, img, macro, env.Workers())
+	err = buildMacroPartials(env, img, macro, env.Workers())
 	if err != nil {
 		env.Printf("Error creating macro partials: %s\n", err.Error())
 		return nil
@@ -66,7 +39,10 @@ func Macro(env environment.Environment, path string, coverId int64, outfile stri
 	return macro
 }
 
-func findOrCreateMacro(l *log.Logger, macroService service.MacroService, aspectService service.AspectService, cover *model.Cover, path, outfile string) (*model.Macro, *image.Image, error) {
+func findOrCreateMacro(env environment.Environment, cover *model.Cover, path, outfile string) (*model.Macro, *image.Image, error) {
+	macroService := env.MustMacroService()
+	aspectService := env.MustAspectService()
+
 	md5sum, err := util.Md5sum(path)
 	if err != nil {
 		return nil, nil, err
@@ -96,7 +72,7 @@ func findOrCreateMacro(l *log.Logger, macroService service.MacroService, aspectS
 		if err != nil {
 			return nil, nil, err
 		}
-		l.Printf("Wrote macro image: %s\n", outfile)
+		env.Printf("Wrote macro image: %s\n", outfile)
 	}
 
 	macro, err := macroService.GetOneBy("cover_id = ? AND md5sum = ?", cover.Id, md5sum)
@@ -128,7 +104,9 @@ func findOrCreateMacro(l *log.Logger, macroService service.MacroService, aspectS
 	return macro, &imgCov, nil
 }
 
-func buildMacroPartials(l *log.Logger, macroPartialService service.MacroPartialService, img *image.Image, macro *model.Macro, workers int) error {
+func buildMacroPartials(env environment.Environment, img *image.Image, macro *model.Macro, workers int) error {
+	macroPartialService := env.MustMacroPartialService()
+
 	countMissing, err := macroPartialService.CountMissing(macro)
 	if err != nil {
 		return err
@@ -138,30 +116,21 @@ func buildMacroPartials(l *log.Logger, macroPartialService service.MacroPartialS
 		return nil
 	}
 
-	l.Printf("Building %d macro partials...\n", countMissing)
+	env.Printf("Building %d macro partials...\n", countMissing)
 
 	bar := pb.StartNew(int(countMissing))
 
 	batchSize := 100
 	errs := make(chan error)
 
-	go func(myLog *log.Logger, myErrs <-chan error) {
+	go func(myErrs <-chan error) {
 		for e := range myErrs {
-			l.Printf("Error building macro partial: %s\n", e.Error())
+			env.Printf("Error building macro partial: %s\n", e.Error())
 		}
-	}(l, errs)
-
-	cancel := false
-	c := make(chan os.Signal, 2)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-c
-		cancel = true
-	}()
+	}(errs)
 
 	for {
-		if cancel {
-			close(c)
+		if env.Cancel() {
 			return errors.New("Cancelled")
 		}
 
@@ -169,7 +138,6 @@ func buildMacroPartials(l *log.Logger, macroPartialService service.MacroPartialS
 
 		coverPartials, err = macroPartialService.FindMissing(macro, "cover_partials.id ASC", batchSize, 0)
 		if err != nil {
-			close(c)
 			return err
 		}
 
@@ -178,21 +146,20 @@ func buildMacroPartials(l *log.Logger, macroPartialService service.MacroPartialS
 			break
 		}
 
-		processMacroPartials(macroPartialService, img, macro, coverPartials, errs, workers)
+		processMacroPartials(env, img, macro, coverPartials, errs, workers)
 		bar.Add(num)
 	}
 
-	close(c)
 	close(errs)
 	bar.Finish()
 	return err
 }
 
-func processMacroPartials(macroPartialService service.MacroPartialService, img *image.Image, macro *model.Macro, coverPartials []*model.CoverPartial, errs chan<- error, workers int) {
+func processMacroPartials(env environment.Environment, img *image.Image, macro *model.Macro, coverPartials []*model.CoverPartial, errs chan<- error, workers int) {
 	add := make(chan *model.MacroPartial)
 	sem := make(chan bool, workers)
 
-	go storeMacroPartials(macroPartialService, add, sem, errs)
+	go storeMacroPartials(env, add, sem, errs)
 
 	for _, coverPartial := range coverPartials {
 		sem <- true
@@ -220,7 +187,9 @@ func storeMacroPartial(img *image.Image, macro *model.Macro, coverPartial *model
 	add <- &macroPartial
 }
 
-func storeMacroPartials(macroPartialService service.MacroPartialService, add <-chan *model.MacroPartial, sem <-chan bool, errs chan<- error) {
+func storeMacroPartials(env environment.Environment, add <-chan *model.MacroPartial, sem <-chan bool, errs chan<- error) {
+	macroPartialService := env.MustMacroPartialService()
+
 	for macroPartial := range add {
 		err := macroPartialService.Insert(macroPartial)
 		if err != nil {

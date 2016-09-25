@@ -6,19 +6,14 @@ import (
 	"gosaic/model"
 	"gosaic/util"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
 func IndexClean(env environment.Environment) (int, error) {
-	num := 0
+	gidxService := env.MustGidxService()
 
-	gidxService, err := env.GidxService()
-	if err != nil {
-		return num, err
-	}
+	num := 0
 
 	count, err := gidxService.Count()
 	if err != nil {
@@ -36,23 +31,13 @@ func IndexClean(env environment.Environment) (int, error) {
 	batchSize := 1000
 	toRm := []*model.Gidx{}
 
-	cancel := false
-	c := make(chan os.Signal, 2)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-c
-		cancel = true
-	}()
-
 	for i := 0; ; i++ {
-		if cancel {
-			close(c)
+		if env.Cancel() {
 			return num, errors.New("Cancelled")
 		}
 
 		gidxs, err := gidxService.FindAll("gidx.id", batchSize, batchSize*i)
 		if err != nil {
-			close(c)
 			return num, err
 		}
 		if len(gidxs) == 0 {
@@ -63,7 +48,6 @@ func IndexClean(env environment.Environment) (int, error) {
 		for _, gidx := range gidxs {
 			rm, err := shouldRmGidx(gidx)
 			if err != nil {
-				close(c)
 				return num, err
 			} else if rm {
 				toRm = append(toRm, gidx)
@@ -76,14 +60,12 @@ func IndexClean(env environment.Environment) (int, error) {
 		for _, gidx := range toRm {
 			_, err := gidxService.Delete(gidx)
 			if err != nil {
-				close(c)
 				return num, err
 			}
 			num++
 		}
 	}
 
-	close(c)
 	bar.Finish()
 	return num, nil
 }

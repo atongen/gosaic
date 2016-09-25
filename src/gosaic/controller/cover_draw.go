@@ -4,21 +4,12 @@ import (
 	"errors"
 	"gosaic/environment"
 	"gosaic/model"
-	"gosaic/service"
 
 	"github.com/fogleman/gg"
 )
 
 func CoverDraw(env environment.Environment, coverId int64, outPath string) error {
-	coverService, err := env.CoverService()
-	if err != nil {
-		return err
-	}
-
-	coverPartialService, err := env.CoverPartialService()
-	if err != nil {
-		return err
-	}
+	coverService := env.MustCoverService()
 
 	cover, err := coverService.Get(coverId)
 	if err != nil {
@@ -27,7 +18,7 @@ func CoverDraw(env environment.Environment, coverId int64, outPath string) error
 		return errors.New("Cover not found")
 	}
 
-	err = doCoverDraw(cover, outPath, coverPartialService)
+	err = doCoverDraw(env, cover, outPath)
 	if err != nil {
 		return err
 	}
@@ -36,7 +27,9 @@ func CoverDraw(env environment.Environment, coverId int64, outPath string) error
 	return nil
 }
 
-func doCoverDraw(cover *model.Cover, outPath string, coverPartialService service.CoverPartialService) error {
+func doCoverDraw(env environment.Environment, cover *model.Cover, outPath string) error {
+	coverPartialService := env.MustCoverPartialService()
+
 	dc := gg.NewContext(int(cover.Width), int(cover.Height))
 	dc.Clear()
 
