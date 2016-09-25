@@ -82,3 +82,23 @@ func TestServices(t *testing.T) {
 		t.Fatalf("Error getting quadDistService: %s\n", err.Error())
 	}
 }
+
+func TestMustServices(t *testing.T) {
+	env, _, err := setupEnvTest()
+	if err != nil {
+		t.Fatalf("Error getting test environment: %s\n", err.Error())
+	}
+	defer env.Close()
+
+	env.MustGidxService()
+	env.MustAspectService()
+	env.MustGidxPartialService()
+	env.MustCoverService()
+	env.MustCoverPartialService()
+	env.MustMacroService()
+	env.MustMacroPartialService()
+	env.MustPartialComparisonService()
+	env.MustMosaicService()
+	env.MustMosaicPartialService()
+	env.MustQuadDistService()
+}

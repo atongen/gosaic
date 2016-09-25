@@ -5,8 +5,10 @@ import (
 	"io"
 	"log"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"sync"
+	"syscall"
 
 	"gosaic/database"
 	"gosaic/service"
@@ -29,6 +31,16 @@ var (
 type Environment interface {
 	Init() error
 	Close()
+	Cancel() bool
+	DbPath() string
+	Workers() int
+	Log() *log.Logger
+	Db() *sql.DB
+	Printf(format string, a ...interface{})
+	Println(a ...interface{})
+	Fatalf(format string, a ...interface{})
+	Fatalln(a ...interface{})
+
 	GidxService() (service.GidxService, error)
 	AspectService() (service.AspectService, error)
 	GidxPartialService() (service.GidxPartialService, error)
@@ -40,14 +52,18 @@ type Environment interface {
 	MosaicService() (service.MosaicService, error)
 	MosaicPartialService() (service.MosaicPartialService, error)
 	QuadDistService() (service.QuadDistService, error)
-	DbPath() string
-	Workers() int
-	Log() *log.Logger
-	Db() *sql.DB
-	Printf(format string, a ...interface{})
-	Println(a ...interface{})
-	Fatalf(format string, a ...interface{})
-	Fatalln(a ...interface{})
+
+	MustGidxService() service.GidxService
+	MustAspectService() service.AspectService
+	MustGidxPartialService() service.GidxPartialService
+	MustCoverService() service.CoverService
+	MustCoverPartialService() service.CoverPartialService
+	MustMacroService() service.MacroService
+	MustMacroPartialService() service.MacroPartialService
+	MustPartialComparisonService() service.PartialComparisonService
+	MustMosaicService() service.MosaicService
+	MustMosaicPartialService() service.MosaicPartialService
+	MustQuadDistService() service.QuadDistService
 }
 
 type environment struct {
@@ -56,6 +72,8 @@ type environment struct {
 	dB       *sql.DB
 	dbMap    *gorp.DbMap
 	log      *log.Logger
+	cancel   bool
+	cancelCh chan os.Signal
 	services map[ServiceName]service.Service
 	m        sync.Mutex
 }
@@ -65,6 +83,7 @@ func NewEnvironment(dbPath string, out io.Writer, workers int) (Environment, err
 
 	// setup the environment logger
 	env.log = log.New(out, "GOSAIC: ", log.Ldate|log.Ltime)
+	env.cancel = false
 
 	var dbPathAbs string
 	if dbPath == DBMEM {
@@ -134,11 +153,24 @@ func (env *environment) Init() error {
 	// services
 	env.services = map[ServiceName]service.Service{}
 
+	// cancel
+	env.cancelCh = make(chan os.Signal, 2)
+	signal.Notify(env.cancelCh, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-env.cancelCh
+		env.cancel = true
+	}()
+
 	return nil
 }
 
 func (env *environment) Close() {
 	env.dB.Close()
+	close(env.cancelCh)
+}
+
+func (env *environment) Cancel() bool {
+	return env.cancel
 }
 
 func (env *environment) DbPath() string {

@@ -4,28 +4,14 @@ import (
 	"errors"
 	"gosaic/environment"
 	"gosaic/model"
-	"gosaic/service"
 	"log"
-	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
 func Compare(env environment.Environment, macroId int64) error {
-	macroService, err := env.MacroService()
-	if err != nil {
-		env.Printf("Error getting macro service: %s\n", err.Error())
-		return err
-	}
-
-	partialComparisonService, err := env.PartialComparisonService()
-	if err != nil {
-		env.Printf("Error getting partial comparison service: %s\n", err.Error())
-		return err
-	}
+	macroService := env.MustMacroService()
 
 	macro, err := macroService.Get(macroId)
 	if err != nil {
@@ -33,7 +19,7 @@ func Compare(env environment.Environment, macroId int64) error {
 		return err
 	}
 
-	err = createMissingComparisons(env.Log(), partialComparisonService, macro)
+	err = createMissingComparisons(env, macro)
 	if err != nil {
 		env.Printf("Error creating comparisons: %s\n", err.Error())
 		return err
@@ -42,7 +28,9 @@ func Compare(env environment.Environment, macroId int64) error {
 	return nil
 }
 
-func createMissingComparisons(l *log.Logger, partialComparisonService service.PartialComparisonService, macro *model.Macro) error {
+func createMissingComparisons(env environment.Environment, macro *model.Macro) error {
+	partialComparisonService := env.MustPartialComparisonService()
+
 	batchSize := 500
 	numTotal, err := partialComparisonService.CountMissing(macro)
 	if err != nil {
@@ -53,26 +41,16 @@ func createMissingComparisons(l *log.Logger, partialComparisonService service.Pa
 		return nil
 	}
 
-	l.Printf("Building %d partial image comparisons...\n", numTotal)
+	env.Printf("Building %d partial image comparisons...\n", numTotal)
 	bar := pb.StartNew(int(numTotal))
 
-	cancel := false
-	c := make(chan os.Signal, 2)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-c
-		cancel = true
-	}()
-
 	for {
-		if cancel {
-			close(c)
+		if env.Cancel() {
 			return errors.New("Cancelled")
 		}
 
 		views, err := partialComparisonService.FindMissing(macro, batchSize)
 		if err != nil {
-			close(c)
 			return err
 		}
 
@@ -80,12 +58,11 @@ func createMissingComparisons(l *log.Logger, partialComparisonService service.Pa
 			break
 		}
 
-		partialComparisons := buildPartialComparisons(l, views)
+		partialComparisons := buildPartialComparisons(env.Log(), views)
 
 		if len(partialComparisons) > 0 {
 			numCreated, err := partialComparisonService.BulkInsert(partialComparisons)
 			if err != nil {
-				close(c)
 				return err
 			}
 
@@ -93,7 +70,6 @@ func createMissingComparisons(l *log.Logger, partialComparisonService service.Pa
 		}
 	}
 
-	close(c)
 	bar.Finish()
 	return nil
 }

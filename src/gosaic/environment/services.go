@@ -217,3 +217,91 @@ func (env *environment) QuadDistService() (service.QuadDistService, error) {
 
 	return quadDistService, nil
 }
+
+func (env *environment) MustGidxService() service.GidxService {
+	s, err := env.GidxService()
+	if err != nil {
+		panic(err.Error())
+	}
+	return s
+}
+
+func (env *environment) MustAspectService() service.AspectService {
+	s, err := env.AspectService()
+	if err != nil {
+		panic(err.Error())
+	}
+	return s
+}
+
+func (env *environment) MustGidxPartialService() service.GidxPartialService {
+	s, err := env.GidxPartialService()
+	if err != nil {
+		panic(err.Error())
+	}
+	return s
+}
+
+func (env *environment) MustCoverService() service.CoverService {
+	s, err := env.CoverService()
+	if err != nil {
+		panic(err.Error())
+	}
+	return s
+}
+
+func (env *environment) MustCoverPartialService() service.CoverPartialService {
+	s, err := env.CoverPartialService()
+	if err != nil {
+		panic(err.Error())
+	}
+	return s
+}
+
+func (env *environment) MustMacroService() service.MacroService {
+	s, err := env.MacroService()
+	if err != nil {
+		panic(err.Error())
+	}
+	return s
+}
+
+func (env *environment) MustMacroPartialService() service.MacroPartialService {
+	s, err := env.MacroPartialService()
+	if err != nil {
+		panic(err.Error())
+	}
+	return s
+}
+
+func (env *environment) MustPartialComparisonService() service.PartialComparisonService {
+	s, err := env.PartialComparisonService()
+	if err != nil {
+		panic(err.Error())
+	}
+	return s
+}
+
+func (env *environment) MustMosaicService() service.MosaicService {
+	s, err := env.MosaicService()
+	if err != nil {
+		panic(err.Error())
+	}
+	return s
+}
+
+func (env *environment) MustMosaicPartialService() service.MosaicPartialService {
+	s, err := env.MosaicPartialService()
+	if err != nil {
+		panic(err.Error())
+	}
+	return s
+}
+
+func (env *environment) MustQuadDistService() service.QuadDistService {
+	s, err := env.QuadDistService()
+	if err != nil {
+		panic(err.Error())
+	}
+	return s
+}
