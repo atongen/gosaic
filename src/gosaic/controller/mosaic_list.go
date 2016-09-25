@@ -6,17 +6,8 @@ import (
 )
 
 func MosaicList(env environment.Environment) {
-	mosaicService, err := env.MosaicService()
-	if err != nil {
-		env.Printf("Error getting mosaic service: %s\n", err.Error())
-		return
-	}
-
-	mosaicPartialService, err := env.MosaicPartialService()
-	if err != nil {
-		env.Printf("Error getting mosaic partial service: %s\n", err.Error())
-		return
-	}
+	mosaicService := env.MustMosaicService()
+	mosaicPartialService := env.MustMosaicPartialService()
 
 	mosaics, err := mosaicService.FindAll("mosaics.id desc")
 	if err != nil {

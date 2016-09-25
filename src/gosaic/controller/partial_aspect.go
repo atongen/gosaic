@@ -4,47 +4,16 @@ import (
 	"errors"
 	"gosaic/environment"
 	"gosaic/model"
-	"gosaic/service"
 	"gosaic/util"
 	"image"
-	"log"
-	"os"
-	"os/signal"
-	"syscall"
 
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
 func PartialAspect(env environment.Environment, macroId int64, threashold float64) error {
-	aspectService, err := env.AspectService()
-	if err != nil {
-		env.Printf("Error getting aspect service: %s\n", err.Error())
-		return err
-	}
-
-	macroService, err := env.MacroService()
-	if err != nil {
-		env.Printf("Error getting macro service: %s\n", err.Error())
-		return err
-	}
-
-	macroPartialService, err := env.MacroPartialService()
-	if err != nil {
-		env.Printf("Error getting macro partial service: %s\n", err.Error())
-		return err
-	}
-
-	gidxService, err := env.GidxService()
-	if err != nil {
-		env.Printf("Error getting gidx service: %s\n", err.Error())
-		return err
-	}
-
-	gidxPartialService, err := env.GidxPartialService()
-	if err != nil {
-		env.Printf("Error getting gidx partial service: %s\n", err.Error())
-		return err
-	}
+	aspectService := env.MustAspectService()
+	macroService := env.MustMacroService()
+	macroPartialService := env.MustMacroPartialService()
 
 	macro, err := macroService.Get(macroId)
 	if err != nil {
@@ -68,7 +37,7 @@ func PartialAspect(env environment.Environment, macroId int64, threashold float6
 		return err
 	}
 
-	err = createPartialGidxIndexes(env.Log(), gidxService, gidxPartialService, aspects, threashold, env.Workers())
+	err = createPartialGidxIndexes(env, aspects, threashold, env.Workers())
 	if err != nil {
 		env.Printf("Error creating index aspects: %s\n", err.Error())
 		return err
@@ -77,7 +46,10 @@ func PartialAspect(env environment.Environment, macroId int64, threashold float6
 	return nil
 }
 
-func createPartialGidxIndexes(l *log.Logger, gidxService service.GidxService, gidxPartialService service.GidxPartialService, aspects []*model.Aspect, threashold float64, workers int) error {
+func createPartialGidxIndexes(env environment.Environment, aspects []*model.Aspect, threashold float64, workers int) error {
+	gidxService := env.MustGidxService()
+	gidxPartialService := env.MustGidxPartialService()
+
 	count, err := gidxService.Count()
 	if err != nil {
 		return err
@@ -87,22 +59,13 @@ func createPartialGidxIndexes(l *log.Logger, gidxService service.GidxService, gi
 		return nil
 	}
 
-	l.Printf("Building %d index image partials...\n", count)
+	env.Printf("Building %d index image partials...\n", count)
 	bar := pb.StartNew(int(count))
 	batchSize := workers * 8
-
-	cancel := false
-	c := make(chan os.Signal, 2)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	go func() {
-		<-c
-		cancel = true
-	}()
 
 	for i := 0; ; i++ {
 		gidxs, err := gidxService.FindAll("id asc", batchSize, i*batchSize)
 		if err != nil {
-			close(c)
 			return err
 		}
 
@@ -111,33 +74,31 @@ func createPartialGidxIndexes(l *log.Logger, gidxService service.GidxService, gi
 		}
 
 		for _, gidx := range gidxs {
-			if cancel {
-				close(c)
+			if env.Cancel() {
 				return errors.New("Cancelled")
 			}
 
-			gidxPartials, err := buildGidxPartials(l, gidxPartialService, gidx, aspects, threashold, workers)
+			gidxPartials, err := buildGidxPartials(env, gidx, aspects, threashold, workers)
 			if err != nil {
-				close(c)
 				return err
 			}
 
 			_, err = gidxPartialService.BulkInsert(gidxPartials)
 			if err != nil {
-				close(c)
 				return err
 			}
 			bar.Increment()
 		}
 	}
 
-	close(c)
 	bar.Finish()
 
 	return nil
 }
 
-func buildGidxPartials(l *log.Logger, gidxPartialService service.GidxPartialService, gidx *model.Gidx, aspects []*model.Aspect, threashold float64, workers int) ([]*model.GidxPartial, error) {
+func buildGidxPartials(env environment.Environment, gidx *model.Gidx, aspects []*model.Aspect, threashold float64, workers int) ([]*model.GidxPartial, error) {
+	gidxPartialService := env.MustGidxPartialService()
+
 	var gidxPartials []*model.GidxPartial
 
 	pAspects := []*model.Aspect{}
@@ -189,7 +150,7 @@ func buildGidxPartials(l *log.Logger, gidxPartialService service.GidxPartialServ
 				gps[idx] = gp
 				idx += 1
 			case err := <-errs:
-				l.Printf("Error building index partial: %s\n", err.Error())
+				env.Printf("Error building index partial: %s\n", err.Error())
 			}
 			<-sem
 		}

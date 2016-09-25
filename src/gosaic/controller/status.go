@@ -7,11 +7,7 @@ import (
 func Status(env environment.Environment) {
 	env.Println("Gosaic project db:", env.DbPath())
 
-	gidxService, err := env.GidxService()
-	if err != nil {
-		env.Println(err.Error())
-		return
-	}
+	gidxService := env.MustGidxService()
 
 	count, err := gidxService.Count()
 	if err != nil {
