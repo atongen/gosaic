@@ -459,8 +459,8 @@ func TestGidxPartialServiceFindOrCreate(t *testing.T) {
 	}
 
 	numPixels := len(gidxPartial.Pixels)
-	if numPixels != 100 {
-		t.Errorf("gidxPartial.Pixels len was %d, expected %d\n", numPixels, 100)
+	if numPixels != 256 {
+		t.Errorf("gidxPartial.Pixels len was %d, expected %d\n", numPixels, 256)
 	}
 
 	for i, pix := range gidxPartial.Pixels {

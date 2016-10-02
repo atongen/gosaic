@@ -61,6 +61,8 @@ func MosaicDraw(env environment.Environment, mosaicId int64, outfile string) err
 	}
 	env.Printf("Wrote mosaic image: %s\n", outfile)
 
+	writeExif("", macro.Path, outfile)
+
 	return nil
 }
 
@@ -120,4 +122,15 @@ func drawMosaic(env environment.Environment, mosaic *model.Mosaic, cover *model.
 	}
 
 	return nil
+}
+
+func writeExif(toolPath, src, dst string) error {
+	tp, err := util.ExiftoolPath(toolPath)
+	if err != nil {
+		return err
+	} else if tp == "" {
+		return nil
+	}
+	_, err = util.ExifCp(tp, src, dst)
+	return err
 }
