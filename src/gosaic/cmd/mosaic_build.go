@@ -25,14 +25,6 @@ var MosaicBuildCmd = &cobra.Command{
 	Long:   "Build mosaic",
 	Hidden: true,
 	Run: func(c *cobra.Command, args []string) {
-		if len(args) != 1 {
-			Env.Fatalln("Mosaic name is required")
-		}
-
-		if args[0] == "" {
-			Env.Fatalln("Mosaic name is required")
-		}
-
 		if mosaicBuildMacroId == 0 {
 			Env.Fatalln("Macro id is required")
 		}
@@ -47,6 +39,6 @@ var MosaicBuildCmd = &cobra.Command{
 		}
 		defer Env.Close()
 
-		controller.MosaicBuild(Env, args[0], mosaicBuildFillType, int64(mosaicBuildMacroId), mosaicBuildMaxRepeats)
+		controller.MosaicBuild(Env, mosaicBuildFillType, int64(mosaicBuildMacroId), mosaicBuildMaxRepeats)
 	},
 }

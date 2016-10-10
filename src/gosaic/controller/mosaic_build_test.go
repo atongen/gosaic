@@ -32,7 +32,7 @@ func TestMosaicBuildRandom(t *testing.T) {
 		t.Fatalf("Comparing images: %s\n", err.Error())
 	}
 
-	mosaic := MosaicBuild(env, "Jumping Bunny", "random", macro.Id, 0)
+	mosaic := MosaicBuild(env, "random", macro.Id, 0)
 	if mosaic == nil {
 		t.Fatal("Failed to build mosaic")
 	}
@@ -71,7 +71,7 @@ func TestMosaicBuildBest(t *testing.T) {
 		t.Fatalf("Comparing images: %s\n", err.Error())
 	}
 
-	mosaic := MosaicBuild(env, "Jumping Bunny", "best", macro.Id, 0)
+	mosaic := MosaicBuild(env, "best", macro.Id, 0)
 	if mosaic == nil {
 		t.Fatal("Failed to build mosaic")
 	}

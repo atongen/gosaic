@@ -25,20 +25,7 @@ func CoverAspect(env environment.Environment, coverWidth, coverHeight, partialWi
 		return nil
 	}
 
-	var cover *model.Cover
-	coverName := model.CoverNameAspect(coverAspect.Id, coverWidth, coverHeight, num)
-	cover, err = coverService.GetOneBy("name = ?", coverName)
-	if err != nil {
-		env.Printf("Error finding cover: %s\n", err.Error())
-		return nil
-	}
-	// Existing cover is found, use it
-	if cover != nil {
-		return cover
-	}
-
-	cover = &model.Cover{
-		Name:     coverName,
+	cover := &model.Cover{
 		AspectId: coverAspect.Id,
 		Width:    coverWidth,
 		Height:   coverHeight,

@@ -51,7 +51,6 @@ func setupPartialComparisonServiceTest() {
 	}
 
 	cover = model.Cover{AspectId: aspect.Id, Width: 1, Height: 1}
-	cover.Name = model.CoverNameAspect(aspect.Id, 1, 1, 1)
 	err = coverService.Insert(&cover)
 	if err != nil {
 		panic(err)
@@ -554,7 +553,6 @@ func TestPartialComparisonServiceGetClosestMax(t *testing.T) {
 	defer partialComparisonService.Close()
 
 	mosaic = model.Mosaic{
-		Name:    "ClosestMaxTest",
 		MacroId: macro.Id,
 	}
 	err := mosaicService.Insert(&mosaic)
@@ -650,7 +648,6 @@ func TestPartialComparisonServiceGetBestAvailableMax(t *testing.T) {
 	defer partialComparisonService.Close()
 
 	mosaic = model.Mosaic{
-		Name:    "BestAvailableMaxTest",
 		MacroId: macro.Id,
 	}
 	err := mosaicService.Insert(&mosaic)

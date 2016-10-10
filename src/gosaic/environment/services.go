@@ -19,6 +19,7 @@ const (
 	MosaicServiceName
 	MosaicPartialServiceName
 	QuadDistServiceName
+	ProjectServiceName
 )
 
 func (env *environment) getService(name ServiceName) (service.Service, error) {
@@ -55,6 +56,8 @@ func (env *environment) getService(name ServiceName) (service.Service, error) {
 		s = service.NewMosaicPartialService(env.dbMap)
 	case QuadDistServiceName:
 		s = service.NewQuadDistService(env.dbMap)
+	case ProjectServiceName:
+		s = service.NewProjectService(env.dbMap)
 	}
 	err := s.Register()
 	if err != nil {
@@ -218,6 +221,20 @@ func (env *environment) QuadDistService() (service.QuadDistService, error) {
 	return quadDistService, nil
 }
 
+func (env *environment) ProjectService() (service.ProjectService, error) {
+	s, err := env.getService(ProjectServiceName)
+	if err != nil {
+		return nil, err
+	}
+
+	projectService, ok := s.(service.ProjectService)
+	if !ok {
+		return nil, fmt.Errorf("Invalid project service")
+	}
+
+	return projectService, nil
+}
+
 func (env *environment) MustGidxService() service.GidxService {
 	s, err := env.GidxService()
 	if err != nil {
@@ -300,6 +317,14 @@ func (env *environment) MustMosaicPartialService() service.MosaicPartialService 
 
 func (env *environment) MustQuadDistService() service.QuadDistService {
 	s, err := env.QuadDistService()
+	if err != nil {
+		panic(err.Error())
+	}
+	return s
+}
+
+func (env *environment) MustProjectService() service.ProjectService {
+	s, err := env.ProjectService()
 	if err != nil {
 		panic(err.Error())
 	}

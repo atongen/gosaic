@@ -29,7 +29,6 @@ func TestCoverServiceInsert(t *testing.T) {
 		Width:    600,
 		Height:   400,
 	}
-	c1.Name = model.CoverNameAspect(aspect.Id, 600, 400, 1)
 
 	err := coverService.Insert(&c1)
 	if err != nil {
@@ -48,7 +47,6 @@ func TestCoverServiceInsert(t *testing.T) {
 	}
 
 	if c1.Id != c2.Id ||
-		c1.Name != c2.Name ||
 		c1.AspectId != c2.AspectId ||
 		c1.Width != c2.Width ||
 		c1.Height != c2.Height {
@@ -66,7 +64,6 @@ func TestCoverServiceUpdate(t *testing.T) {
 		Width:    600,
 		Height:   400,
 	}
-	c1.Name = model.CoverNameAspect(aspect.Id, 600, 400, 1)
 
 	err := coverService.Insert(&c1)
 	if err != nil {
@@ -99,7 +96,6 @@ func TestCoverServiceDelete(t *testing.T) {
 		Width:    600,
 		Height:   400,
 	}
-	c1.Name = model.CoverNameAspect(aspect.Id, 600, 400, 1)
 
 	err := coverService.Insert(&c1)
 	if err != nil {
@@ -129,7 +125,6 @@ func TestCoverServiceGetOneBy(t *testing.T) {
 		Width:    600,
 		Height:   400,
 	}
-	c1.Name = model.CoverNameAspect(aspect.Id, 600, 400, 1)
 
 	err := coverService.Insert(&c1)
 	if err != nil {
@@ -144,7 +139,6 @@ func TestCoverServiceGetOneBy(t *testing.T) {
 	}
 
 	if c1.Id != c2.Id ||
-		c1.Name != c2.Name ||
 		c1.AspectId != c2.AspectId ||
 		c1.Width != c2.Width ||
 		c1.Height != c2.Height {
@@ -158,9 +152,9 @@ func TestCoverServiceFindAll(t *testing.T) {
 	defer coverService.Close()
 
 	covers := []model.Cover{
-		model.Cover{AspectId: aspect.Id, Width: 600, Height: 400, Name: "first"},
-		model.Cover{AspectId: aspect.Id, Width: 600, Height: 400, Name: "second"},
-		model.Cover{AspectId: aspect.Id, Width: 600, Height: 400, Name: "third"},
+		model.Cover{AspectId: aspect.Id, Width: 600, Height: 400},
+		model.Cover{AspectId: aspect.Id, Width: 600, Height: 400},
+		model.Cover{AspectId: aspect.Id, Width: 600, Height: 400},
 	}
 
 	for _, cover := range covers {

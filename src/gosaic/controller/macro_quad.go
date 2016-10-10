@@ -27,15 +27,23 @@ func MacroQuad(env environment.Environment,
 
 	num, maxDepth, minArea = macroQuadFixArgs(myCoverWidth, myCoverHeight, num, maxDepth, minArea)
 
-	md5sum, err := util.Md5sum(path)
+	cover, err := envCover(env)
 	if err != nil {
-		env.Printf("Error checking for existing cover: %s\n", err.Error())
+		env.Printf("Error getting cover from project environment: %s\n", err.Error())
 		return nil, nil
 	}
 
-	cover, err := macroQuadFindOrCreateCover(env, myCoverWidth, myCoverHeight, num, maxDepth, minArea, md5sum)
+	if cover == nil {
+		cover, err = macroQuadCreateCover(env, myCoverWidth, myCoverHeight, num, maxDepth, minArea)
+		if err != nil {
+			env.Printf("Error building cover: %s\n", err.Error())
+			return nil, nil
+		}
+	}
+
+	err = setEnvCover(env, cover)
 	if err != nil {
-		env.Printf("Error building cover: %s\n", err.Error())
+		env.Printf("Error setting cover in project environment: %s\n", err.Error())
 		return nil, nil
 	}
 
@@ -43,14 +51,19 @@ func MacroQuad(env environment.Environment,
 	if err != nil {
 		env.Printf("Error building macro: %s\n", err.Error())
 		coverService.Delete(cover)
-		return nil, nil
+		return cover, nil
+	}
+
+	err = setEnvMacro(env, macro)
+	if err != nil {
+		env.Printf("Error setting macro in project environment: %s\n", err.Error())
+		return cover, nil
 	}
 
 	err = macroQuadBuildPartials(env, cover, macro, img, num, maxDepth, minArea)
 	if err != nil {
 		env.Printf("Error building quad partials: %s\n", err.Error())
-		coverService.Delete(cover)
-		return nil, nil
+		return cover, nil
 	}
 
 	if coverOutfile != "" {
@@ -128,7 +141,7 @@ func macroQuadBuildPartials(env environment.Environment, cover *model.Cover, mac
 	return nil
 }
 
-func macroQuadFindOrCreateCover(env environment.Environment, width, height, num, maxDepth, minArea int, md5sum string) (*model.Cover, error) {
+func macroQuadCreateCover(env environment.Environment, width, height, num, maxDepth, minArea int) (*model.Cover, error) {
 	aspectService := env.MustAspectService()
 	coverService := env.MustCoverService()
 
@@ -137,18 +150,7 @@ func macroQuadFindOrCreateCover(env environment.Environment, width, height, num,
 		return nil, err
 	}
 
-	coverName := model.CoverNameQuad(aspect.Id, width, height, num, maxDepth, minArea, md5sum)
-	cover, err := coverService.GetOneBy("name = ?", coverName)
-	if err != nil {
-		return nil, err
-	}
-	// Existing cover is found, use it
-	if cover != nil {
-		return cover, nil
-	}
-
-	cover = &model.Cover{
-		Name:     coverName,
+	cover := &model.Cover{
 		AspectId: aspect.Id,
 		Width:    width,
 		Height:   height,

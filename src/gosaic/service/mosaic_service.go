@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"gosaic/model"
 	"sync"
-	"time"
 
 	"gopkg.in/gorp.v1"
 )
@@ -68,9 +67,6 @@ func (s *mosaicServiceImpl) Insert(mosaic *model.Mosaic) error {
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	if mosaic.CreatedAt.IsZero() {
-		mosaic.CreatedAt = time.Now()
-	}
 	return s.dbMap.Insert(mosaic)
 }
 

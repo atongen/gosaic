@@ -20,7 +20,6 @@ func setupMacroServiceTest() {
 	}
 
 	cover = model.Cover{AspectId: aspect.Id, Width: 1, Height: 1}
-	cover.Name = model.CoverNameAspect(aspect.Id, 1, 1, 1)
 	err = coverService.Insert(&cover)
 	if err != nil {
 		panic(err)

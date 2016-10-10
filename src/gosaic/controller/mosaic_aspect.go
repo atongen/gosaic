@@ -11,17 +11,14 @@ func MosaicAspect(env environment.Environment,
 	threashold float64,
 	coverOutfile, macroOutfile, mosaicOutfile string) *model.Mosaic {
 
-	mosaicService := env.MustMosaicService()
-
-	myName, myCoverOutfile, myMacroOutfile, myMosaicOutfile, err := validateMosaicArgs(
-		mosaicService, inPath, name, coverOutfile, macroOutfile, mosaicOutfile,
-	)
+	project, err := findOrCreateProject(env, inPath, name, coverOutfile, macroOutfile, mosaicOutfile)
 	if err != nil {
-		env.Printf("Error validating mosaic arguments: %s\n", err.Error())
+		env.Println(err.Error())
 		return nil
 	}
+	env.SetProjectId(project.Id)
 
-	cover, macro := MacroAspect(env, inPath, coverWidth, coverHeight, partialWidth, partialHeight, size, myCoverOutfile, myMacroOutfile)
+	cover, macro := MacroAspect(env, project.Path, coverWidth, coverHeight, partialWidth, partialHeight, size, project.CoverPath, project.MacroPath)
 	if cover == nil || macro == nil {
 		return nil
 	}
@@ -36,12 +33,12 @@ func MosaicAspect(env environment.Environment,
 		return nil
 	}
 
-	mosaic := MosaicBuild(env, myName, fillType, macro.Id, maxRepeats)
+	mosaic := MosaicBuild(env, fillType, macro.Id, maxRepeats)
 	if mosaic == nil {
 		return nil
 	}
 
-	err = MosaicDraw(env, mosaic.Id, myMosaicOutfile)
+	err = MosaicDraw(env, mosaic.Id, project.MosaicPath)
 	if err != nil {
 		return nil
 	}

@@ -10,7 +10,7 @@ import (
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
-func MosaicBuild(env environment.Environment, name, fillType string, macroId int64, maxRepeats int) *model.Mosaic {
+func MosaicBuild(env environment.Environment, fillType string, macroId int64, maxRepeats int) *model.Mosaic {
 	gidxPartialService := env.MustGidxPartialService()
 	macroService := env.MustMacroService()
 	macroPartialService := env.MustMacroPartialService()
@@ -55,15 +55,14 @@ func MosaicBuild(env environment.Environment, name, fillType string, macroId int
 		}
 	}
 
-	mosaic, err := mosaicService.GetOneBy("macro_id = ? AND name = ?", macroId, name)
+	mosaic, err := envMosaic(env)
 	if err != nil {
-		env.Printf("Error checking for existing mosaic: %s\n", err.Error())
+		env.Printf("Error getting mosaic from project environment: %s\n", err.Error())
 		return nil
 	}
 
 	if mosaic == nil {
 		mosaic = &model.Mosaic{
-			Name:    name,
 			MacroId: macro.Id,
 		}
 		err = mosaicService.Insert(mosaic)
@@ -73,6 +72,23 @@ func MosaicBuild(env environment.Environment, name, fillType string, macroId int
 		}
 	}
 
+	err = setEnvMosaic(env, mosaic)
+	if err != nil {
+		env.Printf("Error setting mosaic in project environment: %s\n", err.Error())
+		return nil
+	}
+
+	err = doMosaicBuild(env, mosaic, fillType, maxRepeats)
+	if err != nil {
+		env.Printf("Error building mosaic: %s\n", err.Error())
+		return nil
+	}
+
+	return mosaic
+}
+
+func doMosaicBuild(env environment.Environment, mosaic *model.Mosaic, fillType string, maxRepeats int) error {
+	var err error
 	switch fillType {
 	default:
 		env.Printf("Invalid mosaic type: %s\n", fillType)
@@ -83,18 +99,10 @@ func MosaicBuild(env environment.Environment, name, fillType string, macroId int
 		err = createMosaicPartialsBest(env, mosaic, maxRepeats)
 	}
 	if err != nil {
-		env.Printf("Error creating mosaic partials: %s\n", err.Error())
-		return nil
+		return err
 	}
 
-	mosaic.IsComplete = true
-	_, err = mosaicService.Update(mosaic)
-	if err != nil {
-		env.Printf("Error marking mosaic complete: %s\n", err.Error())
-		return nil
-	}
-
-	return mosaic
+	return nil
 }
 
 func createMosaicPartialsRandom(env environment.Environment, mosaic *model.Mosaic, maxRepeats int) error {

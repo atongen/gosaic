@@ -19,6 +19,7 @@ var (
 		createMosaicTable,
 		createMosaicPartialTable,
 		createQuadDistTable,
+		createProjectTable,
 	}
 )
 
@@ -182,21 +183,13 @@ func createCoverTable(db *sql.DB) error {
 	sql := `
     create table covers (
       id integer not null primary key,
-			name text not null,
       aspect_id integer not null,
       width integer not null,
 			height integer not null,
-			FOREIGN KEY(aspect_id) REFERENCES aspects(id) ON DELETE RESTRICT,
-			CHECK(name <> '')
+			FOREIGN KEY(aspect_id) REFERENCES aspects(id) ON DELETE RESTRICT
     );
   `
 	_, err := db.Exec(sql)
-	if err != nil {
-		return err
-	}
-
-	sql = "create unique index idx_covers_key on covers (name);"
-	_, err = db.Exec(sql)
 	return err
 }
 
@@ -318,21 +311,11 @@ func createMosaicTable(db *sql.DB) error {
 	sql := `
 		create table mosaics (
 			id integer not null primary key,
-			name text not null,
 			macro_id integer not null,
-			is_complete bool not null default false,
-			created_at timestamp default current_timestamp not null,
-			FOREIGN KEY(macro_id) REFERENCES macros (id) ON DELETE CASCADE,
-			CHECK(name <> '')
+			FOREIGN KEY(macro_id) REFERENCES macros (id) ON DELETE CASCADE
 		);
 	`
 	_, err := db.Exec(sql)
-	if err != nil {
-		return err
-	}
-
-	sql = "create unique index idx_mosaics_name on mosaics (name);"
-	_, err = db.Exec(sql)
 	return err
 }
 
@@ -387,6 +370,31 @@ func createQuadDistTable(db *sql.DB) error {
 	}
 
 	sql = "create index idx_quad_dists_dist on quad_dists (macro_partial_id,dist);"
+	_, err = db.Exec(sql)
+	return err
+}
+
+func createProjectTable(db *sql.DB) error {
+	sql := `
+		create table projects (
+			id integer not null primary key,
+			name text not null,
+      path text not null,
+			cover_path text not null,
+			macro_path text not null,
+			mosaic_path text not null,
+			cover_id integer default null,
+			macro_id integer default null,
+			mosaic_id integer default null,
+			created_at timestamp default current_timestamp not null
+		);
+	`
+	_, err := db.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	sql = "create unique index idx_project_name on projects (name);"
 	_, err = db.Exec(sql)
 	return err
 }

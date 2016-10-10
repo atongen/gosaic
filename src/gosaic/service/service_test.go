@@ -24,8 +24,8 @@ var (
 	cachedMosaicPartialService     MosaicPartialService
 	cachedPartialComparisonService PartialComparisonService
 	cachedQuadDistService          QuadDistService
+	cachedProjectService           ProjectService
 
-	// TODO: replace w/ factory
 	aspect        model.Aspect
 	gidx          model.Gidx
 	gidxPartial   model.GidxPartial
@@ -212,6 +212,21 @@ func getTestQuadDistService() QuadDistService {
 	return cachedQuadDistService
 }
 
+func getTestProjectService() ProjectService {
+	m.Lock()
+	defer m.Unlock()
+
+	if cachedProjectService == nil {
+		cachedProjectService = NewProjectService(_getTestDbMap())
+		err := cachedProjectService.Register()
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return cachedProjectService
+}
+
 func _getTestDbMap() *gorp.DbMap {
 	if cachedDbMap == nil {
 		err := _buildTestDbMap()
@@ -263,4 +278,5 @@ func _resetTestDbMap() {
 	cachedMosaicPartialService = nil
 	cachedPartialComparisonService = nil
 	cachedQuadDistService = nil
+	cachedProjectService = nil
 }

@@ -24,9 +24,23 @@ func MacroAspect(env environment.Environment, path string, coverWidth, coverHeig
 
 	myPartialWidth, myPartialHeight := calculateDimensionsFromAspect(coverAspect, partialWidth, partialHeight, myCoverWidth, myCoverHeight)
 
-	cover := CoverAspect(env, myCoverWidth, myCoverHeight, myPartialWidth, myPartialHeight, num)
+	cover, err := envCover(env)
+	if err != nil {
+		env.Printf("Error getting cover from project environment: %s\n", err.Error())
+		return nil, nil
+	}
+
 	if cover == nil {
-		env.Println("Failed to create cover")
+		cover = CoverAspect(env, myCoverWidth, myCoverHeight, myPartialWidth, myPartialHeight, num)
+		if cover == nil {
+			env.Println("Failed to create cover")
+			return nil, nil
+		}
+	}
+
+	err = setEnvCover(env, cover)
+	if err != nil {
+		env.Printf("Error setting cover in project environment: %s\n", err.Error())
 		return nil, nil
 	}
 
@@ -38,9 +52,23 @@ func MacroAspect(env environment.Environment, path string, coverWidth, coverHeig
 		}
 	}
 
-	macro := Macro(env, path, cover.Id, macroOutfile)
+	macro, err := envMacro(env)
+	if err != nil {
+		env.Printf("Error getting macro from project environment: %s\n", err.Error())
+		return cover, nil
+	}
+
 	if macro == nil {
-		env.Println("Failed to create macro")
+		macro = Macro(env, path, cover.Id, macroOutfile)
+		if macro == nil {
+			env.Println("Failed to create macro")
+			return cover, nil
+		}
+	}
+
+	err = setEnvMacro(env, macro)
+	if err != nil {
+		env.Printf("Error setting macro in project environment: %s\n", err.Error())
 		return cover, nil
 	}
 

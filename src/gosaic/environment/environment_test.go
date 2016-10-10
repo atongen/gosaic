@@ -81,6 +81,11 @@ func TestServices(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error getting quadDistService: %s\n", err.Error())
 	}
+
+	_, err = env.ProjectService()
+	if err != nil {
+		t.Fatalf("Error getting projectService: %s\n", err.Error())
+	}
 }
 
 func TestMustServices(t *testing.T) {
@@ -101,4 +106,5 @@ func TestMustServices(t *testing.T) {
 	env.MustMosaicService()
 	env.MustMosaicPartialService()
 	env.MustQuadDistService()
+	env.MustProjectService()
 }

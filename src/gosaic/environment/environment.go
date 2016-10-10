@@ -36,6 +36,8 @@ type Environment interface {
 	Workers() int
 	Log() *log.Logger
 	Db() *sql.DB
+	ProjectId() int64
+	SetProjectId(id int64)
 	Printf(format string, a ...interface{})
 	Println(a ...interface{})
 	Fatalf(format string, a ...interface{})
@@ -52,6 +54,7 @@ type Environment interface {
 	MosaicService() (service.MosaicService, error)
 	MosaicPartialService() (service.MosaicPartialService, error)
 	QuadDistService() (service.QuadDistService, error)
+	ProjectService() (service.ProjectService, error)
 
 	MustGidxService() service.GidxService
 	MustAspectService() service.AspectService
@@ -64,18 +67,20 @@ type Environment interface {
 	MustMosaicService() service.MosaicService
 	MustMosaicPartialService() service.MosaicPartialService
 	MustQuadDistService() service.QuadDistService
+	MustProjectService() service.ProjectService
 }
 
 type environment struct {
-	dbPath   string
-	workers  int
-	dB       *sql.DB
-	dbMap    *gorp.DbMap
-	log      *log.Logger
-	cancel   bool
-	cancelCh chan os.Signal
-	services map[ServiceName]service.Service
-	m        sync.Mutex
+	dbPath    string
+	workers   int
+	projectId int64
+	dB        *sql.DB
+	dbMap     *gorp.DbMap
+	log       *log.Logger
+	cancel    bool
+	cancelCh  chan os.Signal
+	services  map[ServiceName]service.Service
+	m         sync.Mutex
 }
 
 func NewEnvironment(dbPath string, out io.Writer, workers int) (Environment, error) {
@@ -158,6 +163,7 @@ func (env *environment) Init() error {
 	signal.Notify(env.cancelCh, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-env.cancelCh
+		env.Println("Interrupt caught, attempting graceful shutdown...")
 		env.cancel = true
 	}()
 
@@ -187,6 +193,14 @@ func (env *environment) Log() *log.Logger {
 
 func (env *environment) Db() *sql.DB {
 	return env.dB
+}
+
+func (env *environment) ProjectId() int64 {
+	return env.projectId
+}
+
+func (env *environment) SetProjectId(projectId int64) {
+	env.projectId = projectId
 }
 
 func (env *environment) Fatalln(v ...interface{}) {
