@@ -16,6 +16,7 @@ type PartialComparisonService interface {
 	BulkInsert([]*model.PartialComparison) (int64, error)
 	Update(*model.PartialComparison) error
 	Delete(*model.PartialComparison) error
+	DeleteBy(string, ...interface{}) error
 	Get(int64) (*model.PartialComparison, error)
 	GetOneBy(string, ...interface{}) (*model.PartialComparison, error)
 	ExistsBy(string, ...interface{}) (bool, error)
@@ -110,6 +111,19 @@ func (s *partialComparisonServiceImpl) Delete(pc *model.PartialComparison) error
 	defer s.m.Unlock()
 
 	_, err := s.dbMap.Delete(pc)
+	return err
+}
+
+func (s *partialComparisonServiceImpl) DeleteBy(conditions string, params ...interface{}) error {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	if conditions == "" || len(params) == 0 {
+		return nil
+	}
+
+	sqlStr := fmt.Sprintf("delete from partial_comparisons where %s;", conditions)
+	_, err := s.dbMap.Db.Exec(sqlStr, params...)
 	return err
 }
 
