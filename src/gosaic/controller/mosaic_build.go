@@ -159,8 +159,8 @@ func createMosaicPartialsRandom(env environment.Environment, mosaic *model.Mosai
 			return err
 		}
 
-		if destructive && maxRepeats > 0 {
-			err = mosaicBuildDeleteDuplicates(env, mosaic, maxRepeats)
+		if destructive {
+			err = mosaicBuildDestruct(env, mosaic, maxRepeats, macroPartial.Id)
 			if err != nil {
 				return err
 			}
@@ -218,8 +218,8 @@ func createMosaicPartialsBest(env environment.Environment, mosaic *model.Mosaic,
 			return err
 		}
 
-		if destructive && maxRepeats > 0 {
-			err = mosaicBuildDeleteDuplicates(env, mosaic, maxRepeats)
+		if destructive {
+			err = mosaicBuildDestruct(env, mosaic, maxRepeats, mosaicPartial.MacroPartialId)
 			if err != nil {
 				return err
 			}
@@ -232,26 +232,41 @@ func createMosaicPartialsBest(env environment.Environment, mosaic *model.Mosaic,
 	return nil
 }
 
-func mosaicBuildDeleteDuplicates(env environment.Environment, mosaic *model.Mosaic, maxRepeats int) error {
+func mosaicBuildDestruct(env environment.Environment, mosaic *model.Mosaic, maxRepeats int, macroPartialId int64) error {
+	if maxRepeats > 0 {
+		err := mosaicBuildDeleteGidxDuplicates(env, mosaic, maxRepeats)
+		if err != nil {
+			return err
+		}
+	}
+	return mosaicBuildDeleteMacroPartial(env, mosaic, macroPartialId)
+}
+
+func mosaicBuildDeleteGidxDuplicates(env environment.Environment, mosaic *model.Mosaic, maxRepeats int) error {
 	mosaicPartialService := env.MustMosaicPartialService()
 
-	macroPartialIds, err := mosaicPartialService.FindRepeats(mosaic, maxRepeats)
+	gidxPartialIds, err := mosaicPartialService.FindRepeats(mosaic, maxRepeats)
 	if err != nil {
 		return err
 	}
 
-	if len(macroPartialIds) == 0 {
+	if len(gidxPartialIds) == 0 {
 		return nil
 	}
 
 	partialComparisonService := env.MustPartialComparisonService()
 
-	for _, id := range macroPartialIds {
-		err = partialComparisonService.DeleteBy("macro_partial_id = ?", id)
+	for _, id := range gidxPartialIds {
+		err = partialComparisonService.DeleteBy("gidx_partial_id = ?", id)
 		if err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func mosaicBuildDeleteMacroPartial(env environment.Environment, mosaic *model.Mosaic, macroPartialId int64) error {
+	partialComparisonService := env.MustPartialComparisonService()
+	return partialComparisonService.DeleteBy("macro_partial_id = ?", macroPartialId)
 }

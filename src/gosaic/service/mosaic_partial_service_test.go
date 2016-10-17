@@ -376,12 +376,12 @@ func TestMosaicPartialServiceFindRepeats(t *testing.T) {
 
 	ids, err := mosaicPartialService.FindRepeats(&mosaic, 2)
 	if err != nil {
-		t.Fatal("Error finding macro partials with repeats")
+		t.Fatalf("Error finding macro partials with repeats: %s\n", err.Error())
 	}
 
 	num := len(ids)
 	if num != 0 {
-		t.Fatalf("Expected 0 macro partials with 2 or more gidx duplicates, but got %d\n", num)
+		t.Fatalf("Expected 0 gidx partials with 2 or more macro partial duplicates, but got %d\n", num)
 	}
 
 	c2 := model.MosaicPartial{
@@ -402,6 +402,6 @@ func TestMosaicPartialServiceFindRepeats(t *testing.T) {
 
 	num = len(ids)
 	if num != 1 {
-		t.Fatalf("Expected 1 macro partials with 2 or more gidx duplicates, but got %d\n", num)
+		t.Fatalf("Expected 1 gidx partials with 2 or more macro partial duplicates, but got %d\n", num)
 	}
 }

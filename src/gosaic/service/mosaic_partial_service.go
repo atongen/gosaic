@@ -232,30 +232,28 @@ func (s *mosaicPartialServiceImpl) FindAllPartialViews(mosaic *model.Mosaic, ord
 	return mosaicPartialViews, nil
 }
 
-// FindRepeats returns macro partials that have maxRepeats or more duplicate
-// gidxs selected
+// FindRepeats returns gidx_partial ids that have maxRepeats or more duplicats
+// used in mosaic
 func (s *mosaicPartialServiceImpl) FindRepeats(mosaic *model.Mosaic, maxRepeats int) ([]int64, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
 	sqlStr := fmt.Sprintf(`
-		select map.id
-		from macro_partials map
+		select gp.id
+		from gidx_partials gp
 		inner join mosaic_partials mop
-			on mop.macro_partial_id = map.id
-		inner join gidx_partials gp
 			on mop.gidx_partial_id = gp.id
 		where mop.mosaic_id = ?
 		group by gp.gidx_id
-		having count(*) >= %d
+		having count(gp.gidx_id) >= %d
 	`, maxRepeats)
 
-	var macroPartialIds []int64
+	var gidxPartialIds []int64
 	// returns error on no results
-	_, err := s.dbMap.Select(&macroPartialIds, sqlStr, mosaic.Id)
+	_, err := s.dbMap.Select(&gidxPartialIds, sqlStr, mosaic.Id)
 	if err != nil {
 		return nil, err
 	}
 
-	return macroPartialIds, nil
+	return gidxPartialIds, nil
 }
