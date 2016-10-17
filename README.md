@@ -36,8 +36,7 @@ $ ./build.sh
 
 ## TODO
 
-* resume messaging for complete/incomplete project
-* exiftool wrapper
+* improve exiftool wrapper
 * makefile
 * cross compile
   - linux amd64
