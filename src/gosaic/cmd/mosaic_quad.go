@@ -20,6 +20,7 @@ var (
 	mosaicQuadCoverOutfile string
 	mosaicQuadMacroOutfile string
 	mosaicQuadCleanup      bool
+	mosaicQuadDestructive  bool
 )
 
 func init() {
@@ -36,6 +37,7 @@ func init() {
 	addLocalStrFlag(&mosaicQuadCoverOutfile, "cover-out", "", "", "File to write cover partial pattern image", MosaicQuadCmd)
 	addLocalStrFlag(&mosaicQuadMacroOutfile, "macro-out", "", "", "File to write resized macro image", MosaicQuadCmd)
 	addLocalBoolFlag(&mosaicQuadCleanup, "cleanup", "c", true, "Delete mosaic metadata after completion", MosaicQuadCmd)
+	addLocalBoolFlag(&mosaicQuadDestructive, "destructive", "d", false, "Delete mosaic metadata during creation", MosaicQuadCmd)
 	MosaicCmd.AddCommand(MosaicQuadCmd)
 }
 
@@ -89,7 +91,8 @@ var MosaicQuadCmd = &cobra.Command{
 			mosaicQuadCoverOutfile,
 			mosaicQuadMacroOutfile,
 			mosaicQuadOutfile,
-			mosaicAspectCleanup,
+			mosaicQuadCleanup,
+			mosaicQuadDestructive,
 		)
 	},
 }

@@ -40,7 +40,7 @@ func TestMosaicDraw(t *testing.T) {
 		t.Fatalf("Comparing images: %s\n", err.Error())
 	}
 
-	mosaic := MosaicBuild(env, "best", macro.Id, 0)
+	mosaic := MosaicBuild(env, "best", macro.Id, 0, false)
 	if mosaic == nil {
 		t.Fatal("Failed to build mosaic")
 	}

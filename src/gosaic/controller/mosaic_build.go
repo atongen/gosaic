@@ -10,7 +10,7 @@ import (
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
-func MosaicBuild(env environment.Environment, fillType string, macroId int64, maxRepeats int) *model.Mosaic {
+func MosaicBuild(env environment.Environment, fillType string, macroId int64, maxRepeats int, destructive bool) *model.Mosaic {
 	gidxPartialService := env.MustGidxPartialService()
 	macroService := env.MustMacroService()
 	macroPartialService := env.MustMacroPartialService()
@@ -78,7 +78,7 @@ func MosaicBuild(env environment.Environment, fillType string, macroId int64, ma
 		return nil
 	}
 
-	err = doMosaicBuild(env, mosaic, fillType, maxRepeats)
+	err = doMosaicBuild(env, mosaic, fillType, maxRepeats, destructive)
 	if err != nil {
 		env.Printf("Error building mosaic: %s\n", err.Error())
 		return nil
@@ -87,16 +87,16 @@ func MosaicBuild(env environment.Environment, fillType string, macroId int64, ma
 	return mosaic
 }
 
-func doMosaicBuild(env environment.Environment, mosaic *model.Mosaic, fillType string, maxRepeats int) error {
+func doMosaicBuild(env environment.Environment, mosaic *model.Mosaic, fillType string, maxRepeats int, destructive bool) error {
 	var err error
 	switch fillType {
 	default:
 		env.Printf("Invalid mosaic type: %s\n", fillType)
 		return nil
 	case "random":
-		err = createMosaicPartialsRandom(env, mosaic, maxRepeats)
+		err = createMosaicPartialsRandom(env, mosaic, maxRepeats, destructive)
 	case "best":
-		err = createMosaicPartialsBest(env, mosaic, maxRepeats)
+		err = createMosaicPartialsBest(env, mosaic, maxRepeats, destructive)
 	}
 	if err != nil {
 		return err
@@ -105,7 +105,7 @@ func doMosaicBuild(env environment.Environment, mosaic *model.Mosaic, fillType s
 	return nil
 }
 
-func createMosaicPartialsRandom(env environment.Environment, mosaic *model.Mosaic, maxRepeats int) error {
+func createMosaicPartialsRandom(env environment.Environment, mosaic *model.Mosaic, maxRepeats int, destructive bool) error {
 	mosaicPartialService := env.MustMosaicPartialService()
 	partialComparisonService := env.MustPartialComparisonService()
 
@@ -135,7 +135,7 @@ func createMosaicPartialsRandom(env environment.Environment, mosaic *model.Mosai
 		}
 
 		var gidxPartialId int64
-		if maxRepeats == 0 {
+		if maxRepeats == 0 || destructive {
 			gidxPartialId, err = partialComparisonService.GetClosest(macroPartial)
 		} else {
 			gidxPartialId, err = partialComparisonService.GetClosestMax(macroPartial, mosaic, maxRepeats)
@@ -153,10 +153,19 @@ func createMosaicPartialsRandom(env environment.Environment, mosaic *model.Mosai
 			MacroPartialId: macroPartial.Id,
 			GidxPartialId:  gidxPartialId,
 		}
+
 		err = mosaicPartialService.Insert(&mosaicPartial)
 		if err != nil {
 			return err
 		}
+
+		if destructive && maxRepeats > 0 {
+			err = mosaicBuildDeleteDuplicates(env, mosaic, maxRepeats)
+			if err != nil {
+				return err
+			}
+		}
+
 		bar.Increment()
 	}
 
@@ -164,7 +173,7 @@ func createMosaicPartialsRandom(env environment.Environment, mosaic *model.Mosai
 	return nil
 }
 
-func createMosaicPartialsBest(env environment.Environment, mosaic *model.Mosaic, maxRepeats int) error {
+func createMosaicPartialsBest(env environment.Environment, mosaic *model.Mosaic, maxRepeats int, destructive bool) error {
 	mosaicPartialService := env.MustMosaicPartialService()
 	partialComparisonService := env.MustPartialComparisonService()
 
@@ -186,7 +195,7 @@ func createMosaicPartialsBest(env environment.Environment, mosaic *model.Mosaic,
 		}
 
 		var partialComparison *model.PartialComparison
-		if maxRepeats == 0 {
+		if maxRepeats == 0 || destructive {
 			partialComparison, err = partialComparisonService.GetBestAvailable(mosaic)
 		} else {
 			partialComparison, err = partialComparisonService.GetBestAvailableMax(mosaic, maxRepeats)
@@ -203,13 +212,46 @@ func createMosaicPartialsBest(env environment.Environment, mosaic *model.Mosaic,
 			MacroPartialId: partialComparison.MacroPartialId,
 			GidxPartialId:  partialComparison.GidxPartialId,
 		}
+
 		err = mosaicPartialService.Insert(&mosaicPartial)
 		if err != nil {
 			return err
 		}
+
+		if destructive && maxRepeats > 0 {
+			err = mosaicBuildDeleteDuplicates(env, mosaic, maxRepeats)
+			if err != nil {
+				return err
+			}
+		}
+
 		bar.Increment()
 	}
 
 	bar.Finish()
+	return nil
+}
+
+func mosaicBuildDeleteDuplicates(env environment.Environment, mosaic *model.Mosaic, maxRepeats int) error {
+	mosaicPartialService := env.MustMosaicPartialService()
+
+	macroPartialIds, err := mosaicPartialService.FindRepeats(mosaic, maxRepeats)
+	if err != nil {
+		return err
+	}
+
+	if len(macroPartialIds) == 0 {
+		return nil
+	}
+
+	partialComparisonService := env.MustPartialComparisonService()
+
+	for _, id := range macroPartialIds {
+		err = partialComparisonService.DeleteBy("macro_partial_id = ?", id)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }

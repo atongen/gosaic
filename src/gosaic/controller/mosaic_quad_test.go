@@ -33,6 +33,7 @@ func TestMosaicQuad(t *testing.T) {
 		filepath.Join(dir, "jumping_bunny_macro.jpg"),
 		filepath.Join(dir, "jumping_bunny_mosaic.jpg"),
 		true,
+		false,
 	)
 	if mosaic == nil {
 		t.Fatal("Failed to create mosaic")

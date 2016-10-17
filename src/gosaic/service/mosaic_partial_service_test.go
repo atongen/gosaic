@@ -357,3 +357,51 @@ func TestMosaicPartialServiceFindAllPartialViews(t *testing.T) {
 		t.Fatalf("Inserted cover partial (%+v) does not match: %+v\n", view.CoverPartial, coverPartial)
 	}
 }
+
+func TestMosaicPartialServiceFindRepeats(t *testing.T) {
+	setupMosaicPartialServiceTest()
+	mosaicPartialService := getTestMosaicPartialService()
+	defer mosaicPartialService.Close()
+
+	c1 := model.MosaicPartial{
+		MosaicId:       mosaic.Id,
+		MacroPartialId: macroPartial.Id,
+		GidxPartialId:  gidxPartial.Id,
+	}
+
+	err := mosaicPartialService.Insert(&c1)
+	if err != nil {
+		t.Fatalf("Error inserting mosaic partial: %s\n", err.Error())
+	}
+
+	ids, err := mosaicPartialService.FindRepeats(&mosaic, 2)
+	if err != nil {
+		t.Fatal("Error finding macro partials with repeats")
+	}
+
+	num := len(ids)
+	if num != 0 {
+		t.Fatalf("Expected 0 macro partials with 2 or more gidx duplicates, but got %d\n", num)
+	}
+
+	c2 := model.MosaicPartial{
+		MosaicId:       mosaic.Id,
+		MacroPartialId: macroPartial.Id + 1,
+		GidxPartialId:  gidxPartial.Id,
+	}
+
+	err = mosaicPartialService.Insert(&c2)
+	if err != nil {
+		t.Fatalf("Error inserting mosaic partial: %s\n", err.Error())
+	}
+
+	ids, err = mosaicPartialService.FindRepeats(&mosaic, 2)
+	if err != nil {
+		t.Fatal("Error finding macro partials with repeats")
+	}
+
+	num = len(ids)
+	if num != 1 {
+		t.Fatalf("Expected 1 macro partials with 2 or more gidx duplicates, but got %d\n", num)
+	}
+}

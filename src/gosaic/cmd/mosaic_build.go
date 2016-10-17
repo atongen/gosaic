@@ -7,15 +7,17 @@ import (
 )
 
 var (
-	mosaicBuildMaxRepeats int
-	mosaicBuildMacroId    int
-	mosaicBuildFillType   string
+	mosaicBuildMaxRepeats  int
+	mosaicBuildMacroId     int
+	mosaicBuildFillType    string
+	mosaicBuildDestructive bool
 )
 
 func init() {
 	addLocalIntFlag(&mosaicBuildMacroId, "macro-id", "", 0, "Id of macro to use to build mosaic", MosaicBuildCmd)
 	addLocalIntFlag(&mosaicBuildMaxRepeats, "max-repeats", "", -1, "Number of times an index image can be repeated in the mosaic, 0 indicates unlimited, -1 is the minimum number", MosaicBuildCmd)
 	addLocalStrFlag(&mosaicBuildFillType, "fill-type", "f", "random", "Mosaic build type, either 'best' or 'random'", MosaicBuildCmd)
+	addLocalBoolFlag(&mosaicBuildDestructive, "destructive", "d", false, "Delete mosaic metadata during creation", MosaicBuildCmd)
 	RootCmd.AddCommand(MosaicBuildCmd)
 }
 
@@ -39,6 +41,6 @@ var MosaicBuildCmd = &cobra.Command{
 		}
 		defer Env.Close()
 
-		controller.MosaicBuild(Env, mosaicBuildFillType, int64(mosaicBuildMacroId), mosaicBuildMaxRepeats)
+		controller.MosaicBuild(Env, mosaicBuildFillType, int64(mosaicBuildMacroId), mosaicBuildMaxRepeats, mosaicBuildDestructive)
 	},
 }

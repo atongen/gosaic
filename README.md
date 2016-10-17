@@ -36,7 +36,6 @@ $ ./build.sh
 
 ## TODO
 
-* mosaic build option: destroy partial comparisons after mosaic partial created
 * resume messaging for complete/incomplete project
 * exiftool wrapper
 * makefile

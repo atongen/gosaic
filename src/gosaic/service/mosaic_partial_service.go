@@ -19,6 +19,7 @@ type MosaicPartialService interface {
 	GetMissing(*model.Mosaic) (*model.MacroPartial, error)
 	GetRandomMissing(*model.Mosaic) (*model.MacroPartial, error)
 	FindAllPartialViews(*model.Mosaic, string, int, int) ([]*model.MosaicPartialView, error)
+	FindRepeats(*model.Mosaic, int) ([]int64, error)
 }
 
 type mosaicPartialServiceImpl struct {
@@ -229,4 +230,32 @@ func (s *mosaicPartialServiceImpl) FindAllPartialViews(mosaic *model.Mosaic, ord
 	}
 
 	return mosaicPartialViews, nil
+}
+
+// FindRepeats returns macro partials that have maxRepeats or more duplicate
+// gidxs selected
+func (s *mosaicPartialServiceImpl) FindRepeats(mosaic *model.Mosaic, maxRepeats int) ([]int64, error) {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	sqlStr := fmt.Sprintf(`
+		select map.id
+		from macro_partials map
+		inner join mosaic_partials mop
+			on mop.macro_partial_id = map.id
+		inner join gidx_partials gp
+			on mop.gidx_partial_id = gp.id
+		where mop.mosaic_id = ?
+		group by gp.gidx_id
+		having count(*) >= %d
+	`, maxRepeats)
+
+	var macroPartialIds []int64
+	// returns error on no results
+	_, err := s.dbMap.Select(&macroPartialIds, sqlStr, mosaic.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return macroPartialIds, nil
 }
