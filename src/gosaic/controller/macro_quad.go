@@ -121,7 +121,7 @@ func macroQuadBuildPartials(l *log.Logger, aspectService service.AspectService, 
 		},
 	}
 
-	l.Printf("Building %d macro partial quads...\n", num)
+	l.Printf("Building %d macro partial quads with max-depth %d and min-area %d...\n", num, maxDepth, minArea)
 
 	bar := pb.StartNew(num)
 
@@ -133,15 +133,20 @@ func macroQuadBuildPartials(l *log.Logger, aspectService service.AspectService, 
 		cancel = true
 	}()
 
-	for i := 0; i < num; i++ {
-		if cancel {
-			break
-		}
-
+	i := 0
+	for {
 		err = macroQuadSplit(aspectService, coverPartialService, macroPartialService, quadDistService, macro, coverPartialQuadView, img)
 		if err != nil {
 			close(c)
 			return err
+		}
+
+		if cancel {
+			break
+		}
+
+		if i >= num {
+			break
 		}
 
 		coverPartialQuadView, err = quadDistService.GetWorst(macro, maxDepth, minArea)
@@ -163,6 +168,7 @@ func macroQuadBuildPartials(l *log.Logger, aspectService service.AspectService, 
 			}
 		}
 
+		i += 1
 		bar.Increment()
 	}
 
@@ -186,6 +192,7 @@ func macroQuadFindOrCreateCover(coverService service.CoverService, aspectService
 	if err != nil {
 		return nil, err
 	}
+
 	// Existing cover is found, use it
 	if cover != nil {
 		return cover, nil
@@ -342,33 +349,34 @@ func macroQuadBuildQuadDist(quadDistService service.QuadDistService, coverPartia
 	return nil
 }
 
+// for num, maxDepth, and minArea
+// val == 0 is unrestricted
+// val > 0 sets explicitly
+// val == -1 (<0) calculates optimal
 func macroQuadFixArgs(width, height, num, maxDepth, minArea int) (int, int, int) {
 	var size, cNum, cMaxDepth, cMinArea int
 
-	if num > 0 {
+	if num >= 0 {
 		cNum = num
 	} else {
-		// arbitrarily choose n iterations if none provided
-		cNum = 1024
+		// set num to 2/5 root of total number of pixels
+		area := width * height
+		cNum = util.Round(math.Pow(float64(area), 0.4))
 	}
 
-	// size is the smaller dimension of width and height
-	if width < height {
-		size = width
-	} else {
-		size = height
-	}
+	// size is the average dimension of width and height
+	size = util.Round((float64(width) + float64(height)) / 2.0)
 
-	if minArea > 0 {
+	if minArea >= 0 {
 		cMinArea = minArea
 	} else {
 		// min size is the smallest length of a macro partial that we can tolerate
-		// it is the bigger of size cut into 100 partials, and 25px
-		minSize := util.Round(math.Max(float64(size/100), float64(25)))
+		// it is the bigger of size cut into 85 partials, and 35px
+		minSize := util.Round(math.Max(float64(size/85), float64(35)))
 		cMinArea = minSize * minSize
 	}
 
-	if maxDepth > 0 {
+	if maxDepth >= 0 {
 		cMaxDepth = maxDepth
 	} else {
 		// we want a max depth such that

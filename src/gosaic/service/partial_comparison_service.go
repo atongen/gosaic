@@ -417,10 +417,7 @@ func (s *partialComparisonServiceImpl) GetBestAvailable(mosaic *model.Mosaic) (*
 	defer s.m.Unlock()
 
 	sqlStr := `
-		select pc.id,
-		pc.macro_partial_id,
-		pc.gidx_partial_id,
-		pc.dist
+		select pc.*
 		from partial_comparisons pc
 		inner join macro_partials map
 			on pc.macro_partial_id = map.id

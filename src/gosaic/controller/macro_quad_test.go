@@ -15,7 +15,7 @@ func TestMacroQuad(t *testing.T) {
 	}
 
 	expect := []string{
-		"Building 10 macro partial quads...",
+		"Building 10 macro partial quads with max-depth 2 and min-area 50...",
 	}
 
 	testResultExpect(t, out.String(), expect)

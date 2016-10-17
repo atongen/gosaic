@@ -236,7 +236,7 @@ func createMacroTable(db *sql.DB) error {
       height integer not null,
       orientation integer not null,
 			FOREIGN KEY(aspect_id) REFERENCES aspects(id) ON DELETE RESTRICT,
-			FOREIGN KEY(cover_id) REFERENCES covers(id) ON DELETE RESTRICT,
+			FOREIGN KEY(cover_id) REFERENCES covers(id) ON DELETE CASCADE,
 			CHECK(path <> ''),
 			CHECK(length(md5sum) = 32)
     );
