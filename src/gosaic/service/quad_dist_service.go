@@ -2,6 +2,7 @@ package service
 
 import (
 	"database/sql"
+	"fmt"
 	"gosaic/model"
 	"sync"
 
@@ -58,7 +59,7 @@ func (s *quadDistServiceImpl) GetWorst(macro *model.Macro, maxDepth, minArea int
 	s.m.Lock()
 	defer s.m.Unlock()
 
-	sqlStr := `
+	sqlStr := fmt.Sprintf(`
 		select cop.id as cover_partial_id,
 			cop.cover_id as cover_partial_cover_id,
 			cop.aspect_id as cover_partial_aspect_id,
@@ -76,19 +77,24 @@ func (s *quadDistServiceImpl) GetWorst(macro *model.Macro, maxDepth, minArea int
 			on qd.macro_partial_id = map.id
 		inner join cover_partials cop
 			on map.cover_partial_id = cop.id
-		where map.macro_id = ?
-		and qd.depth <= ?
-		and qd.area >= ?
-		order by qd.dist desc
-		limit 1
-	`
+		where map.macro_id = ?`)
+
+	if maxDepth > 0 {
+		sqlStr = fmt.Sprintf("%s and qd.depth <= %d", sqlStr, maxDepth)
+	}
+
+	if minArea > 0 {
+		sqlStr = fmt.Sprintf("%s and qd.area >= %d", sqlStr, minArea)
+	}
+
+	sqlStr = fmt.Sprintf("%s order by qd.dist desc limit 1", sqlStr)
 
 	var v model.CoverPartialQuadView = model.CoverPartialQuadView{
 		CoverPartial: &model.CoverPartial{},
 		QuadDist:     &model.QuadDist{},
 	}
 
-	err := s.dbMap.Db.QueryRow(sqlStr, macro.Id, maxDepth, minArea).Scan(
+	err := s.dbMap.Db.QueryRow(sqlStr, macro.Id).Scan(
 		&v.CoverPartial.Id,
 		&v.CoverPartial.CoverId,
 		&v.CoverPartial.AspectId,
