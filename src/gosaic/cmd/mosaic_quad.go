@@ -62,6 +62,10 @@ var MosaicQuadCmd = &cobra.Command{
 			Env.Fatalln("Invalid fill-type")
 		}
 
+		if mosaicQuadNum == 0 && mosaicQuadMaxDepth == 0 && mosaicQuadMinArea == 0 {
+			Env.Fatalln("Add least one of num, max-depth or min-area must be non-zero.")
+		}
+
 		err := Env.Init()
 		if err != nil {
 			Env.Fatalf("Unable to initialize environment: %s\n", err.Error())

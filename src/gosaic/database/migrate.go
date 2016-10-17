@@ -386,6 +386,7 @@ func createProjectTable(db *sql.DB) error {
 			cover_id integer default null,
 			macro_id integer default null,
 			mosaic_id integer default null,
+			is_complete boolean not null default false,
 			created_at timestamp default current_timestamp not null
 		);
 	`

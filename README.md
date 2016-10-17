@@ -36,7 +36,6 @@ $ ./build.sh
 
 ## TODO
 
-* persist project completion status
 * optionally cleanup after project completion (default true)
   - delete cover for project
 * resume messaging for complete/incomplete project

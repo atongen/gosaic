@@ -103,8 +103,7 @@ func macroQuadBuildPartials(env environment.Environment, cover *model.Cover, mac
 
 	bar := pb.StartNew(num)
 
-	i := 0
-	for {
+	for i := 0; ; i++ {
 		err = macroQuadSplit(env, macro, coverPartialQuadView, img)
 		if err != nil {
 			return err
@@ -135,7 +134,6 @@ func macroQuadBuildPartials(env environment.Environment, cover *model.Cover, mac
 			}
 		}
 
-		i += 1
 		bar.Increment()
 	}
 

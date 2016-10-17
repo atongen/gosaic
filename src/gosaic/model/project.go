@@ -12,5 +12,6 @@ type Project struct {
 	CoverId    int64     `db:"cover_id"`
 	MacroId    int64     `db:"macro_id"`
 	MosaicId   int64     `db:"mosaic_id"`
+	IsComplete bool      `db:"is_complete"`
 	CreatedAt  time.Time `db:"created_at"`
 }

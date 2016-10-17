@@ -43,5 +43,10 @@ func MosaicQuad(env environment.Environment,
 		return nil
 	}
 
+	err = projectComplete(env, project)
+	if err != nil {
+		return nil
+	}
+
 	return mosaic
 }

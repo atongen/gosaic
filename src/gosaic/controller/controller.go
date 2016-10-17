@@ -278,3 +278,14 @@ func setEnvMosaic(env environment.Environment, mosaic *model.Mosaic) error {
 	_, err = projectService.Update(project)
 	return err
 }
+
+func projectComplete(env environment.Environment, project *model.Project) error {
+	if project.IsComplete {
+		return nil
+	}
+
+	projectService := env.MustProjectService()
+	project.IsComplete = true
+	_, err := projectService.Update(project)
+	return err
+}
