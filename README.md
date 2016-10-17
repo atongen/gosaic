@@ -36,10 +36,8 @@ $ ./build.sh
 
 ## TODO
 
-* optionally cleanup after project completion (default true)
-  - delete cover for project
-* resume messaging for complete/incomplete project
 * mosaic build option: destroy partial comparisons after mosaic partial created
+* resume messaging for complete/incomplete project
 * exiftool wrapper
 * makefile
 * cross compile

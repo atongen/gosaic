@@ -20,6 +20,7 @@ var (
 	mosaicAspectOutfile       string
 	mosaicAspectCoverOutfile  string
 	mosaicAspectMacroOutfile  string
+	mosaicAspectCleanup       bool
 )
 
 func init() {
@@ -34,6 +35,7 @@ func init() {
 	addLocalStrFlag(&mosaicAspectOutfile, "out", "", "", "File to write final mosaic image", MosaicAspectCmd)
 	addLocalStrFlag(&mosaicAspectCoverOutfile, "cover-out", "", "", "File to write cover partial pattern image", MosaicAspectCmd)
 	addLocalStrFlag(&mosaicAspectMacroOutfile, "macro-out", "", "", "File to write resized macro image", MosaicAspectCmd)
+	addLocalBoolFlag(&mosaicAspectCleanup, "cleanup", "c", true, "Delete mosaic metadata after completion", MosaicAspectCmd)
 	MosaicCmd.AddCommand(MosaicAspectCmd)
 }
 
@@ -120,6 +122,7 @@ var MosaicAspectCmd = &cobra.Command{
 			mosaicAspectCoverOutfile,
 			mosaicAspectMacroOutfile,
 			mosaicAspectOutfile,
+			mosaicAspectCleanup,
 		)
 	},
 }

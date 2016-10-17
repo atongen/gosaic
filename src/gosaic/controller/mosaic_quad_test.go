@@ -32,6 +32,7 @@ func TestMosaicQuad(t *testing.T) {
 		filepath.Join(dir, "jumping_bunny_cover.png"),
 		filepath.Join(dir, "jumping_bunny_macro.jpg"),
 		filepath.Join(dir, "jumping_bunny_mosaic.jpg"),
+		true,
 	)
 	if mosaic == nil {
 		t.Fatal("Failed to create mosaic")
@@ -47,4 +48,15 @@ func TestMosaicQuad(t *testing.T) {
 	}
 
 	testResultExpect(t, out.String(), expect)
+
+	project, err := envProject(env)
+	if err != nil {
+		t.Fatalf("Error getting project from environment: %s\n", err.Error())
+	} else if project == nil {
+		t.Fatalf("Project not found in environment.")
+	}
+
+	if !project.IsComplete {
+		t.Fatalf("Project not marked complete.")
+	}
 }

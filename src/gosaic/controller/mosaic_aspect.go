@@ -9,7 +9,8 @@ func MosaicAspect(env environment.Environment,
 	inPath, name, fillType string,
 	coverWidth, coverHeight, partialWidth, partialHeight, size, maxRepeats int,
 	threashold float64,
-	coverOutfile, macroOutfile, mosaicOutfile string) *model.Mosaic {
+	coverOutfile, macroOutfile, mosaicOutfile string,
+	cleanup bool) *model.Mosaic {
 
 	project, err := findOrCreateProject(env, inPath, name, coverOutfile, macroOutfile, mosaicOutfile)
 	if err != nil {
@@ -46,6 +47,13 @@ func MosaicAspect(env environment.Environment,
 	err = projectComplete(env, project)
 	if err != nil {
 		return nil
+	}
+
+	if cleanup {
+		err = projectCleanup(env, cover)
+		if err != nil {
+			return nil
+		}
 	}
 
 	return mosaic
