@@ -122,17 +122,19 @@ func findOrCreateProject(env environment.Environment, inPath, name, coverOutfile
 	if project == nil {
 		project = &model.Project{Name: name}
 	} else {
-		var msg string
+		var status, action string
 		if project.IsComplete {
-			msg = fmt.Sprintf("Complete project with name '%s' already exists. Type 'Y' to attempt to rebuild project with current configuration: ", name)
+			status = "Complete"
+			action = "rebuild"
 		} else {
-			msg = fmt.Sprintf("Incomplete project with name '%s' already exists. Type 'Y' to attempt to resume project with current configuration: ", name)
+			status = "Incomplete"
+			action = "resume"
 		}
-		fmt.Println(msg)
+		fmt.Printf("%s project with name '%s' already exists. Type 'Y' to %s, or anything else to abort [Y,n]: ", status, name, action)
 		var confirm string
 		fmt.Scanln(&confirm)
 		if confirm != "Y" {
-			return nil, fmt.Errorf("Not attempting to resume project.")
+			return nil, fmt.Errorf("Not attempting to %s project.", action)
 		}
 	}
 	project.Path = inPath
