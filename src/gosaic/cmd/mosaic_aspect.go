@@ -20,7 +20,7 @@ var (
 	mosaicAspectOutfile       string
 	mosaicAspectCoverOutfile  string
 	mosaicAspectMacroOutfile  string
-	mosaicAspectCleanup       bool
+	mosaicAspectNoCleanup     bool
 	mosaicAspectDestructive   bool
 )
 
@@ -30,13 +30,13 @@ func init() {
 	addLocalIntFlag(&mosaicAspectCoverWidth, "width", "w", 0, "Pixel width of mosaic, 0 maintains aspect from image height", MosaicAspectCmd)
 	addLocalIntFlag(&mosaicAspectCoverHeight, "height", "", 0, "Pixel height of mosaic, 0 maintains aspect from width", MosaicAspectCmd)
 	addLocalStrFlag(&mosaicAspectPartialAspect, "aspect", "a", "", "Aspect of mosaic partials (CxR)", MosaicAspectCmd)
-	addLocalIntFlag(&mosaicAspectSize, "size", "s", 10, "Number of mosaic partials in smallest dimension", MosaicAspectCmd)
+	addLocalIntFlag(&mosaicAspectSize, "size", "s", 0, "Number of mosaic partials in smallest dimension, 0 auto-calculates", MosaicAspectCmd)
 	addLocalIntFlag(&mosaicAspectMaxRepeats, "max-repeats", "", -1, "Number of times an index image can be repeated, 0 is unlimited, -1 is the minimun number", MosaicAspectCmd)
 	addLocalFloatFlag(&mosaicAspectThreashold, "threashold", "t", -1.0, "How similar aspect ratios must be", MosaicAspectCmd)
 	addLocalStrFlag(&mosaicAspectOutfile, "out", "", "", "File to write final mosaic image", MosaicAspectCmd)
 	addLocalStrFlag(&mosaicAspectCoverOutfile, "cover-out", "", "", "File to write cover partial pattern image", MosaicAspectCmd)
 	addLocalStrFlag(&mosaicAspectMacroOutfile, "macro-out", "", "", "File to write resized macro image", MosaicAspectCmd)
-	addLocalBoolFlag(&mosaicAspectCleanup, "cleanup", "c", true, "Delete mosaic metadata after completion", MosaicAspectCmd)
+	addLocalBoolFlag(&mosaicAspectNoCleanup, "no-cleanup", "", false, "Do not delete mosaic metadata after completion", MosaicAspectCmd)
 	addLocalBoolFlag(&mosaicAspectDestructive, "destructive", "d", false, "Delete mosaic metadata during creation", MosaicAspectCmd)
 	MosaicCmd.AddCommand(MosaicAspectCmd)
 }
@@ -99,10 +99,6 @@ var MosaicAspectCmd = &cobra.Command{
 			Env.Fatalln("Invalid fill-type")
 		}
 
-		if mosaicAspectSize <= 0 {
-			Env.Fatalln("size is required and must be greater than zero")
-		}
-
 		err = Env.Init()
 		if err != nil {
 			Env.Fatalf("Unable to initialize environment: %s\n", err.Error())
@@ -124,7 +120,7 @@ var MosaicAspectCmd = &cobra.Command{
 			mosaicAspectCoverOutfile,
 			mosaicAspectMacroOutfile,
 			mosaicAspectOutfile,
-			mosaicAspectCleanup,
+			!mosaicAspectNoCleanup,
 			mosaicAspectDestructive,
 		)
 	},

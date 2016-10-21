@@ -11,7 +11,7 @@ var (
 	mosaicQuadFillType     string
 	mosaicQuadCoverWidth   int
 	mosaicQuadCoverHeight  int
-	mosaicQuadNum          int
+	mosaicQuadSize         int
 	mosaicQuadMaxDepth     int
 	mosaicQuadMinArea      int
 	mosaicQuadMaxRepeats   int
@@ -19,7 +19,7 @@ var (
 	mosaicQuadOutfile      string
 	mosaicQuadCoverOutfile string
 	mosaicQuadMacroOutfile string
-	mosaicQuadCleanup      bool
+	mosaicQuadNoCleanup    bool
 	mosaicQuadDestructive  bool
 )
 
@@ -28,7 +28,7 @@ func init() {
 	addLocalStrFlag(&mosaicQuadFillType, "fill-type", "f", "random", "Mosaic fill to use, either 'random' or 'best'", MosaicQuadCmd)
 	addLocalIntFlag(&mosaicQuadCoverWidth, "width", "w", 0, "Pixel width of mosaic, 0 maintains aspect from image height", MosaicQuadCmd)
 	addLocalIntFlag(&mosaicQuadCoverHeight, "height", "", 0, "Pixel height of mosaic, 0 maintains aspect from width", MosaicQuadCmd)
-	addLocalIntFlag(&mosaicQuadNum, "num", "", -1, "Number of times to split the partials into quads", MosaicQuadCmd)
+	addLocalIntFlag(&mosaicQuadSize, "size", "s", -1, "Number of times to split the partials into quads", MosaicQuadCmd)
 	addLocalIntFlag(&mosaicQuadMaxDepth, "max-depth", "", -1, "Number of times a partial can be split into quads", MosaicQuadCmd)
 	addLocalIntFlag(&mosaicQuadMinArea, "min-area", "", -1, "The smallest an partial can get before it can't be split", MosaicQuadCmd)
 	addLocalIntFlag(&mosaicQuadMaxRepeats, "max-repeats", "", -1, "Number of times an index image can be repeated, 0 is unlimited, -1 is the minimun number", MosaicQuadCmd)
@@ -36,7 +36,7 @@ func init() {
 	addLocalStrFlag(&mosaicQuadOutfile, "out", "o", "", "File to write final mosaic image", MosaicQuadCmd)
 	addLocalStrFlag(&mosaicQuadCoverOutfile, "cover-out", "", "", "File to write cover partial pattern image", MosaicQuadCmd)
 	addLocalStrFlag(&mosaicQuadMacroOutfile, "macro-out", "", "", "File to write resized macro image", MosaicQuadCmd)
-	addLocalBoolFlag(&mosaicQuadCleanup, "cleanup", "c", true, "Delete mosaic metadata after completion", MosaicQuadCmd)
+	addLocalBoolFlag(&mosaicQuadNoCleanup, "no-cleanup", "", false, "Do not delete mosaic metadata after completion", MosaicQuadCmd)
 	addLocalBoolFlag(&mosaicQuadDestructive, "destructive", "d", false, "Delete mosaic metadata during creation", MosaicQuadCmd)
 	MosaicCmd.AddCommand(MosaicQuadCmd)
 }
@@ -66,8 +66,8 @@ var MosaicQuadCmd = &cobra.Command{
 			Env.Fatalln("Invalid fill-type")
 		}
 
-		if mosaicQuadNum == 0 && mosaicQuadMaxDepth == 0 && mosaicQuadMinArea == 0 {
-			Env.Fatalln("Add least one of num, max-depth or min-area must be non-zero.")
+		if mosaicQuadSize == 0 && mosaicQuadMaxDepth == 0 && mosaicQuadMinArea == 0 {
+			Env.Fatalln("Add least one of size, max-depth or min-area must be non-zero.")
 		}
 
 		err := Env.Init()
@@ -83,7 +83,7 @@ var MosaicQuadCmd = &cobra.Command{
 			mosaicQuadFillType,
 			mosaicQuadCoverWidth,
 			mosaicQuadCoverHeight,
-			mosaicQuadNum,
+			mosaicQuadSize,
 			mosaicQuadMaxDepth,
 			mosaicQuadMinArea,
 			mosaicQuadMaxRepeats,
@@ -91,7 +91,7 @@ var MosaicQuadCmd = &cobra.Command{
 			mosaicQuadCoverOutfile,
 			mosaicQuadMacroOutfile,
 			mosaicQuadOutfile,
-			mosaicQuadCleanup,
+			!mosaicQuadNoCleanup,
 			mosaicQuadDestructive,
 		)
 	},

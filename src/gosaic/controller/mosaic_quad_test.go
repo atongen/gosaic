@@ -41,7 +41,7 @@ func TestMosaicQuad(t *testing.T) {
 
 	expect := []string{
 		"Indexing 4 images...",
-		"Building 10 macro partial quads with max-depth 2 and min-area 50...",
+		"Building 34 macro partial quads with size 10 and max depth 2 and min area 50...",
 		"Building 4 index image partials...",
 		"Building 136 partial image comparisons...",
 		"Building 34 mosaic partials...",

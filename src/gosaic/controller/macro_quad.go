@@ -2,6 +2,7 @@ package controller
 
 import (
 	"errors"
+	"fmt"
 	"gosaic/environment"
 	"gosaic/model"
 	"gosaic/util"
@@ -13,7 +14,7 @@ import (
 
 func MacroQuad(env environment.Environment,
 	path string,
-	coverWidth, coverHeight, num, maxDepth, minArea int,
+	coverWidth, coverHeight, size, maxDepth, minArea int,
 	coverOutfile, macroOutfile string) (*model.Cover, *model.Macro) {
 
 	aspectService := env.MustAspectService()
@@ -25,7 +26,7 @@ func MacroQuad(env environment.Environment,
 		return nil, nil
 	}
 
-	num, maxDepth, minArea = macroQuadFixArgs(myCoverWidth, myCoverHeight, num, maxDepth, minArea)
+	size, maxDepth, minArea = macroQuadFixArgs(myCoverWidth, myCoverHeight, size, maxDepth, minArea)
 
 	cover, err := envCover(env)
 	if err != nil {
@@ -34,7 +35,7 @@ func MacroQuad(env environment.Environment,
 	}
 
 	if cover == nil {
-		cover, err = macroQuadCreateCover(env, myCoverWidth, myCoverHeight, num, maxDepth, minArea)
+		cover, err = macroQuadCreateCover(env, myCoverWidth, myCoverHeight, size, maxDepth, minArea)
 		if err != nil {
 			env.Printf("Error building cover: %s\n", err.Error())
 			return nil, nil
@@ -60,7 +61,7 @@ func MacroQuad(env environment.Environment,
 		return cover, nil
 	}
 
-	err = macroQuadBuildPartials(env, cover, macro, img, num, maxDepth, minArea)
+	err = macroQuadBuildPartials(env, cover, macro, img, size, maxDepth, minArea)
 	if err != nil {
 		env.Printf("Error building quad partials: %s\n", err.Error())
 		return cover, nil
@@ -77,64 +78,82 @@ func MacroQuad(env environment.Environment,
 	return cover, macro
 }
 
-func macroQuadBuildPartials(env environment.Environment, cover *model.Cover, macro *model.Macro, img *image.Image, num, maxDepth, minArea int) error {
+func macroQuadBuildPartials(env environment.Environment, cover *model.Cover, macro *model.Macro, img *image.Image, size, maxDepth, minArea int) error {
 	coverPartialService := env.MustCoverPartialService()
 	quadDistService := env.MustQuadDistService()
 
 	var err error
 
-	// start with initial values
-	coverPartialQuadView := &model.CoverPartialQuadView{
-		CoverPartial: &model.CoverPartial{
-			CoverId: cover.Id,
-			X1:      0,
-			Y1:      0,
-			X2:      cover.Width,
-			Y2:      cover.Height,
-		},
-		QuadDist: &model.QuadDist{
-			Depth: 0,
-			Area:  0,
-			Dist:  0.0,
-		},
+	total := 4 + 3*size
+	count, err := coverPartialService.Count(cover)
+	if err != nil {
+		return err
 	}
+	current := int(count)
+	remain := total - current
 
-	env.Printf("Building %d macro partial quads with max-depth %d and min-area %d...\n", num, maxDepth, minArea)
+	msg := fmt.Sprintf("Building %d macro partial quads with size %d", remain, size)
+	if maxDepth > 0 {
+		msg += fmt.Sprintf(" and max depth %d", maxDepth)
+	}
+	if minArea > 0 {
+		msg += fmt.Sprintf(" and min area %d", minArea)
+	}
+	msg += "..."
+	env.Println(msg)
 
-	bar := pb.StartNew(num)
+	bar := pb.StartNew(remain)
 
-	for i := 0; ; i++ {
-		err = macroQuadSplit(env, macro, coverPartialQuadView, img)
-		if err != nil {
-			return err
-		}
+	for {
+		var coverPartialQuadView *model.CoverPartialQuadView
+		if current == 0 {
+			// start with initial values
+			coverPartialQuadView = &model.CoverPartialQuadView{
+				CoverPartial: &model.CoverPartial{
+					CoverId: cover.Id,
+					X1:      0,
+					Y1:      0,
+					X2:      cover.Width,
+					Y2:      cover.Height,
+				},
+				QuadDist: &model.QuadDist{
+					Depth: 0,
+					Area:  0,
+					Dist:  0.0,
+				},
+			}
+			current = 1 // fake the first
+		} else {
+			// get the worst quad dist
+			coverPartialQuadView, err = quadDistService.GetWorst(macro, maxDepth, minArea)
+			if err != nil {
+				return err
+			}
 
-		if env.Cancel() {
-			break
-		}
+			if coverPartialQuadView == nil {
+				return errors.New("Failed to find worst quad dist")
+			}
 
-		if i >= num {
-			break
-		}
-
-		coverPartialQuadView, err = quadDistService.GetWorst(macro, maxDepth, minArea)
-		if err != nil {
-			return err
-		}
-
-		if coverPartialQuadView == nil {
-			// we are done
-			break
-		}
-
-		if coverPartialQuadView.CoverPartial.Id != int64(0) {
 			err = coverPartialService.Delete(coverPartialQuadView.CoverPartial)
 			if err != nil {
 				return err
 			}
 		}
 
-		bar.Increment()
+		err = macroQuadSplit(env, macro, coverPartialQuadView, img)
+		if err != nil {
+			return err
+		}
+		current += 3
+		bar.Set(current)
+
+		if env.Cancel() {
+			break
+		}
+
+		if current >= remain {
+			break
+		}
 	}
 
 	if env.Cancel() {
@@ -145,7 +164,7 @@ func macroQuadBuildPartials(env environment.Environment, cover *model.Cover, mac
 	return nil
 }
 
-func macroQuadCreateCover(env environment.Environment, width, height, num, maxDepth, minArea int) (*model.Cover, error) {
+func macroQuadCreateCover(env environment.Environment, width, height, size, maxDepth, minArea int) (*model.Cover, error) {
 	aspectService := env.MustAspectService()
 	coverService := env.MustCoverService()
 
@@ -307,19 +326,19 @@ func macroQuadBuildQuadDist(env environment.Environment, coverPartials []*model.
 	return nil
 }
 
-// for num, maxDepth, and minArea
+// for size, maxDepth, and minArea
 // val == 0 is unrestricted
 // val > 0 sets explicitly
 // val == -1 (<0) calculates optimal
-func macroQuadFixArgs(width, height, num, maxDepth, minArea int) (int, int, int) {
-	var size, cNum, cMaxDepth, cMinArea int
+func macroQuadFixArgs(width, height, size, maxDepth, minArea int) (int, int, int) {
+	var cSize, cMaxDepth, cMinArea int
 
-	if num >= 0 {
-		cNum = num
+	if size >= 0 {
+		cSize = size
 	} else {
-		// set num to 2/5 root of total number of pixels
+		// set size to 2/5 root of total number of pixels
 		area := width * height
-		cNum = util.Round(math.Pow(float64(area), 0.4))
+		cSize = util.Round(math.Pow(float64(area), 0.4))
 	}
 
 	// size is the average dimension of width and height
@@ -344,5 +363,5 @@ func macroQuadFixArgs(width, height, num, maxDepth, minArea int) (int, int, int)
 		cMaxDepth = util.Round(math.Log(v1) / (2.0 * math.Log(2.0)))
 	}
 
-	return cNum, cMaxDepth, cMinArea
+	return cSize, cMaxDepth, cMinArea
 }

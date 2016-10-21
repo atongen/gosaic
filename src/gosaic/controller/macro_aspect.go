@@ -5,7 +5,7 @@ import (
 	"gosaic/model"
 )
 
-func MacroAspect(env environment.Environment, path string, coverWidth, coverHeight, partialWidth, partialHeight, num int, coverOutfile, macroOutfile string) (*model.Cover, *model.Macro) {
+func MacroAspect(env environment.Environment, path string, coverWidth, coverHeight, partialWidth, partialHeight, size int, coverOutfile, macroOutfile string) (*model.Cover, *model.Macro) {
 	aspectService := env.MustAspectService()
 
 	aspect, width, height, err := getImageDimensions(aspectService, path)
@@ -31,7 +31,7 @@ func MacroAspect(env environment.Environment, path string, coverWidth, coverHeig
 	}
 
 	if cover == nil {
-		cover = CoverAspect(env, myCoverWidth, myCoverHeight, myPartialWidth, myPartialHeight, num)
+		cover = CoverAspect(env, myCoverWidth, myCoverHeight, myPartialWidth, myPartialHeight, size)
 		if cover == nil {
 			env.Println("Failed to create cover")
 			return nil, nil

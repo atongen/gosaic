@@ -4,12 +4,13 @@ import (
 	"errors"
 	"gosaic/environment"
 	"gosaic/model"
+	"gosaic/util"
 	"math"
 
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
-func CoverAspect(env environment.Environment, coverWidth, coverHeight, partialWidth, partialHeight, num int) *model.Cover {
+func CoverAspect(env environment.Environment, coverWidth, coverHeight, partialWidth, partialHeight, size int) *model.Cover {
 	coverService := env.MustCoverService()
 	aspectService := env.MustAspectService()
 
@@ -36,7 +37,14 @@ func CoverAspect(env environment.Environment, coverWidth, coverHeight, partialWi
 		return nil
 	}
 
-	err = addCoverAspectPartials(env, cover, coverPartialAspect, num)
+	var cSize int
+	if size <= 0 {
+		cSize = coverAspectCalculateSize(coverWidth, coverHeight)
+	} else {
+		cSize = size
+	}
+
+	err = addCoverAspectPartials(env, cover, coverPartialAspect, cSize)
 	if err != nil {
 		env.Printf("Error adding cover partials: %s\n", err.Error())
 		// attempt to delete cover
@@ -49,27 +57,33 @@ func CoverAspect(env environment.Environment, coverWidth, coverHeight, partialWi
 	return cover
 }
 
+func coverAspectCalculateSize(coverWidth, coverHeight int) int {
+	normalizedCoverLength := math.Sqrt(float64(coverWidth * coverHeight))
+	targetPartialLength := math.Max(120.0, normalizedCoverLength/30.0)
+	return util.Round(normalizedCoverLength / targetPartialLength)
+}
+
 // getCoverAspectDims takes a cover width and height,
 // and an expected width and height for the aspect of the partial rectangles
 // needed and returns the width and height of the partial rectangles,
 // as well as the number of columns and rows needed for the cover.
-func getCoverAspectDims(coverWidth, coverHeight, partialAspectWidth, partialAspectHeight, num int) (width, height, columns, rows int) {
+func getCoverAspectDims(coverWidth, coverHeight, partialAspectWidth, partialAspectHeight, size int) (width, height, columns, rows int) {
 	cw := float64(coverWidth)
 	ch := float64(coverHeight)
 	aw := float64(partialAspectWidth)
 	ah := float64(partialAspectHeight)
-	n := float64(num)
+	s := float64(size)
 
 	var fw, fh, pc, pr float64
 
 	if cw < ch {
-		fw = math.Ceil(cw / n)
-		pc = n
+		fw = math.Ceil(cw / s)
+		pc = s
 		fh = math.Ceil(fw * ah / aw)
 		pr = math.Ceil(ch / fh)
 	} else {
-		fh = math.Ceil(ch / n)
-		pr = n
+		fh = math.Ceil(ch / s)
+		pr = s
 		fw = math.Ceil(fh * aw / ah)
 		pc = math.Ceil(cw / fw)
 	}
@@ -82,10 +96,10 @@ func getCoverAspectDims(coverWidth, coverHeight, partialAspectWidth, partialAspe
 	return
 }
 
-func addCoverAspectPartials(env environment.Environment, cover *model.Cover, coverPartialAspect *model.Aspect, num int) error {
+func addCoverAspectPartials(env environment.Environment, cover *model.Cover, coverPartialAspect *model.Aspect, size int) error {
 	coverPartialService := env.MustCoverPartialService()
 
-	width, height, columns, rows := getCoverAspectDims(cover.Width, cover.Height, coverPartialAspect.Columns, coverPartialAspect.Rows, num)
+	width, height, columns, rows := getCoverAspectDims(cover.Width, cover.Height, coverPartialAspect.Columns, coverPartialAspect.Rows, size)
 
 	xOffset := int(math.Floor(float64(cover.Width-width*columns) / float64(2.0)))
 	yOffset := int(math.Floor(float64(cover.Height-height*rows) / float64(2.0)))
