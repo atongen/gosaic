@@ -37,11 +37,6 @@ $ ./build.sh
 ## TODO
 
 * improve exiftool wrapper
-* makefile
-* cross compile
-  - linux amd64
-  - darwin amd64
-  - windows amd64
 * move code to github
 * travis ci
 

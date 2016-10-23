@@ -4,6 +4,9 @@
 /bin/*
 !/bin/.gitkeep
 
+/dist/*
+!/dist/.gitkeep
+
 /gosaic.sqlite3
 
 /.cover

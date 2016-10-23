@@ -53,6 +53,12 @@
 			"branch": "master"
 		},
 		{
+			"importpath": "github.com/inconshreveable/mousetrap",
+			"repository": "https://github.com/inconshreveable/mousetrap",
+			"revision": "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75",
+			"branch": "master"
+		},
+		{
 			"importpath": "github.com/lucasb-eyer/go-colorful",
 			"repository": "https://github.com/lucasb-eyer/go-colorful",
 			"revision": "e524a63fc3d334b573e6c1060c9b5866cf236626",
