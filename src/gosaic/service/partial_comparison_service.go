@@ -17,6 +17,7 @@ type PartialComparisonService interface {
 	Update(*model.PartialComparison) error
 	Delete(*model.PartialComparison) error
 	DeleteBy(string, ...interface{}) error
+	DeleteFrom(*model.Macro) error
 	Get(int64) (*model.PartialComparison, error)
 	GetOneBy(string, ...interface{}) (*model.PartialComparison, error)
 	ExistsBy(string, ...interface{}) (bool, error)
@@ -124,6 +125,24 @@ func (s *partialComparisonServiceImpl) DeleteBy(conditions string, params ...int
 
 	sqlStr := fmt.Sprintf("delete from partial_comparisons where %s;", conditions)
 	_, err := s.dbMap.Db.Exec(sqlStr, params...)
+	return err
+}
+
+func (s *partialComparisonServiceImpl) DeleteFrom(macro *model.Macro) error {
+	s.m.Lock()
+	defer s.m.Unlock()
+
+	sqlStr := `
+		delete from partial_comparisons
+		where id in (
+			select pcs.id
+			from partial_comparisons pcs
+			inner join macro_partials maps
+				on pcs.macro_partial_id = maps.id
+			where maps.macro_id = ?
+		)
+	`
+	_, err := s.dbMap.Db.Exec(sqlStr, macro.Id)
 	return err
 }
 

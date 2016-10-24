@@ -283,6 +283,46 @@ func TestPartialComparisonServiceDeleteBy(t *testing.T) {
 	}
 }
 
+func TestPartialComparisonServiceDeleteFrom(t *testing.T) {
+	setupPartialComparisonServiceTest()
+	partialComparisonService := getTestPartialComparisonService()
+	defer partialComparisonService.Close()
+
+	pc := model.PartialComparison{
+		MacroPartialId: macroPartial.Id,
+		GidxPartialId:  gidxPartial.Id,
+		Dist:           0.5,
+	}
+
+	err := partialComparisonService.Insert(&pc)
+	if err != nil {
+		t.Fatalf("Error inserting partial comparison: %s\n", err.Error())
+	}
+
+	num, err := partialComparisonService.Count()
+	if err != nil {
+		t.Fatalf("Error counting partial comparison: %s\n", err.Error())
+	}
+
+	if num == 0 {
+		t.Fatalf("Expected %d partial comparisons got %d\n", 0, num)
+	}
+
+	err = partialComparisonService.DeleteFrom(&macro)
+	if err != nil {
+		t.Fatalf("Error deleting from partial comparison macro: %s\n", err.Error())
+	}
+
+	num2, err := partialComparisonService.Count()
+	if err != nil {
+		t.Fatalf("Error counting partial comparison: %s\n", err.Error())
+	}
+
+	if num2 != 0 {
+		t.Fatalf("Partial comparisons not deleted. Expected %d, got %d\n", 0, num2)
+	}
+}
+
 func TestPartialComparisonServiceGetOneBy(t *testing.T) {
 	setupPartialComparisonServiceTest()
 	partialComparisonService := getTestPartialComparisonService()

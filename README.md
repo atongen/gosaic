@@ -23,30 +23,27 @@ the binary somewhere on your PATH.
 
 ### Requirements
 
-* golang 1.6.x or later
-* [gb](https://getgb.io/)
-* sqlite3
+* golang 1.5.x or later
 
 ```shell
-$ go get github.com/constabulary/gb/...
 $ git clone git@github.com/atongen/gosaic.git
 $ cd gosaic
-$ ./build.sh
+$ make
 ```
 
 ## TODO
 
-* improve exiftool wrapper
+* native golang exif writer
 * move code to github
 * travis ci
 
 ## References
 
-* http://www.easyrgb.com/index.php
+* http://tools.medialab.sciences-po.fr/iwanthue/
 * http://en.wikipedia.org/wiki/Color_difference
-* fogleman quad trees
-* lab
-* other mosaic examples
+* https://en.wikipedia.org/wiki/Lab_color_space
+* https://github.com/fogleman/Quads
+* https://www.flickr.com/photos/tsevis/
 
 ## Contributing
 

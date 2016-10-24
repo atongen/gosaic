@@ -1,7 +1,7 @@
 VERSION=$(shell cat version)
 BUILD_TIME=$(shell date)
 BUILD_USER=$(shell whoami)
-BUILD_HASH=$(shell git rev-parse HEAD)
+BUILD_HASH=$(shell git rev-parse HEAD 2>/dev/null || echo "")
 ARCH=amd64
 OS=linux darwin
 

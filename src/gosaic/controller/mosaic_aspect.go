@@ -50,7 +50,7 @@ func MosaicAspect(env environment.Environment,
 	}
 
 	if cleanup {
-		err = projectCleanup(env, cover)
+		err = projectCleanup(env, macro)
 		if err != nil {
 			return nil
 		}

@@ -298,9 +298,8 @@ func projectComplete(env environment.Environment, project *model.Project) error 
 	return err
 }
 
-// projectCleanup deletes a cover. Db foreign keys will trigger the deletion
-// of all dependent objects.
-func projectCleanup(env environment.Environment, cover *model.Cover) error {
-	coverService := env.MustCoverService()
-	return coverService.Delete(cover)
+// projectCleanup deletes all partial comparisons for a macro
+func projectCleanup(env environment.Environment, macro *model.Macro) error {
+	partialComparisonService := env.MustPartialComparisonService()
+	return partialComparisonService.DeleteFrom(macro)
 }
