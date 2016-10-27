@@ -31,12 +31,6 @@ $ cd gosaic
 $ make
 ```
 
-## TODO
-
-* native golang exif writer
-* move code to github
-* travis ci
-
 ## References
 
 * http://tools.medialab.sciences-po.fr/iwanthue/
@@ -52,7 +46,3 @@ $ make
 1. Commit your changes (`git commit -am 'Add some feature'`)
 1. Push to the branch (`git push origin my-new-feature`)
 1. Create new Pull Request
-
-## Acknowledgement
-
-This project began as a hack day project at [Leadpages](https://www.leadpages.net).

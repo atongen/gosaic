@@ -1,0 +1,9 @@
+language: go
+go:
+  - 1.5
+  - master
+install:
+  - go get github.com/constabulary/gb/...
+script:
+  - gb build all
+  - gb test all
