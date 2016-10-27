@@ -333,34 +333,34 @@ func macroQuadBuildQuadDist(env environment.Environment, coverPartials []*model.
 func macroQuadFixArgs(width, height, size, maxDepth, minArea int) (int, int, int) {
 	var cSize, cMaxDepth, cMinArea int
 
-	if size >= 0 {
-		cSize = size
-	} else {
+	if size <= 0 {
 		// set size to 2/5 root of total number of pixels
 		area := width * height
 		cSize = util.Round(math.Pow(float64(area), 0.4))
+	} else {
+		cSize = size
 	}
 
-	// size is the average dimension of width and height
-	size = util.Round((float64(width) + float64(height)) / 2.0)
+	// aveDim is the average dimension of width and height
+	aveDim := util.Round((float64(width) + float64(height)) / 2.0)
 
-	if minArea >= 0 {
-		cMinArea = minArea
-	} else {
+	if minArea <= 0 {
 		// min size is the smallest length of a macro partial that we can tolerate
 		// it is the bigger of size cut into 85 partials, and 35px
-		minSize := util.Round(math.Max(float64(size/85), float64(35)))
+		minSize := util.Round(math.Max(float64(aveDim/85), float64(35)))
 		cMinArea = minSize * minSize
+	} else {
+		cMinArea = minArea
 	}
 
-	if maxDepth >= 0 {
-		cMaxDepth = maxDepth
-	} else {
+	if maxDepth <= 0 {
 		// we want a max depth such that
 		// size / 2^depth = minArea ^ (1/2)
 		// solve for depth
-		v1 := float64(size * size / cMinArea)
+		v1 := float64(aveDim * aveDim / cMinArea)
 		cMaxDepth = util.Round(math.Log(v1) / (2.0 * math.Log(2.0)))
+	} else {
+		cMaxDepth = maxDepth
 	}
 
 	return cSize, cMaxDepth, cMinArea
