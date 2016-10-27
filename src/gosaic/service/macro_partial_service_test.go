@@ -390,8 +390,8 @@ func TestMacroPartialServiceFindOrCreate(t *testing.T) {
 	}
 
 	numPixels := len(macroPartial.Pixels)
-	if numPixels != 256 {
-		t.Errorf("macroPartial.Pixels len was %d, expected %d\n", numPixels, 256)
+	if numPixels != 100 {
+		t.Errorf("macroPartial.Pixels len was %d, expected %d\n", numPixels, 100)
 	}
 
 	for i, pix := range macroPartial.Pixels {

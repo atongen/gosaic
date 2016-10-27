@@ -20,7 +20,7 @@ import (
 const (
 	// size of partial square for down-sampling
 	// before getting slice of lab data
-	DATA_SIZE = 16
+	DATA_SIZE = 10
 )
 
 func Md5sum(path string) (string, error) {
