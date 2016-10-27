@@ -35,7 +35,7 @@ func MacroQuad(env environment.Environment,
 	}
 
 	if cover == nil {
-		cover, err = macroQuadCreateCover(env, myCoverWidth, myCoverHeight, size, maxDepth, minArea)
+		cover, err = macroQuadCreateCover(env, myCoverWidth, myCoverHeight)
 		if err != nil {
 			env.Printf("Error building cover: %s\n", err.Error())
 			return nil, nil
@@ -164,7 +164,7 @@ func macroQuadBuildPartials(env environment.Environment, cover *model.Cover, mac
 	return nil
 }
 
-func macroQuadCreateCover(env environment.Environment, width, height, size, maxDepth, minArea int) (*model.Cover, error) {
+func macroQuadCreateCover(env environment.Environment, width, height int) (*model.Cover, error) {
 	aspectService := env.MustAspectService()
 	coverService := env.MustCoverService()
 
@@ -344,7 +344,7 @@ func macroQuadFixArgs(width, height, size, maxDepth, minArea int) (int, int, int
 	// aveDim is the average dimension of width and height
 	aveDim := util.Round((float64(width) + float64(height)) / 2.0)
 
-	if minArea <= 0 {
+	if minArea < 0 {
 		// min size is the smallest length of a macro partial that we can tolerate
 		// it is the bigger of size cut into 85 partials, and 35px
 		minSize := util.Round(math.Max(float64(aveDim/85), float64(35)))
@@ -353,7 +353,7 @@ func macroQuadFixArgs(width, height, size, maxDepth, minArea int) (int, int, int
 		cMinArea = minArea
 	}
 
-	if maxDepth <= 0 {
+	if maxDepth < 0 {
 		// we want a max depth such that
 		// size / 2^depth = minArea ^ (1/2)
 		// solve for depth
