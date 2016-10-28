@@ -55,7 +55,7 @@ func (s *quadDistServiceImpl) Insert(pc *model.QuadDist) error {
 	return s.dbMap.Insert(pc)
 }
 
-func (s *quadDistServiceImpl) GetWorst(macro *model.Macro, maxDepth, minArea int) (*model.CoverPartialQuadView, error) {
+func (s *quadDistServiceImpl) GetWorst(macro *model.Macro, depth, area int) (*model.CoverPartialQuadView, error) {
 	s.m.Lock()
 	defer s.m.Unlock()
 
@@ -79,12 +79,12 @@ func (s *quadDistServiceImpl) GetWorst(macro *model.Macro, maxDepth, minArea int
 			on map.cover_partial_id = cop.id
 		where map.macro_id = ?`)
 
-	if maxDepth > 0 {
-		sqlStr = fmt.Sprintf("%s and qd.depth <= %d", sqlStr, maxDepth)
+	if depth > 0 {
+		sqlStr = fmt.Sprintf("%s and qd.depth <= %d", sqlStr, depth)
 	}
 
-	if minArea > 0 {
-		sqlStr = fmt.Sprintf("%s and qd.area >= %d", sqlStr, minArea)
+	if area > 0 {
+		sqlStr = fmt.Sprintf("%s and qd.area >= %d", sqlStr, area)
 	}
 
 	sqlStr = fmt.Sprintf("%s order by qd.dist desc limit 1", sqlStr)

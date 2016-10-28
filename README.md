@@ -17,14 +17,19 @@ build the mosaic from an image using the images added to the index.
 
 Gosaic will populate a local sqlite3 database with metadata used to build the photo mosaic.
 It will not modify any images added to the index, and it will not modify the aspect ratio
-of any of the partial index images rendered in the mosaic. The final mosaic jpeg
-image is created at 300 dpi.
+of any of the partial index images, or the large image rendered in the mosaic.
+
+Three images will be produced: The cover image, which shows a grid where the partial index
+images will be placed against the large (macro) image. The macro image, which is the large
+image that the final mosiac is based on. It is cropped and resized to the exact size of the
+final mosaic image. This is sometimes useful for post-processing. And the final mosaic image.
+The final mosaic jpeg image is created at 300 dpi.
 
 The best mosaics will be created from large indexes with a wide variety of high quality images.
-However, large indexes will increase the amount of time required to generate mosaics.
+However, large indexes will increase the amount of time required to generate a mosaic.
 It's usually best to start small and do some experimentation and work your way up to a
 large mosaic. Gosaic does its best to calculate sane defaults for all values, so in most
-cases the most basic command will result in a good result.
+cases a basic command will result in a good mosaic.
 
 ### 1: Index
 
@@ -125,6 +130,12 @@ Global Flags:
       --db string     Path to project database (default "$HOME/.gosaic.sqlite3")
       --workers int   Number of workers to use (default 8)
 ```
+
+## Examples
+
+### Aspect
+
+### Quad
 
 ## Tips
 

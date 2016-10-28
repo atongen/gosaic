@@ -14,7 +14,7 @@ import (
 
 func MacroQuad(env environment.Environment,
 	path string,
-	coverWidth, coverHeight, size, maxDepth, minArea int,
+	coverWidth, coverHeight, size, minDepth, maxDepth, minArea, maxArea int,
 	coverOutfile, macroOutfile string) (*model.Cover, *model.Macro) {
 
 	aspectService := env.MustAspectService()
@@ -26,7 +26,7 @@ func MacroQuad(env environment.Environment,
 		return nil, nil
 	}
 
-	size, maxDepth, minArea = macroQuadFixArgs(myCoverWidth, myCoverHeight, size, maxDepth, minArea)
+	size, minDepth, maxDepth, minArea, maxArea = macroQuadFixArgs(myCoverWidth, myCoverHeight, size, minDepth, maxDepth, minArea, maxArea)
 
 	cover, err := envCover(env)
 	if err != nil {
@@ -61,7 +61,7 @@ func MacroQuad(env environment.Environment,
 		return cover, nil
 	}
 
-	err = macroQuadBuildPartials(env, cover, macro, img, size, maxDepth, minArea)
+	err = macroQuadBuildPartials(env, cover, macro, img, size, minDepth, maxDepth, minArea, maxArea)
 	if err != nil {
 		env.Printf("Error building quad partials: %s\n", err.Error())
 		return cover, nil
@@ -78,7 +78,7 @@ func MacroQuad(env environment.Environment,
 	return cover, macro
 }
 
-func macroQuadBuildPartials(env environment.Environment, cover *model.Cover, macro *model.Macro, img *image.Image, size, maxDepth, minArea int) error {
+func macroQuadBuildPartials(env environment.Environment, cover *model.Cover, macro *model.Macro, img *image.Image, size, minDepth, maxDepth, maxArea, minArea int) error {
 	coverPartialService := env.MustCoverPartialService()
 	quadDistService := env.MustQuadDistService()
 
@@ -93,11 +93,17 @@ func macroQuadBuildPartials(env environment.Environment, cover *model.Cover, mac
 	remain := total - current
 
 	msg := fmt.Sprintf("Building %d macro partial quads with size %d", remain, size)
+	if minDepth > 0 {
+		msg += fmt.Sprintf(" and min depth %d", minDepth)
+	}
 	if maxDepth > 0 {
 		msg += fmt.Sprintf(" and max depth %d", maxDepth)
 	}
 	if minArea > 0 {
 		msg += fmt.Sprintf(" and min area %d", minArea)
+	}
+	if maxArea > 0 {
+		msg += fmt.Sprintf(" and max area %d", maxArea)
 	}
 	msg += "..."
 	env.Println(msg)
@@ -124,10 +130,20 @@ func macroQuadBuildPartials(env environment.Environment, cover *model.Cover, mac
 			}
 			current = 1 // fake the first
 		} else {
-			// get the worst quad dist
-			coverPartialQuadView, err = quadDistService.GetWorst(macro, maxDepth, minArea)
-			if err != nil {
-				return err
+			// first check for quads that are too large
+			if minDepth > 0 || maxArea > 0 {
+				coverPartialQuadView, err = quadDistService.GetWorst(macro, minDepth, maxArea)
+				if err != nil {
+					return err
+				}
+			}
+
+			// then check for quads that are too small
+			if coverPartialQuadView == nil && (maxDepth > 0 || minArea > 0) {
+				coverPartialQuadView, err = quadDistService.GetWorst(macro, maxDepth, minArea)
+				if err != nil {
+					return err
+				}
 			}
 
 			if coverPartialQuadView == nil {
@@ -326,42 +342,60 @@ func macroQuadBuildQuadDist(env environment.Environment, coverPartials []*model.
 	return nil
 }
 
-// for size, maxDepth, and minArea
+// for size, minDepth, maxDepth, minArea, and maxArea
 // val == 0 is unrestricted
 // val > 0 sets explicitly
 // val == -1 (<0) calculates optimal
-func macroQuadFixArgs(width, height, size, maxDepth, minArea int) (int, int, int) {
-	var cSize, cMaxDepth, cMinArea int
+func macroQuadFixArgs(width, height, size, minDepth, maxDepth, minArea, maxArea int) (int, int, int, int, int) {
+	var cSize, cMinDepth, cMaxDepth, cMinArea, cMaxArea int
 
-	if size <= 0 {
+	area := width * height
+	normalDim := util.Round(math.Pow(float64(area), 0.5))
+
+	if size < 0 {
 		// set size to 2/5 root of total number of pixels
-		area := width * height
 		cSize = util.Round(math.Pow(float64(area), 0.4))
 	} else {
 		cSize = size
 	}
 
-	// aveDim is the average dimension of width and height
-	aveDim := util.Round((float64(width) + float64(height)) / 2.0)
-
-	if minArea < 0 {
-		// min size is the smallest length of a macro partial that we can tolerate
-		// it is the bigger of size cut into 85 partials, and 35px
-		minSize := util.Round(math.Max(float64(aveDim/85), float64(35)))
-		cMinArea = minSize * minSize
+	if minDepth < 0 {
+		// we want a max depth such that
+		// size / 2^depth = minArea ^ (1/2)
+		// solve for depth
+		v1 := float64(cSize * cSize / cMinArea)
+		cMaxDepth = util.Round(math.Log(v1) / (2.0 * math.Log(2.0)))
 	} else {
-		cMinArea = minArea
+		cMaxDepth = maxDepth
 	}
 
 	if maxDepth < 0 {
 		// we want a max depth such that
 		// size / 2^depth = minArea ^ (1/2)
 		// solve for depth
-		v1 := float64(aveDim * aveDim / cMinArea)
+		v1 := float64(cSize * cSize / cMinArea)
 		cMaxDepth = util.Round(math.Log(v1) / (2.0 * math.Log(2.0)))
 	} else {
 		cMaxDepth = maxDepth
 	}
 
-	return cSize, cMaxDepth, cMinArea
+	if minArea < 0 {
+		// min size is the smallest length of a macro partial that we can tolerate
+		// it is the bigger of aveDim cut into 85 partials, and 35px
+		minSize := util.Round(math.Max(float64(normalDim/85), float64(35)))
+		cMinArea = minSize * minSize
+	} else {
+		cMinArea = minArea
+	}
+
+	if maxArea < 0 {
+		// min size is the smallest length of a macro partial that we can tolerate
+		// it is the bigger of aveDim cut into 85 partials, and 35px
+		minSize := util.Round(math.Max(float64(normalDim/85), float64(35)))
+		cMinArea = minSize * minSize
+	} else {
+		cMinArea = minArea
+	}
+
+	return cSize, cMinDepth, cMaxDepth, cMinArea, cMaxArea
 }
