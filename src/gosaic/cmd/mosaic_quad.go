@@ -12,8 +12,10 @@ var (
 	mosaicQuadCoverWidth   int
 	mosaicQuadCoverHeight  int
 	mosaicQuadSize         int
+	mosaicQuadMinDepth     int
 	mosaicQuadMaxDepth     int
 	mosaicQuadMinArea      int
+	mosaicQuadMaxArea      int
 	mosaicQuadMaxRepeats   int
 	mosaicQuadThreashold   float64
 	mosaicQuadOutfile      string
@@ -29,8 +31,10 @@ func init() {
 	addLocalIntFlag(&mosaicQuadCoverWidth, "width", "w", 0, "Pixel width of mosaic, 0 maintains aspect from image height", MosaicQuadCmd)
 	addLocalIntFlag(&mosaicQuadCoverHeight, "height", "", 0, "Pixel height of mosaic, 0 maintains aspect from width", MosaicQuadCmd)
 	addLocalIntFlag(&mosaicQuadSize, "size", "s", -1, "Number of times to split the partials into quads", MosaicQuadCmd)
+	addLocalIntFlag(&mosaicQuadMinDepth, "min-depth", "", -1, "Minimum number of times all partials will be split into quads", MosaicQuadCmd)
 	addLocalIntFlag(&mosaicQuadMaxDepth, "max-depth", "", -1, "Number of times a partial can be split into quads", MosaicQuadCmd)
-	addLocalIntFlag(&mosaicQuadMinArea, "min-area", "", 0, "The smallest an partial can get before it can't be split", MosaicQuadCmd)
+	addLocalIntFlag(&mosaicQuadMinArea, "min-area", "", -1, "The smallest a partial can get before it can't be split", MosaicQuadCmd)
+	addLocalIntFlag(&mosaicQuadMaxArea, "max-area", "", -1, "The largest a partial can be", MosaicQuadCmd)
 	addLocalIntFlag(&mosaicQuadMaxRepeats, "max-repeats", "", -1, "Number of times an index image can be repeated, 0 is unlimited, -1 is the minimun number", MosaicQuadCmd)
 	addLocalFloatFlag(&mosaicQuadThreashold, "threashold", "t", -1.0, "How similar aspect ratios must be", MosaicQuadCmd)
 	addLocalStrFlag(&mosaicQuadOutfile, "out", "o", "", "File to write final mosaic image", MosaicQuadCmd)
@@ -66,8 +70,12 @@ var MosaicQuadCmd = &cobra.Command{
 			Env.Fatalln("Invalid fill-type")
 		}
 
-		if mosaicQuadSize == 0 && mosaicQuadMaxDepth == 0 && mosaicQuadMinArea == 0 {
-			Env.Fatalln("Add least one of size, max-depth or min-area must be non-zero.")
+		if mosaicQuadSize == 0 &&
+			mosaicQuadMinDepth == 0 &&
+			mosaicQuadMaxDepth == 0 &&
+			mosaicQuadMinArea == 0 &&
+			mosaicQuadMaxArea == 0 {
+			Env.Fatalln("Add least one of size, min-depth, max-depth, min-area, or max-area must be non-zero.")
 		}
 
 		err := Env.Init()
@@ -84,8 +92,10 @@ var MosaicQuadCmd = &cobra.Command{
 			mosaicQuadCoverWidth,
 			mosaicQuadCoverHeight,
 			mosaicQuadSize,
+			mosaicQuadMinDepth,
 			mosaicQuadMaxDepth,
 			mosaicQuadMinArea,
+			mosaicQuadMaxArea,
 			mosaicQuadMaxRepeats,
 			mosaicQuadThreashold,
 			mosaicQuadCoverOutfile,

@@ -8,6 +8,7 @@ import (
 	"gosaic/util"
 	"image"
 	"math"
+	"strings"
 
 	"gopkg.in/cheggaaa/pb.v1"
 )
@@ -26,7 +27,11 @@ func MacroQuad(env environment.Environment,
 		return nil, nil
 	}
 
-	size, minDepth, maxDepth, minArea, maxArea = macroQuadFixArgs(myCoverWidth, myCoverHeight, size, minDepth, maxDepth, minArea, maxArea)
+	size, minDepth, maxDepth, minArea, maxArea, err = macroQuadFixArgs(myCoverWidth, myCoverHeight, size, minDepth, maxDepth, minArea, maxArea)
+	if err != nil {
+		env.Printf("Error calculating quad arguments: %s\n", err.Error())
+		return nil, nil
+	}
 
 	cover, err := envCover(env)
 	if err != nil {
@@ -78,37 +83,51 @@ func MacroQuad(env environment.Environment,
 	return cover, macro
 }
 
-func macroQuadBuildPartials(env environment.Environment, cover *model.Cover, macro *model.Macro, img *image.Image, size, minDepth, maxDepth, maxArea, minArea int) error {
+func macroQuadBuildPartials(env environment.Environment, cover *model.Cover, macro *model.Macro, img *image.Image, size, minDepth, maxDepth, minArea, maxArea int) error {
 	coverPartialService := env.MustCoverPartialService()
 	quadDistService := env.MustQuadDistService()
 
 	var err error
 
-	total := 4 + 3*size
 	count, err := coverPartialService.Count(cover)
 	if err != nil {
 		return err
 	}
 	current := int(count)
-	remain := total - current
 
-	msg := fmt.Sprintf("Building %d macro partial quads with size %d", remain, size)
+	var total, remain int
+	if size > 0 {
+		total = macroQuadSplitSize(size)
+		remain = total - current
+	} else {
+		total = -1
+		remain = 3
+	}
+
+	msgSlice := []string{}
+	if size > 0 {
+		msgSlice = append(msgSlice, fmt.Sprintf("%d splits", size))
+	}
+	if total > 0 {
+		msgSlice = append(msgSlice, fmt.Sprintf("%d partials", remain))
+	}
 	if minDepth > 0 {
-		msg += fmt.Sprintf(" and min depth %d", minDepth)
+		msgSlice = append(msgSlice, fmt.Sprintf("min depth %d", minDepth))
 	}
 	if maxDepth > 0 {
-		msg += fmt.Sprintf(" and max depth %d", maxDepth)
+		msgSlice = append(msgSlice, fmt.Sprintf("max depth %d", maxDepth))
 	}
 	if minArea > 0 {
-		msg += fmt.Sprintf(" and min area %d", minArea)
+		msgSlice = append(msgSlice, fmt.Sprintf("min area %d", minArea))
 	}
 	if maxArea > 0 {
-		msg += fmt.Sprintf(" and max area %d", maxArea)
+		msgSlice = append(msgSlice, fmt.Sprintf("max area %d", maxArea))
 	}
-	msg += "..."
-	env.Println(msg)
+	env.Println(fmt.Sprintf("Building macro quad with %s...", strings.Join(msgSlice, ", ")))
 
 	bar := pb.StartNew(remain)
+
+	largePartialSatisfied := false
 
 	for {
 		var coverPartialQuadView *model.CoverPartialQuadView
@@ -130,16 +149,21 @@ func macroQuadBuildPartials(env environment.Environment, cover *model.Cover, mac
 			}
 			current = 1 // fake the first
 		} else {
-			// first check for quads that are too large
-			if minDepth > 0 || maxArea > 0 {
+			// first, check to see if we need minDepth/maxArea
+			// remember once we've satisfied this requirement
+			if !largePartialSatisfied && (minDepth > 0 || maxArea > 0) {
 				coverPartialQuadView, err = quadDistService.GetWorst(macro, minDepth, maxArea)
 				if err != nil {
 					return err
 				}
+				if coverPartialQuadView == nil {
+					largePartialSatisfied = true
+				}
 			}
 
-			// then check for quads that are too small
-			if coverPartialQuadView == nil && (maxDepth > 0 || minArea > 0) {
+			// if we still don't have a coverPartialQuadView,
+			// now we check with maxDepth/minArea
+			if coverPartialQuadView == nil {
 				coverPartialQuadView, err = quadDistService.GetWorst(macro, maxDepth, minArea)
 				if err != nil {
 					return err
@@ -161,6 +185,11 @@ func macroQuadBuildPartials(env environment.Environment, cover *model.Cover, mac
 			return err
 		}
 		current += 3
+
+		if total == -1 {
+			remain += 3
+			bar.Total = int64(remain)
+		}
 		bar.Set(current)
 
 		if env.Cancel() {
@@ -342,16 +371,50 @@ func macroQuadBuildQuadDist(env environment.Environment, coverPartials []*model.
 	return nil
 }
 
+// macroQuadSplitSize returns the total number of cover partials produced
+// from splitting the rectangle n times
+func macroQuadSplitSize(n int) int {
+	return 4 + 3*n
+}
+
+func macroQuadNewMinDepthSplits(minDepth int, cache map[int]int) (int, map[int]int) {
+	if minDepth <= 0 {
+		return 0, cache
+	} else if minDepth == 1 {
+		return 1, cache
+	} else if splits, ok := cache[minDepth]; ok {
+		return splits, cache
+	} else {
+		rSplits, cache := macroQuadNewMinDepthSplits(minDepth-1, cache)
+		splits = rSplits * 4
+		cache[minDepth] = splits
+		return splits, cache
+	}
+}
+
+func macroQuadMinDepthSplits(minDepth int) int {
+	sum := 0
+	cache := make(map[int]int)
+	for i := 0; i < minDepth; i++ {
+		var v int
+		v, cache = macroQuadNewMinDepthSplits(i, cache)
+		sum += v
+	}
+	return sum
+}
+
+// macroQuadFixArgs attempts to produce sane default values from user parameters
 // for size, minDepth, maxDepth, minArea, and maxArea
 // val == 0 is unrestricted
 // val > 0 sets explicitly
 // val == -1 (<0) calculates optimal
-func macroQuadFixArgs(width, height, size, minDepth, maxDepth, minArea, maxArea int) (int, int, int, int, int) {
+func macroQuadFixArgs(width, height, size, minDepth, maxDepth, minArea, maxArea int) (int, int, int, int, int, error) {
 	var cSize, cMinDepth, cMaxDepth, cMinArea, cMaxArea int
 
 	area := width * height
-	normalDim := util.Round(math.Pow(float64(area), 0.5))
+	normalDim := math.Sqrt(float64(area))
 
+	// cSize is the number of times we split the rectangle
 	if size < 0 {
 		// set size to 2/5 root of total number of pixels
 		cSize = util.Round(math.Pow(float64(area), 0.4))
@@ -359,43 +422,89 @@ func macroQuadFixArgs(width, height, size, minDepth, maxDepth, minArea, maxArea 
 		cSize = size
 	}
 
-	if minDepth < 0 {
-		// we want a max depth such that
-		// size / 2^depth = minArea ^ (1/2)
-		// solve for depth
-		v1 := float64(cSize * cSize / cMinArea)
-		cMaxDepth = util.Round(math.Log(v1) / (2.0 * math.Log(2.0)))
-	} else {
-		cMaxDepth = maxDepth
-	}
-
-	if maxDepth < 0 {
-		// we want a max depth such that
-		// size / 2^depth = minArea ^ (1/2)
-		// solve for depth
-		v1 := float64(cSize * cSize / cMinArea)
-		cMaxDepth = util.Round(math.Log(v1) / (2.0 * math.Log(2.0)))
-	} else {
-		cMaxDepth = maxDepth
-	}
-
 	if minArea < 0 {
 		// min size is the smallest length of a macro partial that we can tolerate
 		// it is the bigger of aveDim cut into 85 partials, and 35px
-		minSize := util.Round(math.Max(float64(normalDim/85), float64(35)))
-		cMinArea = minSize * minSize
+		minLength := math.Max(normalDim/float64(85), float64(35))
+		cMinArea = util.Round(minLength * minLength)
 	} else {
 		cMinArea = minArea
 	}
 
 	if maxArea < 0 {
-		// min size is the smallest length of a macro partial that we can tolerate
-		// it is the bigger of aveDim cut into 85 partials, and 35px
-		minSize := util.Round(math.Max(float64(normalDim/85), float64(35)))
-		cMinArea = minSize * minSize
+		if normalDim < 1500.0 {
+			// we don't restrict maxArea for relatively small macros
+			cMaxArea = 0
+		} else {
+			// max size is the largest length of a macro partial that we can tolerate
+			// it is the smaller of aveDim cut into 12 partials, and 300px
+			maxSize := util.Round(math.Min(normalDim/float64(12), float64(300)))
+			cMaxArea = maxSize * maxSize
+		}
 	} else {
-		cMinArea = minArea
+		cMaxArea = maxArea
 	}
 
-	return cSize, cMinDepth, cMaxDepth, cMinArea, cMaxArea
+	if cMaxArea > 0 && cMinArea > cMaxArea {
+		return 0, 0, 0, 0, 0, fmt.Errorf("min-area %d cannot be greater than max-area %d", cMinArea, cMaxArea)
+	}
+
+	if minDepth < 0 {
+		cMinDepth = 0
+		// do not restrict minDepth is size is not restricted
+		if cSize > 0 {
+			// target a minDepth that produces approx 1/10 the total number of cover partials
+			totalPartials := macroQuadSplitSize(cSize)
+			minDepthSizeTarget := util.Round(float64(totalPartials) / 10.0)
+
+			// increment cMinDepth until the highest value where it doesn't exceed minDepthSizeTarget
+			splits := 0
+			for depth := 0; splits <= minDepthSizeTarget; depth += 1 {
+				splits = macroQuadMinDepthSplits(depth)
+				if splits <= minDepthSizeTarget {
+					cMinDepth = depth
+				}
+			}
+		}
+	} else {
+		cMinDepth = minDepth
+	}
+
+	if cMinDepth > 0 {
+		var splits int
+		splits = macroQuadMinDepthSplits(cMinDepth)
+		if splits > cSize {
+			return 0, 0, 0, 0, 0, fmt.Errorf("min-depth %d too large for size %d", cMinDepth, cSize)
+		}
+	}
+
+	if maxDepth < 0 {
+		// we want a maxDepth such that
+		// minArea^(1/2) = normalDim / depth^2
+		// solve for depth
+		var minLength float64
+		if cMinArea > 0 {
+			minLength = math.Sqrt(float64(cMinArea))
+		} else {
+			// see minArea calculation above
+			minLength = math.Max(normalDim/float64(85), float64(35))
+		}
+		cMaxDepth = util.Round(math.Sqrt(normalDim / minLength))
+
+		if cMinDepth > 0 && cMinDepth >= cMaxDepth {
+			// fall back to basing this off cMinDepth
+			cMaxDepth = util.Round(float64(cMinDepth) * 1.2)
+			if cMinDepth == cMaxDepth {
+				cMaxDepth += 1
+			}
+		}
+	} else {
+		cMaxDepth = maxDepth
+	}
+
+	if cMaxDepth > 0 && cMinDepth > cMaxDepth {
+		return 0, 0, 0, 0, 0, fmt.Errorf("min-depth %d cannot be greater than max-depth %d", cMinDepth, cMaxDepth)
+	}
+
+	return cSize, cMinDepth, cMaxDepth, cMinArea, cMaxArea, nil
 }

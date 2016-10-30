@@ -7,7 +7,7 @@ import (
 
 func MosaicQuad(env environment.Environment,
 	inPath, name, fillType string,
-	coverWidth, coverHeight, num, maxDepth, minArea, maxRepeats int,
+	coverWidth, coverHeight, size, minDepth, maxDepth, minArea, maxArea, maxRepeats int,
 	threashold float64,
 	coverOutfile, macroOutfile, mosaicOutfile string,
 	cleanup, destructive bool) *model.Mosaic {
@@ -19,7 +19,7 @@ func MosaicQuad(env environment.Environment,
 	}
 	env.SetProjectId(project.Id)
 
-	cover, macro := MacroQuad(env, project.Path, coverWidth, coverHeight, num, maxDepth, minArea, project.CoverPath, project.MacroPath)
+	cover, macro := MacroQuad(env, project.Path, coverWidth, coverHeight, size, minDepth, maxDepth, minArea, maxArea, project.CoverPath, project.MacroPath)
 	if cover == nil || macro == nil {
 		return nil
 	}

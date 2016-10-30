@@ -9,9 +9,11 @@ import (
 var (
 	macroQuadWidth        int
 	macroQuadHeight       int
-	macroQuadNum          int
+	macroQuadSize         int
+	macroQuadMinDepth     int
 	macroQuadMaxDepth     int
 	macroQuadMinArea      int
+	macroQuadMaxArea      int
 	macroQuadCoverOutfile string
 	macroQuadMacroOutfile string
 )
@@ -19,9 +21,11 @@ var (
 func init() {
 	addLocalIntFlag(&macroQuadWidth, "width", "w", 0, "Pixel width of cover, 0 maintains aspect from height", MacroQuadCmd)
 	addLocalIntFlag(&macroQuadHeight, "height", "", 0, "Pixel height of cover, 0 maintains aspect from width", MacroQuadCmd)
-	addLocalIntFlag(&macroQuadNum, "num", "n", 0, "Number of times to subdivide the image into quads", MacroQuadCmd)
-	addLocalIntFlag(&macroQuadMaxDepth, "max-depth", "", 0, "Maximum depth of quad subdivisions", MacroQuadCmd)
-	addLocalIntFlag(&macroQuadMinArea, "min-area", "", 0, "Minimum area of quad subdivisions", MacroQuadCmd)
+	addLocalIntFlag(&macroQuadSize, "size", "s", -1, "Number of times to subdivide the image into quads", MacroQuadCmd)
+	addLocalIntFlag(&macroQuadMinDepth, "min-depth", "", -1, "Minimum depth of quad subdivisions", MacroQuadCmd)
+	addLocalIntFlag(&macroQuadMaxDepth, "max-depth", "", -1, "Maximum depth of quad subdivisions", MacroQuadCmd)
+	addLocalIntFlag(&macroQuadMinArea, "min-area", "", -1, "Minimum area of quad subdivisions", MacroQuadCmd)
+	addLocalIntFlag(&macroQuadMinArea, "max-area", "", -1, "Maxumum area of quad subdivisions", MacroQuadCmd)
 	addLocalStrFlag(&macroQuadCoverOutfile, "cover-out", "", "", "File to write cover image", MacroQuadCmd)
 	addLocalStrFlag(&macroQuadMacroOutfile, "out", "o", "", "File to write resized macro image", MacroQuadCmd)
 	RootCmd.AddCommand(MacroQuadCmd)
@@ -49,12 +53,32 @@ var MacroQuadCmd = &cobra.Command{
 			Env.Fatalln("height must be greater than zero")
 		}
 
+		if macroQuadSize == 0 &&
+			macroQuadMinDepth == 0 &&
+			macroQuadMaxDepth == 0 &&
+			macroQuadMinArea == 0 &&
+			macroQuadMaxArea == 0 {
+			Env.Fatalln("Add least one of size, min-depth, max-depth, min-area, or max-area must be non-zero.")
+		}
+
 		err := Env.Init()
 		if err != nil {
 			Env.Fatalf("Unable to initialize environment: %s\n", err.Error())
 		}
 		defer Env.Close()
 
-		controller.MacroQuad(Env, args[0], macroQuadWidth, macroQuadHeight, macroQuadNum, macroQuadMaxDepth, macroQuadMinArea, macroQuadCoverOutfile, macroQuadMacroOutfile)
+		controller.MacroQuad(
+			Env,
+			args[0],
+			macroQuadWidth,
+			macroQuadHeight,
+			macroQuadSize,
+			macroQuadMinDepth,
+			macroQuadMaxDepth,
+			macroQuadMinArea,
+			macroQuadMaxArea,
+			macroQuadCoverOutfile,
+			macroQuadMacroOutfile,
+		)
 	},
 }
