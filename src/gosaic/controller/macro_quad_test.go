@@ -19,13 +19,17 @@ func TestMacroQuadFixArgs(t *testing.T) {
 		t argTestIn
 		e argTestOut
 	}{
+		//(1200, 1200, -1, -1, -1, -1, -1) => (291, 4, 6, 1225, 0, ), expect (291, 5, 6, 1225, 0, )
+		//(2400, 2400, -1, -1, -1, -1, -1) => (506, 4, 8, 1225, 160000, ), expect (506, 5, 8, 1225, 40000, )
+		//(3600, 3600, -1, -1, -1, -1, -1) => (700, 5, 9, 1794, 360000, ), expect (700, 5, 9, 1794, 90000, )
+
 		{
 			argTestIn{100, 100, -1, -1, -1, -1, -1},
 			argTestOut{40, 3, 4, 1225, 0, ""},
 		},
 		{
 			argTestIn{300, 300, -1, -1, -1, -1, -1},
-			argTestOut{96, 4, 5, 1225, 0, ""},
+			argTestOut{96, 3, 4, 1225, 0, ""},
 		},
 		{
 			argTestIn{600, 600, -1, -1, -1, -1, -1},
@@ -33,15 +37,15 @@ func TestMacroQuadFixArgs(t *testing.T) {
 		},
 		{
 			argTestIn{1200, 1200, -1, -1, -1, -1, -1},
-			argTestOut{291, 5, 6, 1225, 0, ""},
+			argTestOut{291, 4, 6, 1225, 0, ""},
 		},
 		{
 			argTestIn{2400, 2400, -1, -1, -1, -1, -1},
-			argTestOut{506, 5, 8, 1225, 40000, ""},
+			argTestOut{506, 4, 8, 1225, 160000, ""},
 		},
 		{
 			argTestIn{3600, 3600, -1, -1, -1, -1, -1},
-			argTestOut{700, 5, 9, 1794, 90000, ""},
+			argTestOut{700, 5, 9, 1794, 360000, ""},
 		},
 	} {
 		size, minDepth, maxDepth, minArea, maxArea, err := macroQuadFixArgs(

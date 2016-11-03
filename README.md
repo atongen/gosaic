@@ -168,6 +168,11 @@ $ cd gosaic
 $ make
 ```
 
+## TODO
+
+* Tool to identify very similar index images
+* Option to not fill solid color macro partials
+
 ## References
 
 * http://tools.medialab.sciences-po.fr/iwanthue/

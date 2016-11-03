@@ -437,8 +437,8 @@ func macroQuadFixArgs(width, height, size, minDepth, maxDepth, minArea, maxArea 
 			cMaxArea = 0
 		} else {
 			// max size is the largest length of a macro partial that we can tolerate
-			// it is the smaller of aveDim cut into 12 partials, and 300px
-			maxSize := util.Round(math.Min(normalDim/float64(12), float64(300)))
+			// it is the smaller of aveDim cut into 6 partials, and 600px
+			maxSize := util.Round(math.Min(normalDim/float64(6), float64(600)))
 			cMaxArea = maxSize * maxSize
 		}
 	} else {
@@ -453,9 +453,9 @@ func macroQuadFixArgs(width, height, size, minDepth, maxDepth, minArea, maxArea 
 		cMinDepth = 0
 		// do not restrict minDepth is size is not restricted
 		if cSize > 0 {
-			// target a minDepth that produces approx 1/10 the total number of cover partials
+			// target a minDepth that produces approx 1/20 the total number of cover partials
 			totalPartials := macroQuadSplitSize(cSize)
-			minDepthSizeTarget := util.Round(float64(totalPartials) / 10.0)
+			minDepthSizeTarget := util.Round(float64(totalPartials) / 20.0)
 
 			// increment cMinDepth until the highest value where it doesn't exceed minDepthSizeTarget
 			splits := 0
