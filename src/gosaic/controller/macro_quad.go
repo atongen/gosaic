@@ -432,7 +432,7 @@ func macroQuadFixArgs(width, height, size, minDepth, maxDepth, minArea, maxArea 
 	}
 
 	if maxArea < 0 {
-		if normalDim < 1500.0 {
+		if normalDim <= 1225.0 {
 			// we don't restrict maxArea for relatively small macros
 			cMaxArea = 0
 		} else {
