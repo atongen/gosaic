@@ -395,7 +395,7 @@ func macroQuadNewMinDepthSplits(minDepth int, cache map[int]int) (int, map[int]i
 func macroQuadMinDepthSplits(minDepth int) int {
 	sum := 0
 	cache := make(map[int]int)
-	for i := 0; i < minDepth; i++ {
+	for i := 0; i <= minDepth; i++ {
 		var v int
 		v, cache = macroQuadNewMinDepthSplits(i, cache)
 		sum += v
@@ -423,8 +423,8 @@ func macroQuadFixArgs(width, height, size, minDepth, maxDepth, minArea, maxArea 
 	}
 
 	if minArea < 0 {
-		// min size is the smallest length of a macro partial that we can tolerate
-		// it is the bigger of aveDim cut into 85 partials, and 35px
+		// min length is the smallest length of a macro partial that we can tolerate
+		// it is the bigger of normalDim cut into 85 partials or 35px
 		minLength := math.Max(normalDim/float64(85), float64(35))
 		cMinArea = util.Round(minLength * minLength)
 	} else {
@@ -453,9 +453,9 @@ func macroQuadFixArgs(width, height, size, minDepth, maxDepth, minArea, maxArea 
 		cMinDepth = 0
 		// do not restrict minDepth is size is not restricted
 		if cSize > 0 {
-			// target a minDepth that produces approx 1/20 the total number of cover partials
+			// target a minDepth that produces approx 1/60 the total number of cover partials
 			totalPartials := macroQuadSplitSize(cSize)
-			minDepthSizeTarget := util.Round(float64(totalPartials) / 20.0)
+			minDepthSizeTarget := util.Round(float64(totalPartials) / 60.0)
 
 			// increment cMinDepth until the highest value where it doesn't exceed minDepthSizeTarget
 			splits := 0

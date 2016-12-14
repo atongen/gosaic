@@ -19,33 +19,29 @@ func TestMacroQuadFixArgs(t *testing.T) {
 		t argTestIn
 		e argTestOut
 	}{
-		//(1200, 1200, -1, -1, -1, -1, -1) => (291, 4, 6, 1225, 0, ), expect (291, 5, 6, 1225, 0, )
-		//(2400, 2400, -1, -1, -1, -1, -1) => (506, 4, 8, 1225, 160000, ), expect (506, 5, 8, 1225, 40000, )
-		//(3600, 3600, -1, -1, -1, -1, -1) => (700, 5, 9, 1794, 360000, ), expect (700, 5, 9, 1794, 90000, )
-
 		{
 			argTestIn{100, 100, -1, -1, -1, -1, -1},
-			argTestOut{40, 3, 4, 1225, 0, ""},
+			argTestOut{40, 1, 2, 1225, 0, ""},
 		},
 		{
 			argTestIn{300, 300, -1, -1, -1, -1, -1},
-			argTestOut{96, 3, 4, 1225, 0, ""},
+			argTestOut{96, 2, 3, 1225, 0, ""},
 		},
 		{
 			argTestIn{600, 600, -1, -1, -1, -1, -1},
-			argTestOut{167, 4, 5, 1225, 0, ""},
+			argTestOut{167, 2, 4, 1225, 0, ""},
 		},
 		{
 			argTestIn{1200, 1200, -1, -1, -1, -1, -1},
-			argTestOut{291, 4, 6, 1225, 0, ""},
+			argTestOut{291, 2, 6, 1225, 0, ""},
 		},
 		{
 			argTestIn{2400, 2400, -1, -1, -1, -1, -1},
-			argTestOut{506, 4, 8, 1225, 160000, ""},
+			argTestOut{506, 3, 8, 1225, 160000, ""},
 		},
 		{
 			argTestIn{3600, 3600, -1, -1, -1, -1, -1},
-			argTestOut{700, 5, 9, 1794, 360000, ""},
+			argTestOut{700, 3, 9, 1794, 360000, ""},
 		},
 	} {
 		size, minDepth, maxDepth, minArea, maxArea, err := macroQuadFixArgs(
@@ -84,8 +80,27 @@ func TestMacroQuad(t *testing.T) {
 	}
 
 	expect := []string{
-		"Building macro quad with 10 splits, 34 partials, min depth 2, max depth 2, min area 50...",
+		"Building macro quad with 10 splits, 34 partials, min depth 1, max depth 2, min area 50...",
 	}
 
 	testResultExpect(t, out.String(), expect)
+}
+
+func TestMacroQuadMinDepthSplits(t *testing.T) {
+	for _, tt := range []struct {
+		a int
+		r int
+	}{
+		{0, 0},
+		{1, 1},
+		{2, 5},
+		{3, 21},
+		{4, 85},
+		{5, 341},
+	} {
+		r := macroQuadMinDepthSplits(tt.a)
+		if r != tt.r {
+			t.Errorf("macroQuadMinDepthSplits(%d) => %d, want %d", tt.a, r, tt.r)
+		}
+	}
 }
