@@ -15,10 +15,10 @@ clean:
 deps:
 	go get -u github.com/constabulary/gb/...
 
-test:
+test: deps
 	gb test all
 
-build:
+build: deps
 	gb build ${LDFLAGS} all
 
 distclean:
@@ -46,4 +46,9 @@ package: sign
 		done; \
 	done
 
-.PHONY: all clean deps test build distclean dist sign package
+tag:
+	scripts/tag.sh
+
+release: tag package
+
+.PHONY: all clean deps test build distclean dist sign package tag release

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Generate test coverage statistics for Go packages.
 #
@@ -17,8 +17,8 @@
 
 set -e
 
-PROJECT=`pwd`
-workdir=.cover
+PROJECT=`cd "$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )"`
+workdir="$PROJECT/.cover"
 profile="$workdir/cover.out"
 mode=count
 
