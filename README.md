@@ -1,5 +1,7 @@
 # Gosaic
 
+[![Build Status](https://travis-ci.org/atongen/gosaic.svg?branch=master)](https://travis-ci.org/atongen/gosaic)
+
 Create your own image mosaics.
 
 ## Installation
