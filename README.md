@@ -8,7 +8,7 @@ Create your own image mosaics.
 
 ### Binary
 
-Download the latest release from the github releases page. Unzip and put the binary somewhere on your PATH.
+Download the latest [release](https://github.com/atongen/gosaic/releases), unzip and put the binary somewhere on your PATH.
 
 ### Building
 
