@@ -6,7 +6,23 @@ Create your own image mosaics.
 
 ## Installation
 
+### Binary
+
 Download the latest release from the github releases page. Unzip and put the binary somewhere on your PATH.
+
+### Building
+
+#### Requirements
+
+* golang 1.5.x or later
+* [gb](https://github.com/constabulary/gb)
+
+```shell
+λ git clone git@github.com/atongen/gosaic.git
+λ cd gosaic
+λ make
+```
+The project _should_ build on Windows, but so far has only been tested on Linux and osx.
 
 ## Examples
 
@@ -373,18 +389,6 @@ Then you can generate themed mosaics, like so:
 ```shell
 λ gosaic_wedding index < path/to/wedding/photos
 λ gosaic_wedding mosaic aspect path/to/wedding/photo.jpg
-```
-
-## Building
-
-### Requirements
-
-* golang 1.5.x or later
-
-```shell
-λ git clone git@github.com/atongen/gosaic.git
-λ cd gosaic
-λ make
 ```
 
 ## TODO

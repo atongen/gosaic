@@ -49,6 +49,6 @@ package: sign
 tag:
 	scripts/tag.sh
 
-release: tag package
+release: package tag
 
 .PHONY: all clean deps test build distclean dist sign package tag release
