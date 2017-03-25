@@ -1,3 +1,4 @@
+NAME=gosaic
 VERSION=$(shell cat version)
 BUILD_TIME=$(shell date)
 BUILD_USER=$(shell whoami)
@@ -5,21 +6,25 @@ BUILD_HASH=$(shell git rev-parse HEAD 2>/dev/null || echo "")
 ARCH=amd64
 OS=linux darwin
 
-LDFLAGS=-ldflags "-X 'gosaic/environment.Version=$(VERSION)' -X 'gosaic/environment.BuildTime=$(BUILD_TIME)' -X 'gosaic/environment.BuildUser=$(BUILD_USER)' -X 'gosaic/environment.BuildHash=$(BUILD_HASH)'"
+LDFLAGS=-ldflags "-X 'github.com/atongen/gosaic/environment.Version=$(VERSION)' \
+				          -X 'github.com/atongen/gosaic/environment.BuildTime=$(BUILD_TIME)' \
+									-X 'github.com/atongen/gosaic/environment.BuildUser=$(BUILD_USER)' \
+									-X 'github.com/atongen/gosaic/environment.BuildHash=$(BUILD_HASH)'"
 
-all: deps test build
+all: clean test build
 
 clean:
-	rm -rf bin/* pkg/*
+	go clean
+	@rm -f `which ${NAME}`
 
-deps:
-	go get -u github.com/constabulary/gb/...
+vet:
+	go vet `go list ./... | grep -v /vendor/`
 
-test: deps
-	gb test all
+test:
+	go test -cover `go list ./... | grep -v /vendor/`
 
-build: deps
-	gb build ${LDFLAGS} all
+build: test
+	go install ${LDFLAGS}
 
 distclean:
 	@mkdir -p dist
@@ -28,8 +33,7 @@ distclean:
 dist: test distclean
 	for arch in ${ARCH}; do \
 		for os in ${OS}; do \
-			env GOOS=$${os} GOARCH=$${arch} gb build ${LDFLAGS} all; \
-			mv bin/gosaic-$${os}-$${arch} dist/gosaic-${VERSION}-$${os}-$${arch}; \
+			env GOOS=$${os} GOARCH=$${arch} go build -v ${LDFLAGS} -o dist/${NAME}-${VERSION}-$${os}-$${arch}; \
 		done; \
 	done
 
@@ -42,13 +46,19 @@ sign: dist
 package: sign
 	for arch in ${ARCH}; do \
 		for os in ${OS}; do \
-			tar czf dist/gosaic-${VERSION}-$${os}-$${arch}.tar.gz -C dist gosaic-${VERSION}-$${os}-$${arch} gosaic-${VERSION}-$${os}-$${arch}.asc; \
+			tar czf dist/${NAME}-${VERSION}-$${os}-$${arch}.tar.gz -C dist ${NAME}-${VERSION}-$${os}-$${arch} ${NAME}-${VERSION}-$${os}-$${arch}.asc; \
 		done; \
-	done
+	done; \
+	find dist/ -type f  ! -name "*.tar.gz" -delete
 
 tag:
 	scripts/tag.sh
 
-release: tag package
+upload:
+	if [ ! -z "\${GITHUB_TOKEN}" ]; then \
+		ghr -t "${GITHUB_TOKEN}" -u ${BUILD_USER} -r ${NAME} -replace ${VERSION} dist/; \
+	fi
 
-.PHONY: all clean deps test build distclean dist sign package tag release
+release: package tag upload
+
+.PHONY: all clean vet test build distclean dist sign package tag upload release
