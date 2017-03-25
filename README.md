@@ -15,7 +15,12 @@ Download the latest [release](https://github.com/atongen/gosaic/releases), unzip
 #### Requirements
 
 * golang 1.5.x or later
-* [gb](https://github.com/constabulary/gb)
+
+```shell
+λ go get github.com/atongen/gosaic
+```
+
+_OR_
 
 ```shell
 λ git clone git@github.com/atongen/gosaic.git
