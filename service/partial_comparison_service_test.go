@@ -9,14 +9,14 @@ import (
 )
 
 func setupPartialComparisonServiceTest() {
-	setTestDbMap()
-	gidxService := getTestGidxService()
-	gidxPartialService := getTestGidxPartialService()
-	aspectService := getTestAspectService()
-	coverService := getTestCoverService()
-	coverPartialService := getTestCoverPartialService()
-	macroService := getTestMacroService()
-	macroPartialService := getTestMacroPartialService()
+	setTestServiceFactory()
+	gidxService := serviceFactory.MustGidxService()
+	gidxPartialService := serviceFactory.MustGidxPartialService()
+	aspectService := serviceFactory.MustAspectService()
+	coverService := serviceFactory.MustCoverService()
+	coverPartialService := serviceFactory.MustCoverPartialService()
+	macroService := serviceFactory.MustMacroService()
+	macroPartialService := serviceFactory.MustMacroPartialService()
 
 	aspect = model.Aspect{Columns: 239, Rows: 170}
 	err := aspectService.Insert(&aspect)
@@ -115,7 +115,7 @@ func setupPartialComparisonServiceTest() {
 
 func TestPartialComparisonServiceInsert(t *testing.T) {
 	setupPartialComparisonServiceTest()
-	partialComparisonService := getTestPartialComparisonService()
+	partialComparisonService := serviceFactory.MustPartialComparisonService()
 	defer partialComparisonService.Close()
 
 	pc := model.PartialComparison{
@@ -150,7 +150,7 @@ func TestPartialComparisonServiceInsert(t *testing.T) {
 
 func TestPartialComparisonServiceBulkInsert(t *testing.T) {
 	setupPartialComparisonServiceTest()
-	partialComparisonService := getTestPartialComparisonService()
+	partialComparisonService := serviceFactory.MustPartialComparisonService()
 	defer partialComparisonService.Close()
 
 	macroGidxViews, err := partialComparisonService.FindMissing(&macro, 1000)
@@ -193,7 +193,7 @@ func TestPartialComparisonServiceBulkInsert(t *testing.T) {
 
 func TestPartialComparisonServiceUpdate(t *testing.T) {
 	setupPartialComparisonServiceTest()
-	partialComparisonService := getTestPartialComparisonService()
+	partialComparisonService := serviceFactory.MustPartialComparisonService()
 	defer partialComparisonService.Close()
 
 	pc := model.PartialComparison{
@@ -227,7 +227,7 @@ func TestPartialComparisonServiceUpdate(t *testing.T) {
 
 func TestPartialComparisonServiceDelete(t *testing.T) {
 	setupPartialComparisonServiceTest()
-	partialComparisonService := getTestPartialComparisonService()
+	partialComparisonService := serviceFactory.MustPartialComparisonService()
 	defer partialComparisonService.Close()
 
 	pc := model.PartialComparison{
@@ -256,7 +256,7 @@ func TestPartialComparisonServiceDelete(t *testing.T) {
 
 func TestPartialComparisonServiceDeleteBy(t *testing.T) {
 	setupPartialComparisonServiceTest()
-	partialComparisonService := getTestPartialComparisonService()
+	partialComparisonService := serviceFactory.MustPartialComparisonService()
 	defer partialComparisonService.Close()
 
 	pc := model.PartialComparison{
@@ -285,7 +285,7 @@ func TestPartialComparisonServiceDeleteBy(t *testing.T) {
 
 func TestPartialComparisonServiceDeleteFrom(t *testing.T) {
 	setupPartialComparisonServiceTest()
-	partialComparisonService := getTestPartialComparisonService()
+	partialComparisonService := serviceFactory.MustPartialComparisonService()
 	defer partialComparisonService.Close()
 
 	pc := model.PartialComparison{
@@ -325,7 +325,7 @@ func TestPartialComparisonServiceDeleteFrom(t *testing.T) {
 
 func TestPartialComparisonServiceGetOneBy(t *testing.T) {
 	setupPartialComparisonServiceTest()
-	partialComparisonService := getTestPartialComparisonService()
+	partialComparisonService := serviceFactory.MustPartialComparisonService()
 	defer partialComparisonService.Close()
 
 	pc := model.PartialComparison{
@@ -354,7 +354,7 @@ func TestPartialComparisonServiceGetOneBy(t *testing.T) {
 
 func TestPartialComparisonServiceGetOneByNot(t *testing.T) {
 	setupPartialComparisonServiceTest()
-	partialComparisonService := getTestPartialComparisonService()
+	partialComparisonService := serviceFactory.MustPartialComparisonService()
 	defer partialComparisonService.Close()
 
 	_, err := partialComparisonService.GetOneBy("macro_partial_id = ? and gidx_partial_id = ?", macroPartial.Id, gidxPartial.Id)
@@ -365,7 +365,7 @@ func TestPartialComparisonServiceGetOneByNot(t *testing.T) {
 
 func TestPartialComparisonServiceExistsBy(t *testing.T) {
 	setupPartialComparisonServiceTest()
-	partialComparisonService := getTestPartialComparisonService()
+	partialComparisonService := serviceFactory.MustPartialComparisonService()
 	defer partialComparisonService.Close()
 
 	pc := model.PartialComparison{
@@ -391,7 +391,7 @@ func TestPartialComparisonServiceExistsBy(t *testing.T) {
 
 func TestPartialComparisonServiceExistsByNot(t *testing.T) {
 	setupPartialComparisonServiceTest()
-	partialComparisonService := getTestPartialComparisonService()
+	partialComparisonService := serviceFactory.MustPartialComparisonService()
 	defer partialComparisonService.Close()
 
 	found, err := partialComparisonService.ExistsBy("macro_partial_id = ? and gidx_partial_id = ?", macroPartial.Id, gidxPartial.Id)
@@ -406,7 +406,7 @@ func TestPartialComparisonServiceExistsByNot(t *testing.T) {
 
 func TestPartialComparisonServiceCount(t *testing.T) {
 	setupPartialComparisonServiceTest()
-	partialComparisonService := getTestPartialComparisonService()
+	partialComparisonService := serviceFactory.MustPartialComparisonService()
 	defer partialComparisonService.Close()
 
 	pc := model.PartialComparison{
@@ -432,7 +432,7 @@ func TestPartialComparisonServiceCount(t *testing.T) {
 
 func TestPartialComparisonServiceCountBy(t *testing.T) {
 	setupPartialComparisonServiceTest()
-	partialComparisonService := getTestPartialComparisonService()
+	partialComparisonService := serviceFactory.MustPartialComparisonService()
 	defer partialComparisonService.Close()
 
 	pc := model.PartialComparison{
@@ -458,7 +458,7 @@ func TestPartialComparisonServiceCountBy(t *testing.T) {
 
 func TestPartialComparisonServiceFindAll(t *testing.T) {
 	setupPartialComparisonServiceTest()
-	partialComparisonService := getTestPartialComparisonService()
+	partialComparisonService := serviceFactory.MustPartialComparisonService()
 	defer partialComparisonService.Close()
 
 	pc := model.PartialComparison{
@@ -495,7 +495,7 @@ func TestPartialComparisonServiceFindAll(t *testing.T) {
 
 func TestPartialComparisonServiceFindOrCreate(t *testing.T) {
 	setupPartialComparisonServiceTest()
-	partialComparisonService := getTestPartialComparisonService()
+	partialComparisonService := serviceFactory.MustPartialComparisonService()
 	defer partialComparisonService.Close()
 
 	partialComparison, err := partialComparisonService.FindOrCreate(&macroPartial, &gidxPartial)
@@ -518,7 +518,7 @@ func TestPartialComparisonServiceFindOrCreate(t *testing.T) {
 
 func TestPartialComparisonServiceCountMissing(t *testing.T) {
 	setupPartialComparisonServiceTest()
-	partialComparisonService := getTestPartialComparisonService()
+	partialComparisonService := serviceFactory.MustPartialComparisonService()
 	defer partialComparisonService.Close()
 
 	num, err := partialComparisonService.CountMissing(&macro)
@@ -533,7 +533,7 @@ func TestPartialComparisonServiceCountMissing(t *testing.T) {
 
 func TestPartialComparisonServiceFindMissing(t *testing.T) {
 	setupPartialComparisonServiceTest()
-	partialComparisonService := getTestPartialComparisonService()
+	partialComparisonService := serviceFactory.MustPartialComparisonService()
 	defer partialComparisonService.Close()
 
 	macroGidxViews, err := partialComparisonService.FindMissing(&macro, 1000)
@@ -548,7 +548,7 @@ func TestPartialComparisonServiceFindMissing(t *testing.T) {
 
 func TestPartialComparisonServiceCreateFromView(t *testing.T) {
 	setupPartialComparisonServiceTest()
-	partialComparisonService := getTestPartialComparisonService()
+	partialComparisonService := serviceFactory.MustPartialComparisonService()
 	defer partialComparisonService.Close()
 
 	macroGidxViews, err := partialComparisonService.FindMissing(&macro, 1000)
@@ -581,7 +581,7 @@ func TestPartialComparisonServiceCreateFromView(t *testing.T) {
 
 func TestPartialComparisonServiceGetClosest(t *testing.T) {
 	setupPartialComparisonServiceTest()
-	partialComparisonService := getTestPartialComparisonService()
+	partialComparisonService := serviceFactory.MustPartialComparisonService()
 	defer partialComparisonService.Close()
 
 	pc1 := model.PartialComparison{
@@ -616,9 +616,9 @@ func TestPartialComparisonServiceGetClosest(t *testing.T) {
 
 func TestPartialComparisonServiceGetClosestMax(t *testing.T) {
 	setupPartialComparisonServiceTest()
-	partialComparisonService := getTestPartialComparisonService()
-	mosaicService := getTestMosaicService()
-	mosaicPartialService := getTestMosaicPartialService()
+	partialComparisonService := serviceFactory.MustPartialComparisonService()
+	mosaicService := serviceFactory.MustMosaicService()
+	mosaicPartialService := serviceFactory.MustMosaicPartialService()
 	defer partialComparisonService.Close()
 
 	mosaic = model.Mosaic{
@@ -673,7 +673,7 @@ func TestPartialComparisonServiceGetClosestMax(t *testing.T) {
 
 func TestPartialComparisonServiceGetBestAvailable(t *testing.T) {
 	setupPartialComparisonServiceTest()
-	partialComparisonService := getTestPartialComparisonService()
+	partialComparisonService := serviceFactory.MustPartialComparisonService()
 	defer partialComparisonService.Close()
 
 	pc1 := model.PartialComparison{
@@ -710,10 +710,10 @@ func TestPartialComparisonServiceGetBestAvailable(t *testing.T) {
 
 func TestPartialComparisonServiceGetBestAvailableMax(t *testing.T) {
 	setupPartialComparisonServiceTest()
-	partialComparisonService := getTestPartialComparisonService()
-	mosaicService := getTestMosaicService()
-	mosaicPartialService := getTestMosaicPartialService()
-	macroPartialService := getTestMacroPartialService()
+	partialComparisonService := serviceFactory.MustPartialComparisonService()
+	mosaicService := serviceFactory.MustMosaicService()
+	mosaicPartialService := serviceFactory.MustMosaicPartialService()
+	macroPartialService := serviceFactory.MustMacroPartialService()
 	defer partialComparisonService.Close()
 
 	mosaic = model.Mosaic{

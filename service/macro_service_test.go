@@ -9,9 +9,9 @@ import (
 )
 
 func setupMacroServiceTest() {
-	setTestDbMap()
-	coverService := getTestCoverService()
-	aspectService := getTestAspectService()
+	setTestServiceFactory()
+	coverService := serviceFactory.MustCoverService()
+	aspectService := serviceFactory.MustAspectService()
 
 	aspect = model.Aspect{Columns: 1, Rows: 1}
 	err := aspectService.Insert(&aspect)
@@ -28,7 +28,7 @@ func setupMacroServiceTest() {
 
 func TestMacroServiceInsert(t *testing.T) {
 	setupMacroServiceTest()
-	macroService := getTestMacroService()
+	macroService := serviceFactory.MustMacroService()
 	defer macroService.Close()
 
 	c1 := model.Macro{
@@ -71,7 +71,7 @@ func TestMacroServiceInsert(t *testing.T) {
 
 func TestMacroServiceUpdate(t *testing.T) {
 	setupMacroServiceTest()
-	macroService := getTestMacroService()
+	macroService := serviceFactory.MustMacroService()
 	defer macroService.Close()
 
 	c1 := model.Macro{
@@ -107,7 +107,7 @@ func TestMacroServiceUpdate(t *testing.T) {
 
 func TestMacroServiceDelete(t *testing.T) {
 	setupMacroServiceTest()
-	macroService := getTestMacroService()
+	macroService := serviceFactory.MustMacroService()
 	defer macroService.Close()
 
 	c1 := model.Macro{
@@ -140,7 +140,7 @@ func TestMacroServiceDelete(t *testing.T) {
 
 func TestMacroServiceGetOneBy(t *testing.T) {
 	setupMacroServiceTest()
-	macroService := getTestMacroService()
+	macroService := serviceFactory.MustMacroService()
 	defer macroService.Close()
 
 	c1 := model.Macro{
@@ -179,7 +179,7 @@ func TestMacroServiceGetOneBy(t *testing.T) {
 
 func TestMacroServiceGetOneByNone(t *testing.T) {
 	setupMacroServiceTest()
-	macroService := getTestMacroService()
+	macroService := serviceFactory.MustMacroService()
 	defer macroService.Close()
 
 	c, err := macroService.GetOneBy("cover_id = ? AND md5sum = ?", int64(123), "not a valid md5")
@@ -194,7 +194,7 @@ func TestMacroServiceGetOneByNone(t *testing.T) {
 
 func TestMacroServiceExistsBy(t *testing.T) {
 	setupMacroServiceTest()
-	macroService := getTestMacroService()
+	macroService := serviceFactory.MustMacroService()
 	defer macroService.Close()
 
 	c1 := model.Macro{
@@ -222,7 +222,7 @@ func TestMacroServiceExistsBy(t *testing.T) {
 
 func TestMacroServiceFindAll(t *testing.T) {
 	setupMacroServiceTest()
-	macroService := getTestMacroService()
+	macroService := serviceFactory.MustMacroService()
 	defer macroService.Close()
 
 	macros := []model.Macro{

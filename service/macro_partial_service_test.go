@@ -9,11 +9,11 @@ import (
 )
 
 func setupMacroPartialServiceTest() {
-	setTestDbMap()
-	aspectService := getTestAspectService()
-	coverService := getTestCoverService()
-	coverPartialService := getTestCoverPartialService()
-	macroService := getTestMacroService()
+	setTestServiceFactory()
+	aspectService := serviceFactory.MustAspectService()
+	coverService := serviceFactory.MustCoverService()
+	coverPartialService := serviceFactory.MustCoverPartialService()
+	macroService := serviceFactory.MustMacroService()
 
 	aspect = model.Aspect{Columns: 87, Rows: 128}
 	err := aspectService.Insert(&aspect)
@@ -57,7 +57,7 @@ func setupMacroPartialServiceTest() {
 
 func TestMacroPartialServiceInsert(t *testing.T) {
 	setupMacroPartialServiceTest()
-	macroPartialService := getTestMacroPartialService()
+	macroPartialService := serviceFactory.MustMacroPartialService()
 	defer macroPartialService.Close()
 
 	mp := model.MacroPartial{
@@ -112,7 +112,7 @@ func TestMacroPartialServiceInsert(t *testing.T) {
 
 func TestMacroPartialServiceUpdate(t *testing.T) {
 	setupMacroPartialServiceTest()
-	macroPartialService := getTestMacroPartialService()
+	macroPartialService := serviceFactory.MustMacroPartialService()
 	defer macroPartialService.Close()
 
 	mp := model.MacroPartial{
@@ -154,7 +154,7 @@ func TestMacroPartialServiceUpdate(t *testing.T) {
 
 func TestMacroPartialServiceDelete(t *testing.T) {
 	setupMacroPartialServiceTest()
-	macroPartialService := getTestMacroPartialService()
+	macroPartialService := serviceFactory.MustMacroPartialService()
 	defer macroPartialService.Close()
 
 	mp := model.MacroPartial{
@@ -191,7 +191,7 @@ func TestMacroPartialServiceDelete(t *testing.T) {
 
 func TestMacroPartialServiceGetOneBy(t *testing.T) {
 	setupMacroPartialServiceTest()
-	macroPartialService := getTestMacroPartialService()
+	macroPartialService := serviceFactory.MustMacroPartialService()
 	defer macroPartialService.Close()
 
 	mp := model.MacroPartial{
@@ -240,7 +240,7 @@ func TestMacroPartialServiceGetOneBy(t *testing.T) {
 
 func TestMacroPartialServiceExistsBy(t *testing.T) {
 	setupMacroPartialServiceTest()
-	macroPartialService := getTestMacroPartialService()
+	macroPartialService := serviceFactory.MustMacroPartialService()
 	defer macroPartialService.Close()
 
 	mp := model.MacroPartial{
@@ -274,7 +274,7 @@ func TestMacroPartialServiceExistsBy(t *testing.T) {
 
 func TestMacroPartialServiceCount(t *testing.T) {
 	setupMacroPartialServiceTest()
-	macroPartialService := getTestMacroPartialService()
+	macroPartialService := serviceFactory.MustMacroPartialService()
 	defer macroPartialService.Close()
 
 	mp := model.MacroPartial{
@@ -308,7 +308,7 @@ func TestMacroPartialServiceCount(t *testing.T) {
 
 func TestMacroPartialServiceFindAll(t *testing.T) {
 	setupMacroPartialServiceTest()
-	macroPartialService := getTestMacroPartialService()
+	macroPartialService := serviceFactory.MustMacroPartialService()
 	defer macroPartialService.Close()
 
 	mp := model.MacroPartial{
@@ -365,7 +365,7 @@ func TestMacroPartialServiceFindAll(t *testing.T) {
 
 func TestMacroPartialServiceFindOrCreate(t *testing.T) {
 	setupMacroPartialServiceTest()
-	macroPartialService := getTestMacroPartialService()
+	macroPartialService := serviceFactory.MustMacroPartialService()
 	defer macroPartialService.Close()
 
 	macroPartial, err := macroPartialService.FindOrCreate(&macro, &coverPartial)
@@ -403,7 +403,7 @@ func TestMacroPartialServiceFindOrCreate(t *testing.T) {
 
 func TestMacroPartialServiceCountMissing(t *testing.T) {
 	setupMacroPartialServiceTest()
-	macroPartialService := getTestMacroPartialService()
+	macroPartialService := serviceFactory.MustMacroPartialService()
 	defer macroPartialService.Close()
 
 	num, err := macroPartialService.CountMissing(&macro)
@@ -432,7 +432,7 @@ func TestMacroPartialServiceCountMissing(t *testing.T) {
 
 func TestMacroPartialServiceFindMissing(t *testing.T) {
 	setupMacroPartialServiceTest()
-	macroPartialService := getTestMacroPartialService()
+	macroPartialService := serviceFactory.MustMacroPartialService()
 	defer macroPartialService.Close()
 
 	coverPartials, err := macroPartialService.FindMissing(&macro, "id asc", 1000, 0)
@@ -472,7 +472,7 @@ func TestMacroPartialServiceFindMissing(t *testing.T) {
 
 func TestMacroPartialServiceAspectIds(t *testing.T) {
 	setupMacroPartialServiceTest()
-	macroPartialService := getTestMacroPartialService()
+	macroPartialService := serviceFactory.MustMacroPartialService()
 	defer macroPartialService.Close()
 
 	_, err := macroPartialService.FindOrCreate(&macro, &coverPartial)

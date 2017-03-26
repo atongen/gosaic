@@ -1,13 +1,14 @@
 package service
 
 import (
-	"github.com/atongen/gosaic/model"
 	"testing"
+
+	"github.com/atongen/gosaic/model"
 )
 
 func TestProjectServiceInsert(t *testing.T) {
-	setTestDbMap()
-	projectService := getTestProjectService()
+	setTestServiceFactory()
+	projectService := serviceFactory.MustProjectService()
 	defer projectService.Close()
 
 	p1 := model.Project{
@@ -44,8 +45,8 @@ func TestProjectServiceInsert(t *testing.T) {
 }
 
 func TestProjectServiceGetOneBy(t *testing.T) {
-	setTestDbMap()
-	projectService := getTestProjectService()
+	setTestServiceFactory()
+	projectService := serviceFactory.MustProjectService()
 	defer projectService.Close()
 
 	c1 := model.Project{
@@ -74,8 +75,8 @@ func TestProjectServiceGetOneBy(t *testing.T) {
 }
 
 func TestProjectServiceGetOneByNot(t *testing.T) {
-	setTestDbMap()
-	projectService := getTestProjectService()
+	setTestServiceFactory()
+	projectService := serviceFactory.MustProjectService()
 	defer projectService.Close()
 
 	c, err := projectService.GetOneBy("macro_id = ? and name = ?", int64(123), "not a valid name")
@@ -89,8 +90,8 @@ func TestProjectServiceGetOneByNot(t *testing.T) {
 }
 
 func TestProjectServiceExistsBy(t *testing.T) {
-	setTestDbMap()
-	projectService := getTestProjectService()
+	setTestServiceFactory()
+	projectService := serviceFactory.MustProjectService()
 	defer projectService.Close()
 
 	c1 := model.Project{
@@ -112,8 +113,8 @@ func TestProjectServiceExistsBy(t *testing.T) {
 }
 
 func TestProjectServiceExistsByNot(t *testing.T) {
-	setTestDbMap()
-	projectService := getTestProjectService()
+	setTestServiceFactory()
+	projectService := serviceFactory.MustProjectService()
 	defer projectService.Close()
 
 	found, err := projectService.ExistsBy("macro_id = ? and name = ?", int64(123), "not a valid name")
@@ -125,8 +126,8 @@ func TestProjectServiceExistsByNot(t *testing.T) {
 }
 
 func TestProjectServiceUpdate(t *testing.T) {
-	setTestDbMap()
-	projectService := getTestProjectService()
+	setTestServiceFactory()
+	projectService := serviceFactory.MustProjectService()
 	defer projectService.Close()
 
 	updateProject := model.Project{
@@ -160,8 +161,8 @@ func TestProjectServiceUpdate(t *testing.T) {
 }
 
 func TestProjectServiceFindAll(t *testing.T) {
-	setTestDbMap()
-	projectService := getTestProjectService()
+	setTestServiceFactory()
+	projectService := serviceFactory.MustProjectService()
 	defer projectService.Close()
 
 	c1 := model.Project{

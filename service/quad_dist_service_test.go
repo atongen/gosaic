@@ -9,12 +9,12 @@ import (
 )
 
 func setupQuadDistServiceTest() {
-	setTestDbMap()
-	aspectService := getTestAspectService()
-	coverService := getTestCoverService()
-	coverPartialService := getTestCoverPartialService()
-	macroService := getTestMacroService()
-	macroPartialService := getTestMacroPartialService()
+	setTestServiceFactory()
+	aspectService := serviceFactory.MustAspectService()
+	coverService := serviceFactory.MustCoverService()
+	coverPartialService := serviceFactory.MustCoverPartialService()
+	macroService := serviceFactory.MustMacroService()
+	macroPartialService := serviceFactory.MustMacroPartialService()
 
 	aspect = model.Aspect{Columns: 239, Rows: 170}
 	err := aspectService.Insert(&aspect)
@@ -76,7 +76,7 @@ func setupQuadDistServiceTest() {
 
 func TestQuadDistServiceInsert(t *testing.T) {
 	setupQuadDistServiceTest()
-	quadDistService := getTestQuadDistService()
+	quadDistService := serviceFactory.MustQuadDistService()
 	defer quadDistService.Close()
 
 	pc := model.QuadDist{
@@ -113,7 +113,7 @@ func TestQuadDistServiceInsert(t *testing.T) {
 
 func TestQuadDistServiceGetWorst(t *testing.T) {
 	setupQuadDistServiceTest()
-	quadDistService := getTestQuadDistService()
+	quadDistService := serviceFactory.MustQuadDistService()
 	defer quadDistService.Close()
 
 	pc1 := model.QuadDist{

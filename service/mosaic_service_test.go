@@ -1,15 +1,16 @@
 package service
 
 import (
-	"github.com/atongen/gosaic/model"
 	"testing"
+
+	"github.com/atongen/gosaic/model"
 )
 
 func setupMosaicServiceTest() {
-	setTestDbMap()
-	coverService := getTestCoverService()
-	aspectService := getTestAspectService()
-	macroService := getTestMacroService()
+	setTestServiceFactory()
+	coverService := serviceFactory.MustCoverService()
+	aspectService := serviceFactory.MustAspectService()
+	macroService := serviceFactory.MustMacroService()
 
 	aspect = model.Aspect{Columns: 87, Rows: 128}
 	err := aspectService.Insert(&aspect)
@@ -40,7 +41,7 @@ func setupMosaicServiceTest() {
 
 func TestMosaicServiceInsert(t *testing.T) {
 	setupMosaicServiceTest()
-	mosaicService := getTestMosaicService()
+	mosaicService := serviceFactory.MustMosaicService()
 	defer mosaicService.Close()
 
 	c1 := model.Mosaic{
@@ -71,7 +72,7 @@ func TestMosaicServiceInsert(t *testing.T) {
 
 func TestMosaicServiceGetOneBy(t *testing.T) {
 	setupMosaicServiceTest()
-	mosaicService := getTestMosaicService()
+	mosaicService := serviceFactory.MustMosaicService()
 	defer mosaicService.Close()
 
 	c1 := model.Mosaic{
@@ -98,7 +99,7 @@ func TestMosaicServiceGetOneBy(t *testing.T) {
 
 func TestMosaicServiceGetOneByNot(t *testing.T) {
 	setupMosaicServiceTest()
-	mosaicService := getTestMosaicService()
+	mosaicService := serviceFactory.MustMosaicService()
 	defer mosaicService.Close()
 
 	c, err := mosaicService.GetOneBy("macro_id = ?", int64(123))
@@ -113,7 +114,7 @@ func TestMosaicServiceGetOneByNot(t *testing.T) {
 
 func TestMosaicServiceExistsBy(t *testing.T) {
 	setupMosaicServiceTest()
-	mosaicService := getTestMosaicService()
+	mosaicService := serviceFactory.MustMosaicService()
 	defer mosaicService.Close()
 
 	c1 := model.Mosaic{
@@ -135,7 +136,7 @@ func TestMosaicServiceExistsBy(t *testing.T) {
 
 func TestMosaicServiceExistsByNot(t *testing.T) {
 	setupMosaicServiceTest()
-	mosaicService := getTestMosaicService()
+	mosaicService := serviceFactory.MustMosaicService()
 	defer mosaicService.Close()
 
 	found, err := mosaicService.ExistsBy("macro_id = ?", int64(123))
@@ -148,7 +149,7 @@ func TestMosaicServiceExistsByNot(t *testing.T) {
 
 func TestMosaicServiceFindAll(t *testing.T) {
 	setupMosaicServiceTest()
-	mosaicService := getTestMosaicService()
+	mosaicService := serviceFactory.MustMosaicService()
 	defer mosaicService.Close()
 
 	c1 := model.Mosaic{

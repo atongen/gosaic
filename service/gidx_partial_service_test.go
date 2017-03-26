@@ -9,9 +9,9 @@ import (
 )
 
 func setupGidxPartialServiceTest() {
-	setTestDbMap()
-	aspectService := getTestAspectService()
-	gidxService := getTestGidxService()
+	setTestServiceFactory()
+	aspectService := serviceFactory.MustAspectService()
+	gidxService := serviceFactory.MustGidxService()
 
 	aspect = model.Aspect{Columns: 87, Rows: 128}
 	err := aspectService.Insert(&aspect)
@@ -35,7 +35,7 @@ func setupGidxPartialServiceTest() {
 
 func TestGidxPartialServiceInsert(t *testing.T) {
 	setupGidxPartialServiceTest()
-	gidxPartialService := getTestGidxPartialService()
+	gidxPartialService := serviceFactory.MustGidxPartialService()
 	defer gidxPartialService.Close()
 
 	mp := model.GidxPartial{
@@ -89,8 +89,8 @@ func TestGidxPartialServiceInsert(t *testing.T) {
 
 func TestGidxPartialServiceBulkInsert(t *testing.T) {
 	setupGidxPartialServiceTest()
-	gidxPartialService := getTestGidxPartialService()
-	aspectService := getTestAspectService()
+	gidxPartialService := serviceFactory.MustGidxPartialService()
+	aspectService := serviceFactory.MustAspectService()
 	defer gidxPartialService.Close()
 
 	aspect2, err := aspectService.FindOrCreate(5, 7)
@@ -193,7 +193,7 @@ func TestGidxPartialServiceBulkInsert(t *testing.T) {
 
 func TestGidxPartialServiceUpdate(t *testing.T) {
 	setupGidxPartialServiceTest()
-	gidxPartialService := getTestGidxPartialService()
+	gidxPartialService := serviceFactory.MustGidxPartialService()
 	defer gidxPartialService.Close()
 
 	mp := model.GidxPartial{
@@ -234,7 +234,7 @@ func TestGidxPartialServiceUpdate(t *testing.T) {
 
 func TestGidxPartialServiceDelete(t *testing.T) {
 	setupGidxPartialServiceTest()
-	gidxPartialService := getTestGidxPartialService()
+	gidxPartialService := serviceFactory.MustGidxPartialService()
 	defer gidxPartialService.Close()
 
 	mp := model.GidxPartial{
@@ -270,7 +270,7 @@ func TestGidxPartialServiceDelete(t *testing.T) {
 
 func TestGidxPartialServiceGetOneBy(t *testing.T) {
 	setupGidxPartialServiceTest()
-	gidxPartialService := getTestGidxPartialService()
+	gidxPartialService := serviceFactory.MustGidxPartialService()
 	defer gidxPartialService.Close()
 
 	mp := model.GidxPartial{
@@ -305,7 +305,7 @@ func TestGidxPartialServiceGetOneBy(t *testing.T) {
 
 func TestGidxPartialServiceExistsBy(t *testing.T) {
 	setupGidxPartialServiceTest()
-	gidxPartialService := getTestGidxPartialService()
+	gidxPartialService := serviceFactory.MustGidxPartialService()
 	defer gidxPartialService.Close()
 
 	mp := model.GidxPartial{
@@ -338,7 +338,7 @@ func TestGidxPartialServiceExistsBy(t *testing.T) {
 
 func TestGidxPartialServiceCount(t *testing.T) {
 	setupGidxPartialServiceTest()
-	gidxPartialService := getTestGidxPartialService()
+	gidxPartialService := serviceFactory.MustGidxPartialService()
 	defer gidxPartialService.Close()
 
 	mp := model.GidxPartial{
@@ -371,7 +371,7 @@ func TestGidxPartialServiceCount(t *testing.T) {
 
 func TestGidxPartialServiceCountBy(t *testing.T) {
 	setupGidxPartialServiceTest()
-	gidxPartialService := getTestGidxPartialService()
+	gidxPartialService := serviceFactory.MustGidxPartialService()
 	defer gidxPartialService.Close()
 
 	mp := model.GidxPartial{
@@ -404,7 +404,7 @@ func TestGidxPartialServiceCountBy(t *testing.T) {
 
 func TestGidxPartialServiceCountForMacro(t *testing.T) {
 	setupGidxPartialServiceTest()
-	gidxPartialService := getTestGidxPartialService()
+	gidxPartialService := serviceFactory.MustGidxPartialService()
 	defer gidxPartialService.Close()
 
 	gp := model.GidxPartial{
@@ -438,7 +438,7 @@ func TestGidxPartialServiceCountForMacro(t *testing.T) {
 
 func TestGidxPartialServiceFindOrCreate(t *testing.T) {
 	setupGidxPartialServiceTest()
-	gidxPartialService := getTestGidxPartialService()
+	gidxPartialService := serviceFactory.MustGidxPartialService()
 	defer gidxPartialService.Close()
 
 	gidxPartial, err := gidxPartialService.FindOrCreate(&gidx, &aspect)
@@ -472,7 +472,7 @@ func TestGidxPartialServiceFindOrCreate(t *testing.T) {
 
 func TestGidxPartialServiceFindMissing(t *testing.T) {
 	setupGidxPartialServiceTest()
-	gidxPartialService := getTestGidxPartialService()
+	gidxPartialService := serviceFactory.MustGidxPartialService()
 	defer gidxPartialService.Close()
 
 	gidxs, err := gidxPartialService.FindMissing(&aspect, "gidx.id", 100, 0)
@@ -505,7 +505,7 @@ func TestGidxPartialServiceFindMissing(t *testing.T) {
 
 func TestGidxPartialServiceCountMissing(t *testing.T) {
 	setupGidxPartialServiceTest()
-	gidxPartialService := getTestGidxPartialService()
+	gidxPartialService := serviceFactory.MustGidxPartialService()
 	defer gidxPartialService.Close()
 
 	num, err := gidxPartialService.CountMissing([]*model.Aspect{&aspect})

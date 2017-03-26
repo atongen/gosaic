@@ -9,8 +9,8 @@ import (
 )
 
 func setupCoverServiceTest() {
-	setTestDbMap()
-	aspectService := getTestAspectService()
+	setTestServiceFactory()
+	aspectService := serviceFactory.MustAspectService()
 
 	aspect = *model.NewAspect(1, 1)
 	err := aspectService.Insert(&aspect)
@@ -21,7 +21,7 @@ func setupCoverServiceTest() {
 
 func TestCoverServiceInsert(t *testing.T) {
 	setupCoverServiceTest()
-	coverService := getTestCoverService()
+	coverService := serviceFactory.MustCoverService()
 	defer coverService.Close()
 
 	c1 := model.Cover{
@@ -56,7 +56,7 @@ func TestCoverServiceInsert(t *testing.T) {
 
 func TestCoverServiceUpdate(t *testing.T) {
 	setupCoverServiceTest()
-	coverService := getTestCoverService()
+	coverService := serviceFactory.MustCoverService()
 	defer coverService.Close()
 
 	c1 := model.Cover{
@@ -88,7 +88,7 @@ func TestCoverServiceUpdate(t *testing.T) {
 
 func TestCoverServiceDelete(t *testing.T) {
 	setupCoverServiceTest()
-	coverService := getTestCoverService()
+	coverService := serviceFactory.MustCoverService()
 	defer coverService.Close()
 
 	c1 := model.Cover{
@@ -117,7 +117,7 @@ func TestCoverServiceDelete(t *testing.T) {
 
 func TestCoverServiceGetOneBy(t *testing.T) {
 	setupCoverServiceTest()
-	coverService := getTestCoverService()
+	coverService := serviceFactory.MustCoverService()
 	defer coverService.Close()
 
 	c1 := model.Cover{
@@ -148,7 +148,7 @@ func TestCoverServiceGetOneBy(t *testing.T) {
 
 func TestCoverServiceFindAll(t *testing.T) {
 	setupCoverServiceTest()
-	coverService := getTestCoverService()
+	coverService := serviceFactory.MustCoverService()
 	defer coverService.Close()
 
 	covers := []model.Cover{

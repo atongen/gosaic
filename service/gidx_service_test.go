@@ -9,9 +9,9 @@ import (
 )
 
 func setupGidxServiceTest() {
-	setTestDbMap()
-	aspectService := getTestAspectService()
-	gidxService := getTestGidxService()
+	setTestServiceFactory()
+	aspectService := serviceFactory.MustAspectService()
+	gidxService := serviceFactory.MustGidxService()
 
 	aspect = model.Aspect{Columns: 1, Rows: 1}
 	err := aspectService.Insert(&aspect)
@@ -36,7 +36,7 @@ func setupGidxServiceTest() {
 
 func TestGidxServiceGet(t *testing.T) {
 	setupGidxServiceTest()
-	gidxService := getTestGidxService()
+	gidxService := serviceFactory.MustGidxService()
 	defer gidxService.Close()
 
 	gidx2, err := gidxService.Get(gidx.Id)
@@ -57,7 +57,7 @@ func TestGidxServiceGet(t *testing.T) {
 
 func TestGidxServiceGetMissing(t *testing.T) {
 	setupGidxServiceTest()
-	gidxService := getTestGidxService()
+	gidxService := serviceFactory.MustGidxService()
 	defer gidxService.Close()
 
 	gidx2, err := gidxService.Get(1234)
@@ -72,7 +72,7 @@ func TestGidxServiceGetMissing(t *testing.T) {
 
 func TestGidxServiceGetOneBy(t *testing.T) {
 	setupGidxServiceTest()
-	gidxService := getTestGidxService()
+	gidxService := serviceFactory.MustGidxService()
 	defer gidxService.Close()
 
 	gidx2, err := gidxService.GetOneBy("md5sum", gidx.Md5sum)
@@ -93,7 +93,7 @@ func TestGidxServiceGetOneBy(t *testing.T) {
 
 func TestGidxServiceExistBy(t *testing.T) {
 	setupGidxServiceTest()
-	gidxService := getTestGidxService()
+	gidxService := serviceFactory.MustGidxService()
 	defer gidxService.Close()
 
 	val, err := gidxService.ExistsBy("md5sum", gidx.Md5sum)
@@ -108,7 +108,7 @@ func TestGidxServiceExistBy(t *testing.T) {
 
 func TestGidxServiceUpdate(t *testing.T) {
 	setupGidxServiceTest()
-	gidxService := getTestGidxService()
+	gidxService := serviceFactory.MustGidxService()
 	defer gidxService.Close()
 
 	newPath := "/home/user/tmp/other.jpg"
@@ -143,7 +143,7 @@ func TestGidxServiceUpdate(t *testing.T) {
 
 func TestGidxServiceDelete(t *testing.T) {
 	setupGidxServiceTest()
-	gidxService := getTestGidxService()
+	gidxService := serviceFactory.MustGidxService()
 	defer gidxService.Close()
 
 	num, err := gidxService.Delete(&model.Gidx{Id: gidx.Id})
@@ -167,7 +167,7 @@ func TestGidxServiceDelete(t *testing.T) {
 
 func TestGidxServiceCount(t *testing.T) {
 	setupGidxServiceTest()
-	gidxService := getTestGidxService()
+	gidxService := serviceFactory.MustGidxService()
 	defer gidxService.Close()
 
 	num, err := gidxService.Count()
@@ -182,7 +182,7 @@ func TestGidxServiceCount(t *testing.T) {
 
 func TestGidxServiceCountBy(t *testing.T) {
 	setupGidxServiceTest()
-	gidxService := getTestGidxService()
+	gidxService := serviceFactory.MustGidxService()
 	defer gidxService.Close()
 
 	num, err := gidxService.CountBy("md5sum", gidx.Md5sum)

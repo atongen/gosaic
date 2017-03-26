@@ -1,24 +1,13 @@
 package environment
 
 import (
-	"database/sql"
 	"io"
 	"log"
 	"os"
 	"os/signal"
-	"path/filepath"
-	"sync"
 	"syscall"
 
-	"github.com/atongen/gosaic/database"
 	"github.com/atongen/gosaic/service"
-
-	_ "github.com/mattn/go-sqlite3"
-	"gopkg.in/gorp.v1"
-)
-
-const (
-	DBMEM = ":memory:"
 )
 
 var (
@@ -32,85 +21,39 @@ type Environment interface {
 	Init() error
 	Close()
 	Cancel() bool
-	DbPath() string
 	Workers() int
 	Log() *log.Logger
-	Db() *sql.DB
+	ServiceFactory() service.ServiceFactory
 	ProjectId() int64
 	SetProjectId(id int64)
 	Printf(format string, a ...interface{})
 	Println(a ...interface{})
 	Fatalf(format string, a ...interface{})
 	Fatalln(a ...interface{})
-
-	GidxService() (service.GidxService, error)
-	AspectService() (service.AspectService, error)
-	GidxPartialService() (service.GidxPartialService, error)
-	CoverService() (service.CoverService, error)
-	CoverPartialService() (service.CoverPartialService, error)
-	MacroService() (service.MacroService, error)
-	MacroPartialService() (service.MacroPartialService, error)
-	PartialComparisonService() (service.PartialComparisonService, error)
-	MosaicService() (service.MosaicService, error)
-	MosaicPartialService() (service.MosaicPartialService, error)
-	QuadDistService() (service.QuadDistService, error)
-	ProjectService() (service.ProjectService, error)
-
-	MustGidxService() service.GidxService
-	MustAspectService() service.AspectService
-	MustGidxPartialService() service.GidxPartialService
-	MustCoverService() service.CoverService
-	MustCoverPartialService() service.CoverPartialService
-	MustMacroService() service.MacroService
-	MustMacroPartialService() service.MacroPartialService
-	MustPartialComparisonService() service.PartialComparisonService
-	MustMosaicService() service.MosaicService
-	MustMosaicPartialService() service.MosaicPartialService
-	MustQuadDistService() service.QuadDistService
-	MustProjectService() service.ProjectService
 }
 
 type environment struct {
-	dbPath    string
-	workers   int
-	projectId int64
-	dB        *sql.DB
-	dbMap     *gorp.DbMap
-	log       *log.Logger
-	cancel    bool
-	cancelCh  chan os.Signal
-	services  map[ServiceName]service.Service
-	m         sync.Mutex
+	workers        int
+	projectId      int64
+	log            *log.Logger
+	cancel         bool
+	cancelCh       chan os.Signal
+	serviceFactory service.ServiceFactory
 }
 
-func NewEnvironment(dbPath string, out io.Writer, workers int) (Environment, error) {
+func NewEnvironment(dsn string, out io.Writer, workers int) (Environment, error) {
 	env := &environment{}
 
 	// setup the environment logger
 	env.log = log.New(out, "GOSAIC: ", log.Ldate|log.Ltime)
 	env.cancel = false
 
-	var dbPathAbs string
-	if dbPath == DBMEM {
-		env.dbPath = dbPath
-	} else {
-		dir := filepath.Dir(dbPath)
-
-		// ensure environment dir exists
-		err := os.MkdirAll(dir, 0755)
-		if err != nil {
-			return nil, err
-		}
-
-		// get environment absolute dbPath
-		dbPathAbs, err = filepath.Abs(dbPath)
-		if err != nil {
-			return nil, err
-		}
-
-		env.dbPath = dbPathAbs
+	serviceFactory, err := service.NewServiceFactory(dsn)
+	if err != nil {
+		return nil, err
 	}
 
+	env.serviceFactory = serviceFactory
 	env.workers = workers
 
 	return env, nil
@@ -125,39 +68,6 @@ func GetTestEnv(out io.Writer) (Environment, error) {
 }
 
 func (env *environment) Init() error {
-	// setup the environment db
-	db, err := sql.Open("sqlite3", env.dbPath)
-	if err != nil {
-		return err
-	}
-	env.dB = db
-
-	// test db connection
-	err = env.dB.Ping()
-	if err != nil {
-		return err
-	}
-
-	_, err = env.dB.Exec("PRAGMA foreign_keys = ON;")
-	if err != nil {
-		return err
-	}
-
-	// migrate the database
-	_, err = database.Migrate(env.dB)
-	if err != nil {
-		return err
-	}
-
-	// setup orm
-	env.dbMap = &gorp.DbMap{Db: db, Dialect: gorp.SqliteDialect{}}
-
-	// development
-	//env.dbMap.TraceOn("[DB]", env.log)
-
-	// services
-	env.services = map[ServiceName]service.Service{}
-
 	// cancel
 	env.cancelCh = make(chan os.Signal, 2)
 	signal.Notify(env.cancelCh, os.Interrupt, syscall.SIGTERM)
@@ -171,16 +81,12 @@ func (env *environment) Init() error {
 }
 
 func (env *environment) Close() {
-	env.dB.Close()
+	env.serviceFactory.Close()
 	close(env.cancelCh)
 }
 
 func (env *environment) Cancel() bool {
 	return env.cancel
-}
-
-func (env *environment) DbPath() string {
-	return env.dbPath
 }
 
 func (env *environment) Workers() int {
@@ -191,8 +97,8 @@ func (env *environment) Log() *log.Logger {
 	return env.log
 }
 
-func (env *environment) Db() *sql.DB {
-	return env.dB
+func (env *environment) ServiceFactory() service.ServiceFactory {
+	return env.serviceFactory
 }
 
 func (env *environment) ProjectId() int64 {

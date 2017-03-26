@@ -1,20 +1,21 @@
 package service
 
 import (
-	"github.com/atongen/gosaic/model"
 	"testing"
+
+	"github.com/atongen/gosaic/model"
 )
 
 func setupMosaicPartialServiceTest() {
-	setTestDbMap()
-	gidxService := getTestGidxService()
-	gidxPartialService := getTestGidxPartialService()
-	coverService := getTestCoverService()
-	coverPartialService := getTestCoverPartialService()
-	aspectService := getTestAspectService()
-	macroService := getTestMacroService()
-	macroPartialService := getTestMacroPartialService()
-	mosaicService := getTestMosaicService()
+	setTestServiceFactory()
+	gidxService := serviceFactory.MustGidxService()
+	gidxPartialService := serviceFactory.MustGidxPartialService()
+	coverService := serviceFactory.MustCoverService()
+	coverPartialService := serviceFactory.MustCoverPartialService()
+	aspectService := serviceFactory.MustAspectService()
+	macroService := serviceFactory.MustMacroService()
+	macroPartialService := serviceFactory.MustMacroPartialService()
+	mosaicService := serviceFactory.MustMosaicService()
 
 	aspect = model.Aspect{Columns: 87, Rows: 128}
 	err := aspectService.Insert(&aspect)
@@ -121,7 +122,7 @@ func setupMosaicPartialServiceTest() {
 
 func TestMosaicPartialServiceInsert(t *testing.T) {
 	setupMosaicPartialServiceTest()
-	mosaicPartialService := getTestMosaicPartialService()
+	mosaicPartialService := serviceFactory.MustMosaicPartialService()
 	defer mosaicPartialService.Close()
 
 	c1 := model.MosaicPartial{
@@ -155,7 +156,7 @@ func TestMosaicPartialServiceInsert(t *testing.T) {
 
 func TestMosaicPartialServiceCount(t *testing.T) {
 	setupMosaicPartialServiceTest()
-	mosaicPartialService := getTestMosaicPartialService()
+	mosaicPartialService := serviceFactory.MustMosaicPartialService()
 	defer mosaicPartialService.Close()
 
 	num, err := mosaicPartialService.Count(&mosaic)
@@ -190,7 +191,7 @@ func TestMosaicPartialServiceCount(t *testing.T) {
 
 func TestMosaicPartialServiceCountMissing(t *testing.T) {
 	setupMosaicPartialServiceTest()
-	mosaicPartialService := getTestMosaicPartialService()
+	mosaicPartialService := serviceFactory.MustMosaicPartialService()
 	defer mosaicPartialService.Close()
 
 	num, err := mosaicPartialService.CountMissing(&mosaic)
@@ -225,7 +226,7 @@ func TestMosaicPartialServiceCountMissing(t *testing.T) {
 
 func TestMosaicPartialServiceGetMissing(t *testing.T) {
 	setupMosaicPartialServiceTest()
-	mosaicPartialService := getTestMosaicPartialService()
+	mosaicPartialService := serviceFactory.MustMosaicPartialService()
 	defer mosaicPartialService.Close()
 
 	mp1, err := mosaicPartialService.GetMissing(&mosaic)
@@ -266,7 +267,7 @@ func TestMosaicPartialServiceGetMissing(t *testing.T) {
 
 func TestMosaicPartialServiceGetRandomMissing(t *testing.T) {
 	setupMosaicPartialServiceTest()
-	mosaicPartialService := getTestMosaicPartialService()
+	mosaicPartialService := serviceFactory.MustMosaicPartialService()
 	defer mosaicPartialService.Close()
 
 	mp1, err := mosaicPartialService.GetRandomMissing(&mosaic)
@@ -305,7 +306,7 @@ func TestMosaicPartialServiceGetRandomMissing(t *testing.T) {
 
 func TestMosaicPartialServiceFindAllPartialViews(t *testing.T) {
 	setupMosaicPartialServiceTest()
-	mosaicPartialService := getTestMosaicPartialService()
+	mosaicPartialService := serviceFactory.MustMosaicPartialService()
 	defer mosaicPartialService.Close()
 
 	c1 := model.MosaicPartial{
@@ -360,7 +361,7 @@ func TestMosaicPartialServiceFindAllPartialViews(t *testing.T) {
 
 func TestMosaicPartialServiceFindRepeats(t *testing.T) {
 	setupMosaicPartialServiceTest()
-	mosaicPartialService := getTestMosaicPartialService()
+	mosaicPartialService := serviceFactory.MustMosaicPartialService()
 	defer mosaicPartialService.Close()
 
 	c1 := model.MosaicPartial{

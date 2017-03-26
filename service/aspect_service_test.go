@@ -10,8 +10,8 @@ import (
 )
 
 func setupAspectServiceTest() {
-	setTestDbMap()
-	aspectService := getTestAspectService()
+	setTestServiceFactory()
+	aspectService := serviceFactory.MustAspectService()
 
 	aspect = model.Aspect{Columns: 1, Rows: 1}
 	err := aspectService.Insert(&aspect)
@@ -22,7 +22,7 @@ func setupAspectServiceTest() {
 
 func TestAspectServiceGet(t *testing.T) {
 	setupAspectServiceTest()
-	aspectService := getTestAspectService()
+	aspectService := serviceFactory.MustAspectService()
 	defer aspectService.Close()
 
 	aspect2, err := aspectService.Get(aspect.Id)
@@ -39,7 +39,7 @@ func TestAspectServiceGet(t *testing.T) {
 
 func TestAspectServiceGetMissing(t *testing.T) {
 	setupAspectServiceTest()
-	aspectService := getTestAspectService()
+	aspectService := serviceFactory.MustAspectService()
 	defer aspectService.Close()
 
 	aspect2, err := aspectService.Get(1234)
@@ -54,7 +54,7 @@ func TestAspectServiceGetMissing(t *testing.T) {
 
 func TestAspectServiceFind(t *testing.T) {
 	setupAspectServiceTest()
-	aspectService := getTestAspectService()
+	aspectService := serviceFactory.MustAspectService()
 	defer aspectService.Close()
 
 	a1, err := aspectService.Find(333, 333)
@@ -78,7 +78,7 @@ func TestAspectServiceFind(t *testing.T) {
 
 func TestAspectServiceCreate(t *testing.T) {
 	setupAspectServiceTest()
-	aspectService := getTestAspectService()
+	aspectService := serviceFactory.MustAspectService()
 	defer aspectService.Close()
 
 	a1, err := aspectService.Create(123, 234)
@@ -111,7 +111,7 @@ func TestAspectServiceCreate(t *testing.T) {
 
 func TestAspectServiceFindOrCreate(t *testing.T) {
 	setupAspectServiceTest()
-	aspectService := getTestAspectService()
+	aspectService := serviceFactory.MustAspectService()
 	defer aspectService.Close()
 
 	n1, err := aspectService.Count()
@@ -159,7 +159,7 @@ func TestAspectServiceFindOrCreate(t *testing.T) {
 
 func TestAspectServiceFindIn(t *testing.T) {
 	setupAspectServiceTest()
-	aspectService := getTestAspectService()
+	aspectService := serviceFactory.MustAspectService()
 	defer aspectService.Close()
 
 	a1, err := aspectService.FindOrCreate(20, 30)

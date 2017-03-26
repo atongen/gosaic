@@ -9,9 +9,9 @@ import (
 )
 
 func setupCoverPartialServiceTest() {
-	setTestDbMap()
-	coverService := getTestCoverService()
-	aspectService := getTestAspectService()
+	setTestServiceFactory()
+	coverService := serviceFactory.MustCoverService()
+	aspectService := serviceFactory.MustAspectService()
 
 	aspect = model.Aspect{Columns: 1, Rows: 1}
 	err := aspectService.Insert(&aspect)
@@ -28,7 +28,7 @@ func setupCoverPartialServiceTest() {
 
 func TestCoverPartialServiceInsert(t *testing.T) {
 	setupCoverPartialServiceTest()
-	coverPartialService := getTestCoverPartialService()
+	coverPartialService := serviceFactory.MustCoverPartialService()
 	defer coverPartialService.Close()
 
 	p1 := model.CoverPartial{
@@ -69,7 +69,7 @@ func TestCoverPartialServiceInsert(t *testing.T) {
 
 func TestCoverPartialServiceBulkInsert(t *testing.T) {
 	setupCoverPartialServiceTest()
-	coverPartialService := getTestCoverPartialService()
+	coverPartialService := serviceFactory.MustCoverPartialService()
 	defer coverPartialService.Close()
 
 	coverPartials := make([]*model.CoverPartial, 5)
@@ -105,7 +105,7 @@ func TestCoverPartialServiceBulkInsert(t *testing.T) {
 
 func TestCoverPartialServiceUpdate(t *testing.T) {
 	setupCoverPartialServiceTest()
-	coverPartialService := getTestCoverPartialService()
+	coverPartialService := serviceFactory.MustCoverPartialService()
 	defer coverPartialService.Close()
 
 	p1 := model.CoverPartial{
@@ -140,7 +140,7 @@ func TestCoverPartialServiceUpdate(t *testing.T) {
 
 func TestCoverPartialServiceDelete(t *testing.T) {
 	setupCoverPartialServiceTest()
-	coverPartialService := getTestCoverPartialService()
+	coverPartialService := serviceFactory.MustCoverPartialService()
 	defer coverPartialService.Close()
 
 	p1 := model.CoverPartial{
@@ -172,7 +172,7 @@ func TestCoverPartialServiceDelete(t *testing.T) {
 
 func TestCoverPartialServiceDeleteId(t *testing.T) {
 	setupCoverPartialServiceTest()
-	coverPartialService := getTestCoverPartialService()
+	coverPartialService := serviceFactory.MustCoverPartialService()
 	defer coverPartialService.Close()
 
 	p1 := model.CoverPartial{
@@ -204,7 +204,7 @@ func TestCoverPartialServiceDeleteId(t *testing.T) {
 
 func TestCoverPartialServiceFindAll(t *testing.T) {
 	setupCoverPartialServiceTest()
-	coverPartialService := getTestCoverPartialService()
+	coverPartialService := serviceFactory.MustCoverPartialService()
 	defer coverPartialService.Close()
 
 	cps := []model.CoverPartial{
