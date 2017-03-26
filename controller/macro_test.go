@@ -9,10 +9,7 @@ func TestMacro(t *testing.T) {
 	}
 	defer env.Close()
 
-	macroPartialService, err := env.MacroPartialService()
-	if err != nil {
-		t.Fatalf("Unable to get macro partial service: %s\n", err.Error())
-	}
+	macroPartialService := env.ServiceFactory().MustMacroPartialService()
 
 	// build a test cover
 	cover := CoverAspect(env, 594, 554, 2, 3, 10)

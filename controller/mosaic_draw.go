@@ -14,9 +14,9 @@ import (
 )
 
 func MosaicDraw(env environment.Environment, mosaicId int64, outfile string) error {
-	macroService := env.MustMacroService()
-	coverService := env.MustCoverService()
-	mosaicService := env.MustMosaicService()
+	macroService := env.ServiceFactory().MustMacroService()
+	coverService := env.ServiceFactory().MustCoverService()
+	mosaicService := env.ServiceFactory().MustMosaicService()
 
 	mosaic, err := mosaicService.Get(mosaicId)
 	if err != nil {
@@ -67,7 +67,7 @@ func MosaicDraw(env environment.Environment, mosaicId int64, outfile string) err
 }
 
 func drawMosaic(env environment.Environment, mosaic *model.Mosaic, cover *model.Cover, outfile string) error {
-	mosaicPartialService := env.MustMosaicPartialService()
+	mosaicPartialService := env.ServiceFactory().MustMosaicPartialService()
 
 	numPartials, err := mosaicPartialService.Count(mosaic)
 	if err != nil {

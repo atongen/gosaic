@@ -11,8 +11,8 @@ import (
 )
 
 func CoverAspect(env environment.Environment, coverWidth, coverHeight, partialWidth, partialHeight, size int) *model.Cover {
-	coverService := env.MustCoverService()
-	aspectService := env.MustAspectService()
+	coverService := env.ServiceFactory().MustCoverService()
+	aspectService := env.ServiceFactory().MustAspectService()
 
 	coverAspect, err := aspectService.FindOrCreate(coverWidth, coverHeight)
 	if err != nil {
@@ -97,7 +97,7 @@ func getCoverAspectDims(coverWidth, coverHeight, partialAspectWidth, partialAspe
 }
 
 func addCoverAspectPartials(env environment.Environment, cover *model.Cover, coverPartialAspect *model.Aspect, size int) error {
-	coverPartialService := env.MustCoverPartialService()
+	coverPartialService := env.ServiceFactory().MustCoverPartialService()
 
 	width, height, columns, rows := getCoverAspectDims(cover.Width, cover.Height, coverPartialAspect.Columns, coverPartialAspect.Rows, size)
 

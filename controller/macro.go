@@ -13,7 +13,7 @@ import (
 )
 
 func Macro(env environment.Environment, path string, coverId int64, outfile string) *model.Macro {
-	coverService := env.MustCoverService()
+	coverService := env.ServiceFactory().MustCoverService()
 
 	cover, err := coverService.Get(coverId)
 	if err != nil {
@@ -40,8 +40,8 @@ func Macro(env environment.Environment, path string, coverId int64, outfile stri
 }
 
 func findOrCreateMacro(env environment.Environment, cover *model.Cover, path, outfile string) (*model.Macro, *image.Image, error) {
-	macroService := env.MustMacroService()
-	aspectService := env.MustAspectService()
+	macroService := env.ServiceFactory().MustMacroService()
+	aspectService := env.ServiceFactory().MustAspectService()
 
 	md5sum, err := util.Md5sum(path)
 	if err != nil {
@@ -105,7 +105,7 @@ func findOrCreateMacro(env environment.Environment, cover *model.Cover, path, ou
 }
 
 func buildMacroPartials(env environment.Environment, img *image.Image, macro *model.Macro, workers int) error {
-	macroPartialService := env.MustMacroPartialService()
+	macroPartialService := env.ServiceFactory().MustMacroPartialService()
 
 	countMissing, err := macroPartialService.CountMissing(macro)
 	if err != nil {
@@ -188,7 +188,7 @@ func storeMacroPartial(img *image.Image, macro *model.Macro, coverPartial *model
 }
 
 func storeMacroPartials(env environment.Environment, add <-chan *model.MacroPartial, sem <-chan bool, errs chan<- error) {
-	macroPartialService := env.MustMacroPartialService()
+	macroPartialService := env.ServiceFactory().MustMacroPartialService()
 
 	for macroPartial := range add {
 		err := macroPartialService.Insert(macroPartial)

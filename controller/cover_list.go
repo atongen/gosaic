@@ -3,7 +3,7 @@ package controller
 import "github.com/atongen/gosaic/environment"
 
 func CoverList(env environment.Environment) {
-	coverService := env.MustCoverService()
+	coverService := env.ServiceFactory().MustCoverService()
 
 	covers, err := coverService.FindAll("covers.name ASC")
 	if err != nil {

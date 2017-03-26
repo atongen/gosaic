@@ -3,10 +3,7 @@ package controller
 import "github.com/atongen/gosaic/environment"
 
 func IndexRm(env environment.Environment, paths []string) error {
-	gidxService, err := env.GidxService()
-	if err != nil {
-		return err
-	}
+	gidxService := env.ServiceFactory().MustGidxService()
 
 	for _, path := range paths {
 		gidx, err := gidxService.GetOneBy("path", path)

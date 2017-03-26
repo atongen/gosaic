@@ -11,7 +11,7 @@ import (
 )
 
 func IndexClean(env environment.Environment) (int, error) {
-	gidxService := env.MustGidxService()
+	gidxService := env.ServiceFactory().MustGidxService()
 
 	num := 0
 

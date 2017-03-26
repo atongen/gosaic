@@ -64,7 +64,7 @@ func GetProdEnv(dbPath string, workers int) (Environment, error) {
 }
 
 func GetTestEnv(out io.Writer) (Environment, error) {
-	return NewEnvironment(":memory:", out, 2)
+	return NewEnvironment("sqlite3://:memory:", out, 2)
 }
 
 func (env *environment) Init() error {

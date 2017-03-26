@@ -6,10 +6,10 @@ import (
 )
 
 func MacroList(env environment.Environment) {
-	macroService := env.MustMacroService()
-	macroPartialService := env.MustMacroPartialService()
-	coverService := env.MustCoverService()
-	aspectService := env.MustAspectService()
+	macroService := env.ServiceFactory().MustMacroService()
+	macroPartialService := env.ServiceFactory().MustMacroPartialService()
+	coverService := env.ServiceFactory().MustCoverService()
+	aspectService := env.ServiceFactory().MustAspectService()
 
 	macros, err := macroService.FindAll("macros.id desc")
 	if err != nil {

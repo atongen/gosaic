@@ -3,7 +3,7 @@ package controller
 import "github.com/atongen/gosaic/environment"
 
 func CoverRm(env environment.Environment, names []string) {
-	coverService := env.MustCoverService()
+	coverService := env.ServiceFactory().MustCoverService()
 
 	for _, name := range names {
 		cover, err := coverService.GetOneBy("name", name)

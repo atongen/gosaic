@@ -6,8 +6,8 @@ import (
 )
 
 func MosaicList(env environment.Environment) {
-	mosaicService := env.MustMosaicService()
-	mosaicPartialService := env.MustMosaicPartialService()
+	mosaicService := env.ServiceFactory().MustMosaicService()
+	mosaicPartialService := env.ServiceFactory().MustMosaicPartialService()
 
 	mosaics, err := mosaicService.FindAll("mosaics.id desc")
 	if err != nil {

@@ -7,6 +7,8 @@ import (
 
 	"github.com/atongen/gosaic/database"
 	gorp "gopkg.in/gorp.v1"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type ServiceName uint8
@@ -73,6 +75,7 @@ func NewServiceFactory(dsn string) (ServiceFactory, error) {
 func newServiceFactorySqlite3(u *url.URL) (*serviceFactorySqlite3, error) {
 	f := serviceFactorySqlite3{}
 
+	fmt.Println(u.Path)
 	db, err := sql.Open("sqlite3", u.Path)
 	if err != nil {
 		return nil, err

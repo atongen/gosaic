@@ -9,10 +9,7 @@ func TestPartialAspect(t *testing.T) {
 	}
 	defer env.Close()
 
-	gidxPartialService, err := env.GidxPartialService()
-	if err != nil {
-		t.Fatalf("Error getting gidx partial service: %s\n", err.Error())
-	}
+	gidxPartialService := env.ServiceFactory().MustGidxPartialService()
 
 	err = Index(env, []string{"testdata", "../service/testdata"})
 	if err != nil {
@@ -52,10 +49,7 @@ func TestPartialAspectWithin(t *testing.T) {
 	}
 	defer env.Close()
 
-	gidxPartialService, err := env.GidxPartialService()
-	if err != nil {
-		t.Fatalf("Error getting gidx partial service: %s\n", err.Error())
-	}
+	gidxPartialService := env.ServiceFactory().MustGidxPartialService()
 
 	err = Index(env, []string{"testdata", "../service/testdata"})
 	if err != nil {

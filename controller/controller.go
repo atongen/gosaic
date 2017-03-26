@@ -113,7 +113,7 @@ func findOrCreateProject(env environment.Environment, inPath, name, coverOutfile
 
 	baseFilename := util.CleanStr(name)
 
-	projectService := env.MustProjectService()
+	projectService := env.ServiceFactory().MustProjectService()
 	project, err := projectService.GetOneBy("name = ?", name)
 	if err != nil {
 		return nil, fmt.Errorf("Error getting project name: %s\n", err.Error())
@@ -181,7 +181,7 @@ func envProject(env environment.Environment) (*model.Project, error) {
 		return nil, nil
 	}
 
-	projectService := env.MustProjectService()
+	projectService := env.ServiceFactory().MustProjectService()
 	return projectService.Get(env.ProjectId())
 }
 
@@ -199,7 +199,7 @@ func envCover(env environment.Environment) (*model.Cover, error) {
 		return nil, nil
 	}
 
-	coverService := env.MustCoverService()
+	coverService := env.ServiceFactory().MustCoverService()
 	return coverService.Get(project.CoverId)
 }
 
@@ -213,7 +213,7 @@ func setEnvCover(env environment.Environment, cover *model.Cover) error {
 		return nil
 	}
 
-	projectService := env.MustProjectService()
+	projectService := env.ServiceFactory().MustProjectService()
 	project.CoverId = cover.Id
 	_, err = projectService.Update(project)
 	return err
@@ -233,7 +233,7 @@ func envMacro(env environment.Environment) (*model.Macro, error) {
 		return nil, nil
 	}
 
-	macroService := env.MustMacroService()
+	macroService := env.ServiceFactory().MustMacroService()
 	return macroService.Get(project.MacroId)
 }
 
@@ -247,7 +247,7 @@ func setEnvMacro(env environment.Environment, macro *model.Macro) error {
 		return nil
 	}
 
-	projectService := env.MustProjectService()
+	projectService := env.ServiceFactory().MustProjectService()
 	project.MacroId = macro.Id
 	_, err = projectService.Update(project)
 	return err
@@ -267,7 +267,7 @@ func envMosaic(env environment.Environment) (*model.Mosaic, error) {
 		return nil, nil
 	}
 
-	mosaicService := env.MustMosaicService()
+	mosaicService := env.ServiceFactory().MustMosaicService()
 	return mosaicService.Get(project.MosaicId)
 }
 
@@ -281,7 +281,7 @@ func setEnvMosaic(env environment.Environment, mosaic *model.Mosaic) error {
 		return nil
 	}
 
-	projectService := env.MustProjectService()
+	projectService := env.ServiceFactory().MustProjectService()
 	project.MosaicId = mosaic.Id
 	_, err = projectService.Update(project)
 	return err
@@ -292,7 +292,7 @@ func projectComplete(env environment.Environment, project *model.Project) error 
 		return nil
 	}
 
-	projectService := env.MustProjectService()
+	projectService := env.ServiceFactory().MustProjectService()
 	project.IsComplete = true
 	_, err := projectService.Update(project)
 	return err
@@ -300,6 +300,6 @@ func projectComplete(env environment.Environment, project *model.Project) error 
 
 // projectCleanup deletes all partial comparisons for a macro
 func projectCleanup(env environment.Environment, macro *model.Macro) error {
-	partialComparisonService := env.MustPartialComparisonService()
+	partialComparisonService := env.ServiceFactory().MustPartialComparisonService()
 	return partialComparisonService.DeleteFrom(macro)
 }

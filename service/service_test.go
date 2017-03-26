@@ -20,7 +20,7 @@ var (
 
 func setTestServiceFactory() {
 	var err error
-	serviceFactory, err = NewServiceFactory("sqlite3:///:memory:")
+	serviceFactory, err = NewServiceFactory("sqlite3://:memory:")
 	if err != nil {
 		panic(err)
 	}

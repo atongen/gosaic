@@ -11,10 +11,10 @@ import (
 )
 
 func MosaicBuild(env environment.Environment, fillType string, macroId int64, maxRepeats int, destructive bool) *model.Mosaic {
-	gidxPartialService := env.MustGidxPartialService()
-	macroService := env.MustMacroService()
-	macroPartialService := env.MustMacroPartialService()
-	mosaicService := env.MustMosaicService()
+	gidxPartialService := env.ServiceFactory().MustGidxPartialService()
+	macroService := env.ServiceFactory().MustMacroService()
+	macroPartialService := env.ServiceFactory().MustMacroPartialService()
+	mosaicService := env.ServiceFactory().MustMosaicService()
 
 	macro, err := macroService.Get(macroId)
 	if err != nil {
@@ -106,8 +106,8 @@ func doMosaicBuild(env environment.Environment, mosaic *model.Mosaic, fillType s
 }
 
 func createMosaicPartialsRandom(env environment.Environment, mosaic *model.Mosaic, maxRepeats int, destructive bool) error {
-	mosaicPartialService := env.MustMosaicPartialService()
-	partialComparisonService := env.MustPartialComparisonService()
+	mosaicPartialService := env.ServiceFactory().MustMosaicPartialService()
+	partialComparisonService := env.ServiceFactory().MustPartialComparisonService()
 
 	numMissing, err := mosaicPartialService.CountMissing(mosaic)
 	if err != nil {
@@ -174,8 +174,8 @@ func createMosaicPartialsRandom(env environment.Environment, mosaic *model.Mosai
 }
 
 func createMosaicPartialsBest(env environment.Environment, mosaic *model.Mosaic, maxRepeats int, destructive bool) error {
-	mosaicPartialService := env.MustMosaicPartialService()
-	partialComparisonService := env.MustPartialComparisonService()
+	mosaicPartialService := env.ServiceFactory().MustMosaicPartialService()
+	partialComparisonService := env.ServiceFactory().MustPartialComparisonService()
 
 	numMissing, err := mosaicPartialService.CountMissing(mosaic)
 	if err != nil {
@@ -243,7 +243,7 @@ func mosaicBuildDestruct(env environment.Environment, mosaic *model.Mosaic, maxR
 }
 
 func mosaicBuildDeleteGidxDuplicates(env environment.Environment, mosaic *model.Mosaic, maxRepeats int) error {
-	mosaicPartialService := env.MustMosaicPartialService()
+	mosaicPartialService := env.ServiceFactory().MustMosaicPartialService()
 
 	gidxPartialIds, err := mosaicPartialService.FindRepeats(mosaic, maxRepeats)
 	if err != nil {
@@ -254,7 +254,7 @@ func mosaicBuildDeleteGidxDuplicates(env environment.Environment, mosaic *model.
 		return nil
 	}
 
-	partialComparisonService := env.MustPartialComparisonService()
+	partialComparisonService := env.ServiceFactory().MustPartialComparisonService()
 
 	for _, id := range gidxPartialIds {
 		err = partialComparisonService.DeleteBy("gidx_partial_id = ?", id)
@@ -267,6 +267,6 @@ func mosaicBuildDeleteGidxDuplicates(env environment.Environment, mosaic *model.
 }
 
 func mosaicBuildDeleteMacroPartial(env environment.Environment, mosaic *model.Mosaic, macroPartialId int64) error {
-	partialComparisonService := env.MustPartialComparisonService()
+	partialComparisonService := env.ServiceFactory().MustPartialComparisonService()
 	return partialComparisonService.DeleteBy("macro_partial_id = ?", macroPartialId)
 }

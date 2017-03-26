@@ -69,8 +69,8 @@ func indexGetPaths(l *log.Logger, paths []string) []string {
 }
 
 func processIndexPaths(env environment.Environment, workers int, paths []string) error {
-	gidxService := env.MustGidxService()
-	aspectService := env.MustAspectService()
+	gidxService := env.ServiceFactory().MustGidxService()
+	aspectService := env.ServiceFactory().MustAspectService()
 
 	num := len(paths)
 	if num == 0 {

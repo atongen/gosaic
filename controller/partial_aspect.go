@@ -11,9 +11,9 @@ import (
 )
 
 func PartialAspect(env environment.Environment, macroId int64, threashold float64) error {
-	aspectService := env.MustAspectService()
-	macroService := env.MustMacroService()
-	macroPartialService := env.MustMacroPartialService()
+	aspectService := env.ServiceFactory().MustAspectService()
+	macroService := env.ServiceFactory().MustMacroService()
+	macroPartialService := env.ServiceFactory().MustMacroPartialService()
 
 	macro, err := macroService.Get(macroId)
 	if err != nil {
@@ -47,8 +47,8 @@ func PartialAspect(env environment.Environment, macroId int64, threashold float6
 }
 
 func createPartialGidxIndexes(env environment.Environment, aspects []*model.Aspect, threashold float64, workers int) error {
-	gidxService := env.MustGidxService()
-	gidxPartialService := env.MustGidxPartialService()
+	gidxService := env.ServiceFactory().MustGidxService()
+	gidxPartialService := env.ServiceFactory().MustGidxPartialService()
 
 	count, err := gidxService.Count()
 	if err != nil {
@@ -97,7 +97,7 @@ func createPartialGidxIndexes(env environment.Environment, aspects []*model.Aspe
 }
 
 func buildGidxPartials(env environment.Environment, gidx *model.Gidx, aspects []*model.Aspect, threashold float64, workers int) ([]*model.GidxPartial, error) {
-	gidxPartialService := env.MustGidxPartialService()
+	gidxPartialService := env.ServiceFactory().MustGidxPartialService()
 
 	var gidxPartials []*model.GidxPartial
 

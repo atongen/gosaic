@@ -12,7 +12,7 @@ import (
 )
 
 func Compare(env environment.Environment, macroId int64) error {
-	macroService := env.MustMacroService()
+	macroService := env.ServiceFactory().MustMacroService()
 
 	macro, err := macroService.Get(macroId)
 	if err != nil {
@@ -30,7 +30,7 @@ func Compare(env environment.Environment, macroId int64) error {
 }
 
 func createMissingComparisons(env environment.Environment, macro *model.Macro) error {
-	partialComparisonService := env.MustPartialComparisonService()
+	partialComparisonService := env.ServiceFactory().MustPartialComparisonService()
 
 	batchSize := 500
 	numTotal, err := partialComparisonService.CountMissing(macro)

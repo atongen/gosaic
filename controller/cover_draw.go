@@ -9,7 +9,7 @@ import (
 )
 
 func CoverDraw(env environment.Environment, coverId int64, outPath string) error {
-	coverService := env.MustCoverService()
+	coverService := env.ServiceFactory().MustCoverService()
 
 	cover, err := coverService.Get(coverId)
 	if err != nil {
@@ -28,7 +28,7 @@ func CoverDraw(env environment.Environment, coverId int64, outPath string) error
 }
 
 func doCoverDraw(env environment.Environment, cover *model.Cover, outPath string) error {
-	coverPartialService := env.MustCoverPartialService()
+	coverPartialService := env.ServiceFactory().MustCoverPartialService()
 
 	dc := gg.NewContext(int(cover.Width), int(cover.Height))
 	dc.Clear()

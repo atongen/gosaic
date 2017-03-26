@@ -3,7 +3,7 @@ package controller
 import "github.com/atongen/gosaic/environment"
 
 func IndexList(env environment.Environment) error {
-	gidxService := env.MustGidxService()
+	gidxService := env.ServiceFactory().MustGidxService()
 
 	batchSize := 1000
 

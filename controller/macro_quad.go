@@ -18,8 +18,8 @@ func MacroQuad(env environment.Environment,
 	coverWidth, coverHeight, size, minDepth, maxDepth, minArea, maxArea int,
 	coverOutfile, macroOutfile string) (*model.Cover, *model.Macro) {
 
-	aspectService := env.MustAspectService()
-	coverService := env.MustCoverService()
+	aspectService := env.ServiceFactory().MustAspectService()
+	coverService := env.ServiceFactory().MustCoverService()
 
 	myCoverWidth, myCoverHeight, err := calculateDimensions(aspectService, path, coverWidth, coverHeight)
 	if err != nil {
@@ -84,8 +84,8 @@ func MacroQuad(env environment.Environment,
 }
 
 func macroQuadBuildPartials(env environment.Environment, cover *model.Cover, macro *model.Macro, img *image.Image, size, minDepth, maxDepth, minArea, maxArea int) error {
-	coverPartialService := env.MustCoverPartialService()
-	quadDistService := env.MustQuadDistService()
+	coverPartialService := env.ServiceFactory().MustCoverPartialService()
+	quadDistService := env.ServiceFactory().MustQuadDistService()
 
 	var err error
 
@@ -210,8 +210,8 @@ func macroQuadBuildPartials(env environment.Environment, cover *model.Cover, mac
 }
 
 func macroQuadCreateCover(env environment.Environment, width, height int) (*model.Cover, error) {
-	aspectService := env.MustAspectService()
-	coverService := env.MustCoverService()
+	aspectService := env.ServiceFactory().MustAspectService()
+	coverService := env.ServiceFactory().MustCoverService()
 
 	aspect, err := aspectService.FindOrCreate(width, height)
 	if err != nil {
@@ -247,8 +247,8 @@ func macroQuadSplit(env environment.Environment, macro *model.Macro, coverPartia
 }
 
 func macroQuadBuildCoverPartials(env environment.Environment, coverPartialQuadView *model.CoverPartialQuadView) ([]*model.CoverPartial, error) {
-	aspectService := env.MustAspectService()
-	coverPartialService := env.MustCoverPartialService()
+	aspectService := env.ServiceFactory().MustAspectService()
+	coverPartialService := env.ServiceFactory().MustCoverPartialService()
 
 	x1 := coverPartialQuadView.CoverPartial.X1
 	y1 := coverPartialQuadView.CoverPartial.Y1
@@ -293,7 +293,7 @@ func macroQuadBuildCoverPartials(env environment.Environment, coverPartialQuadVi
 }
 
 func macroQuadBuildMacroPartials(env environment.Environment, macro *model.Macro, coverPartials []*model.CoverPartial, img *image.Image) ([]*model.MacroPartial, error) {
-	macroPartialService := env.MustMacroPartialService()
+	macroPartialService := env.ServiceFactory().MustMacroPartialService()
 
 	macroPartials := make([]*model.MacroPartial, 4)
 	sem := make(chan bool, 4)
@@ -336,7 +336,7 @@ func macroQuadBuildMacroPartials(env environment.Environment, macro *model.Macro
 }
 
 func macroQuadBuildQuadDist(env environment.Environment, coverPartials []*model.CoverPartial, macroPartials []*model.MacroPartial, parent *model.QuadDist, img *image.Image) error {
-	quadDistService := env.MustQuadDistService()
+	quadDistService := env.ServiceFactory().MustQuadDistService()
 
 	sem := make(chan bool, 4)
 	errs := false
