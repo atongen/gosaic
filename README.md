@@ -400,7 +400,6 @@ Then you can generate themed mosaics, like so:
 
 * Sub-command to identify very similar index images
 * Option to not fill solid color macro partials
-* Service factory interface
 * Additional service backends: postgres, redis
 
 ## References
