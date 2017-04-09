@@ -65,7 +65,7 @@ func (f *serviceFactorySqlite3) getService(name ServiceName) (Service, error) {
 }
 
 func (f *serviceFactorySqlite3) Close() error {
-	return f.Close()
+	return f.dB.Close()
 }
 
 func (f *serviceFactorySqlite3) GidxService() (GidxService, error) {

@@ -73,9 +73,10 @@ func NewServiceFactory(dsn string) (ServiceFactory, error) {
 }
 
 func newServiceFactorySqlite3(u *url.URL) (*serviceFactorySqlite3, error) {
-	f := serviceFactorySqlite3{}
+	f := serviceFactorySqlite3{
+		services: make(map[ServiceName]Service),
+	}
 
-	fmt.Println(u.Path)
 	db, err := sql.Open("sqlite3", u.Path)
 	if err != nil {
 		return nil, err

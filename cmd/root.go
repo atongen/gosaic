@@ -14,7 +14,7 @@ import (
 
 var (
 	// global flags
-	dbPath  string
+	dsn     string
 	workers int
 )
 
@@ -34,9 +34,9 @@ func init() {
 		os.Exit(1)
 	}
 
-	defaultDb := path.Join(home, ".gosaic.sqlite3")
+	defaultDsn := "sqlite3://" + path.Join(home, ".gosaic.sqlite3")
 
-	addGlobalStrFlag(&dbPath, "db", "", defaultDb, "Path to project database")
+	addGlobalStrFlag(&dsn, "dsn", "", defaultDsn, "Database connection string")
 	addGlobalIntFlag(&workers, "workers", "", runtime.NumCPU(), "Number of workers to use")
 
 	cobra.OnInitialize(setEnv)
@@ -45,7 +45,7 @@ func init() {
 func setEnv() {
 	var err error
 	Env, err = environment.GetProdEnv(
-		viper.GetString("db"),
+		viper.GetString("dsn"),
 		viper.GetInt("workers"),
 	)
 	if err != nil {

@@ -143,7 +143,7 @@ Flags:
   -r, --rm      Remove entries from the index
 
 Global Flags:
-      --db string     Path to project database (default "$HOME/.gosaic.sqlite3")
+      --dsn string    Database connection string (default "sqlite3://$HOME/.gosaic.sqlite3")
       --workers int   Number of workers to use (default 8)
 ```
 
@@ -174,7 +174,7 @@ Flags:
   -w, --width int          Pixel width of mosaic, 0 maintains aspect from image height
 
 Global Flags:
-      --db string     Path to project database (default "$HOME/.gosaic.sqlite3")
+      --dsn string    Database connection string (default "sqlite3://$HOME/.gosaic.sqlite3")
       --workers int   Number of workers to use (default 8)
 ```
 
@@ -277,7 +277,7 @@ Flags:
   -w, --width int          Pixel width of mosaic, 0 maintains aspect from image height
 
 Global Flags:
-      --db string     Path to project database (default "$HOME/.gosaic.sqlite3")
+      --dsn string    Database connection string (default "sqlite3://$HOME/.gosaic.sqlite3")
       --workers int   Number of workers to use (default 8)
 ```
 
@@ -380,13 +380,13 @@ Global Flags:
 ## Tips
 
 If you want to maintain multiple indexes of images, possibly with different themes,
-it can be helpful to create a bash alias that specifies the global db option for that
+it can be helpful to create a bash alias that specifies the global dsn option for that
 theme. For example:
 
 ```shell
-alias gosaic_wedding="gosaic --db $HOME/.gosaic_wedding.sqlite3"
-alias gosaic_africa="gosaic --db $HOME/.gosaic_africa.sqlite3"
-alias gosaic_albums="gosaic --db $HOME/.gosaic_albums.sqlite3"
+alias gosaic_wedding="gosaic --dsn sqlite3://$HOME/.gosaic_wedding.sqlite3"
+alias gosaic_africa="gosaic --dsn sqlite3://$HOME/.gosaic_africa.sqlite3"
+alias gosaic_albums="gosaic --dsn sqlite3://$HOME/.gosaic_albums.sqlite3"
 ```
 
 Then you can generate themed mosaics, like so:

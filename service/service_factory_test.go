@@ -5,7 +5,7 @@ import (
 )
 
 func getServiceFactory() (ServiceFactory, error) {
-	return NewServiceFactory("sqlite3:///:memory:")
+	return NewServiceFactory("sqlite3://:memory:")
 }
 
 func TestServices(t *testing.T) {

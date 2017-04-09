@@ -59,8 +59,8 @@ func NewEnvironment(dsn string, out io.Writer, workers int) (Environment, error)
 	return env, nil
 }
 
-func GetProdEnv(dbPath string, workers int) (Environment, error) {
-	return NewEnvironment(dbPath, os.Stdout, workers)
+func GetProdEnv(dsn string, workers int) (Environment, error) {
+	return NewEnvironment(dsn, os.Stdout, workers)
 }
 
 func GetTestEnv(out io.Writer) (Environment, error) {
