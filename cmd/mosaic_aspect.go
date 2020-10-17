@@ -32,7 +32,7 @@ func init() {
 	addLocalStrFlag(&mosaicAspectPartialAspect, "aspect", "a", "", "Aspect of mosaic partials (CxR)", MosaicAspectCmd)
 	addLocalIntFlag(&mosaicAspectSize, "size", "s", 0, "Number of mosaic partials in smallest dimension, 0 auto-calculates", MosaicAspectCmd)
 	addLocalIntFlag(&mosaicAspectMaxRepeats, "max-repeats", "", -1, "Number of times an index image can be repeated, 0 is unlimited, -1 is the minimun number", MosaicAspectCmd)
-	addLocalFloatFlag(&mosaicAspectThreashold, "threashold", "t", -1.0, "How similar aspect ratios must be", MosaicAspectCmd)
+	addLocalFloatFlag(&mosaicAspectThreashold, "threshold", "t", -1.0, "How similar aspect ratios must be", MosaicAspectCmd)
 	addLocalStrFlag(&mosaicAspectOutfile, "out", "", "", "File to write final mosaic image", MosaicAspectCmd)
 	addLocalStrFlag(&mosaicAspectCoverOutfile, "cover-out", "", "", "File to write cover partial pattern image", MosaicAspectCmd)
 	addLocalStrFlag(&mosaicAspectMacroOutfile, "macro-out", "", "", "File to write resized macro image", MosaicAspectCmd)

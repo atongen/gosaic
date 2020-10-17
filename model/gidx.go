@@ -12,7 +12,7 @@ type Gidx struct {
 	Orientation int    `db:"orientation"`
 }
 
-func (gidx *Gidx) Within(threashold float64, aspect *Aspect) bool {
+func (gidx *Gidx) Within(threshold float64, aspect *Aspect) bool {
 	gRatio := float64(gidx.Width) / float64(gidx.Height)
 	aRatio := aspect.Ratio()
 
@@ -20,7 +20,7 @@ func (gidx *Gidx) Within(threashold float64, aspect *Aspect) bool {
 		return true
 	}
 
-	return math.Abs(gRatio-aRatio) <= threashold
+	return math.Abs(gRatio-aRatio) <= threshold
 }
 
 // implement Image interface

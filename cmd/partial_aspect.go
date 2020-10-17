@@ -12,7 +12,7 @@ var (
 
 func init() {
 	addLocalIntFlag(&partialAspectMacroId, "macro-id", "", 0, "Id of macro to build partials", PartialAspectCmd)
-	addLocalFloatFlag(&partialAspectThreashold, "threashold", "t", -1.0, "How similar aspect ratios must be", PartialAspectCmd)
+	addLocalFloatFlag(&partialAspectThreashold, "threshold", "t", -1.0, "How similar aspect ratios must be", PartialAspectCmd)
 	RootCmd.AddCommand(PartialAspectCmd)
 }
 

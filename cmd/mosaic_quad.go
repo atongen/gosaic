@@ -35,7 +35,7 @@ func init() {
 	addLocalIntFlag(&mosaicQuadMinArea, "min-area", "", -1, "The smallest a partial can get before it can't be split", MosaicQuadCmd)
 	addLocalIntFlag(&mosaicQuadMaxArea, "max-area", "", -1, "The largest a partial can be", MosaicQuadCmd)
 	addLocalIntFlag(&mosaicQuadMaxRepeats, "max-repeats", "", -1, "Number of times an index image can be repeated, 0 is unlimited, -1 is the minimun number", MosaicQuadCmd)
-	addLocalFloatFlag(&mosaicQuadThreashold, "threashold", "t", -1.0, "How similar aspect ratios must be", MosaicQuadCmd)
+	addLocalFloatFlag(&mosaicQuadThreashold, "threshold", "t", -1.0, "How similar aspect ratios must be", MosaicQuadCmd)
 	addLocalStrFlag(&mosaicQuadOutfile, "out", "o", "", "File to write final mosaic image", MosaicQuadCmd)
 	addLocalStrFlag(&mosaicQuadCoverOutfile, "cover-out", "", "", "File to write cover partial pattern image", MosaicQuadCmd)
 	addLocalStrFlag(&mosaicQuadMacroOutfile, "macro-out", "", "", "File to write resized macro image", MosaicQuadCmd)
