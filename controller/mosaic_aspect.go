@@ -8,7 +8,7 @@ import (
 func MosaicAspect(env environment.Environment,
 	inPath, name, fillType string,
 	coverWidth, coverHeight, partialWidth, partialHeight, size, maxRepeats int,
-	threashold float64,
+	threshold float64,
 	coverOutfile, macroOutfile, mosaicOutfile string,
 	cleanup, destructive bool) *model.Mosaic {
 
@@ -24,7 +24,7 @@ func MosaicAspect(env environment.Environment,
 		return nil
 	}
 
-	err = PartialAspect(env, macro.Id, threashold)
+	err = PartialAspect(env, macro.Id, threshold)
 	if err != nil {
 		return nil
 	}

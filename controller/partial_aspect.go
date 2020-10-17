@@ -10,7 +10,7 @@ import (
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
-func PartialAspect(env environment.Environment, macroId int64, threashold float64) error {
+func PartialAspect(env environment.Environment, macroId int64, threshold float64) error {
 	aspectService := env.ServiceFactory().MustAspectService()
 	macroService := env.ServiceFactory().MustMacroService()
 	macroPartialService := env.ServiceFactory().MustMacroPartialService()
@@ -37,7 +37,7 @@ func PartialAspect(env environment.Environment, macroId int64, threashold float6
 		return err
 	}
 
-	err = createPartialGidxIndexes(env, aspects, threashold, env.Workers())
+	err = createPartialGidxIndexes(env, aspects, threshold, env.Workers())
 	if err != nil {
 		env.Printf("Error creating index aspects: %s\n", err.Error())
 		return err
@@ -46,7 +46,7 @@ func PartialAspect(env environment.Environment, macroId int64, threashold float6
 	return nil
 }
 
-func createPartialGidxIndexes(env environment.Environment, aspects []*model.Aspect, threashold float64, workers int) error {
+func createPartialGidxIndexes(env environment.Environment, aspects []*model.Aspect, threshold float64, workers int) error {
 	gidxService := env.ServiceFactory().MustGidxService()
 	gidxPartialService := env.ServiceFactory().MustGidxPartialService()
 
@@ -78,7 +78,7 @@ func createPartialGidxIndexes(env environment.Environment, aspects []*model.Aspe
 				return errors.New("Cancelled")
 			}
 
-			gidxPartials, err := buildGidxPartials(env, gidx, aspects, threashold, workers)
+			gidxPartials, err := buildGidxPartials(env, gidx, aspects, threshold, workers)
 			if err != nil {
 				return err
 			}
@@ -96,17 +96,17 @@ func createPartialGidxIndexes(env environment.Environment, aspects []*model.Aspe
 	return nil
 }
 
-func buildGidxPartials(env environment.Environment, gidx *model.Gidx, aspects []*model.Aspect, threashold float64, workers int) ([]*model.GidxPartial, error) {
+func buildGidxPartials(env environment.Environment, gidx *model.Gidx, aspects []*model.Aspect, threshold float64, workers int) ([]*model.GidxPartial, error) {
 	gidxPartialService := env.ServiceFactory().MustGidxPartialService()
 
 	var gidxPartials []*model.GidxPartial
 
 	pAspects := []*model.Aspect{}
-	if threashold < 0.0 {
+	if threshold < 0.0 {
 		pAspects = aspects
 	} else {
 		for _, aspect := range aspects {
-			if gidx.Within(threashold, aspect) {
+			if gidx.Within(threshold, aspect) {
 				pAspects = append(pAspects, aspect)
 			}
 		}

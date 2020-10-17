@@ -170,7 +170,7 @@ Flags:
   -n, --name string        Name of mosaic
       --out string         File to write final mosaic image
   -s, --size int           Number of mosaic partials in smallest dimension, 0 auto-calculates
-  -t, --threashold float   How similar aspect ratios must be (default -1)
+  -t, --threshold float    How similar aspect ratios must be (default -1)
   -w, --width int          Pixel width of mosaic, 0 maintains aspect from image height
 
 Global Flags:
@@ -219,7 +219,7 @@ Global Flags:
     The number and size of the partials in the other dimension would be determined by the aspect ratio of the mosaic partials.
   </dd>
 
-  <dt>--threashold</dt>
+  <dt>--threshold</dt>
   <dd>
     How similar aspect ratios must be. Allows you to filter out index images whose aspect ratio varies greatly from the aspect ratio of the mosaic partial.
     Threashold must be larger than the absolute value of the difference between the index ratio and the mosaic partial ratio, or the index image is excluded from the mosaic.
@@ -273,7 +273,7 @@ Flags:
   -n, --name string        Name of mosaic
   -o, --out string         File to write final mosaic image
   -s, --size int           Number of times to split the partials into quads (default -1)
-  -t, --threashold float   How similar aspect ratios must be (default -1)
+  -t, --threshold float    How similar aspect ratios must be (default -1)
   -w, --width int          Pixel width of mosaic, 0 maintains aspect from image height
 
 Global Flags:
@@ -349,7 +349,7 @@ Global Flags:
     The higher this value, the more uniformly small each mosaic partial will be in the result.
   </dd>
 
-  <dt>--threashold</dt>
+  <dt>--threshold</dt>
   <dd>
     How similar aspect ratios must be. Allows you to filter out index images whose aspect ratio varies greatly from the aspect ratio of the mosaic partial.
     Threashold must be larger than the absolute value of the difference between the index ratio and the mosaic partial ratio, or the index image is excluded from the mosaic.
